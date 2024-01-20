@@ -219,22 +219,22 @@
                     $("select[name='source_sel']").val(15);
                 }
             }
-            var mediainfo_array = new_text.match(/\[hide\s*=\s*mediainfo\].*?General\s*?Unique\s*?ID[^\0]*?\[\/hide\]/gim);
             var chinese_sub = false;
             var english_sub = false;
             var chinese_dub = false;
             var cantonese_dub = false;
-            if(mediainfo_array){
-                var mediainfo = mediainfo_array[0];
+            var mediainfo_array = new_text.match(/\[hide\s*=\s*mediainfo\].*?(General\s*?Unique\s*?ID[^\0]*?)\[\/hide\]/im);
+            if (mediainfo_array){
+                var mediainfo = mediainfo_array[1];
                 var subtitles = mediainfo.match(/Text.*?\nID[^\0]*?Forced.*?\n/gm);
                 if (subtitles){
                     console.log(`${subtitles.length} subtitles`);
                     subtitles.forEach((subtitle) => {
-                        if (subtitle.match(/Language\s*:\s*Chinese/gi)){
+                        if (subtitle.match(/Language\s*:\s*Chinese/i)){
                             console.log('zhongzi');
                             chinese_sub = true;
                             return;
-                        } else if (subtitle.match(/Language\s*:\s*English/gi)) {
+                        } else if (subtitle.match(/Language\s*:\s*English/i)) {
                             english_sub = true;
                             console.log('ensub');
                             return;
@@ -245,26 +245,26 @@
                 if (dubs){
                     console.log(`${dubs.length} dubs`);
                     dubs.forEach((dub) => {
-                        if (dub.match(/Cantonese/gi)) {
+                        if (dub.match(/Cantonese/i)) {
                             cantonese_dub = true;
                             console.log('yueyu');
                             return;
-                        } else if (dub.match(/Chinese/gi)){
+                        } else if (dub.match(/Chinese/i)){
                             chinese_dub = true;
                             console.log('guoyu');
                             return;
                         }
                     })
                 }
+                var zhongzi = document.getElementById('zhongzi');
+                var ensub = document.getElementById('ensub');
+                var guoyu = document.getElementById('guoyu');
+                var yueyu = document.getElementById('yueyu');
+                zhongzi.checked = chinese_sub;
+                ensub.checked = english_sub;
+                guoyu.checked = chinese_dub;
+                yueyu.checked = cantonese_dub;
             }
-            var zhongzi = document.getElementById('zhongzi');
-            var ensub = document.getElementById('ensub');
-            var guoyu = document.getElementById('guoyu');
-            var yueyu = document.getElementById('yueyu');
-            zhongzi.checked = chinese_sub;
-            ensub.checked = english_sub;
-            guoyu.checked = chinese_dub;
-            yueyu.checked = cantonese_dub;
             $("#descr").focus();
             //=========================================================================================================
         });
