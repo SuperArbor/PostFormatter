@@ -146,14 +146,16 @@
                 }
                 var doub_link_array = new_text.match(/豆瓣\s*链\s*接\s+([^\s\n]+)\s*\n/);
                 if (doub_link_array){
-                    $("input[name='douban']").val(doub_link_array[1]);
+                    var douban_link = doub_link_array[1].replace(/\[url=(.*?)\].*?\[\/url\]/, "$1");
+                    $("input[name='douban']").val(douban_link);
                 }
                 else{
                     $("input[name='douban']").val("");
                 }
                 var imdb_link_array = new_text.match(/IMDb\s*链\s*接\s+([^\s\n]+)\s*\n/i);
                 if(imdb_link_array){
-                    $("input[name='url'][type='text']").val(imdb_link_array[1]);
+                    var imdb_link = imdb_link_array[1].replace(/\[url=(.*?)\].*?\[\/url\]/, "$1");
+                    $("input[name='url'][type='text']").val(imdb_link);
                 }
                 else{
                     $("input[name='url'][type='text']").val("");
@@ -217,7 +219,7 @@
                     $("select[name='source_sel']").val(15);
                 }
             }
-            var mediainfo_array = new_text.match(/\[hide\s*=\s*mediainfo\]\s*General[ \n]Unique ID[^\0]*?\[\/hide\]/gim);
+            var mediainfo_array = new_text.match(/\[hide\s*=\s*mediainfo\].*?General\s*?Unique\s*?ID[^\0]*?\[\/hide\]/gim);
             var chinese_sub = false;
             var english_sub = false;
             var chinese_dub = false;
@@ -225,8 +227,8 @@
             if(mediainfo_array){
                 var mediainfo = mediainfo_array[0];
                 var subtitles = mediainfo.match(/Text.*?\nID[^\0]*?Forced.*?\n/gm);
-                console.log(`${subtitles.length} subtitles`);
                 if (subtitles){
+                    console.log(`${subtitles.length} subtitles`);
                     subtitles.forEach((subtitle) => {
                         if (subtitle.match(/Language\s*:\s*Chinese/gi)){
                             console.log('zhongzi');
@@ -240,8 +242,8 @@
                     });
                 }
                 var dubs = mediainfo.match(/Audio.*?\nID[^\0]*?Forced.*?\n/gm);
-                console.log(`${dubs.length} dubs`);
                 if (dubs){
+                    console.log(`${dubs.length} dubs`);
                     dubs.forEach((dub) => {
                         if (dub.match(/Cantonese/gi)) {
                             cantonese_dub = true;
