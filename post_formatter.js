@@ -74,17 +74,15 @@
         return output_text;
     }
     //============================================================
-    var domain_match_array = window.location.href.match(/(.*)\/(upload|edit)\.php/);
+    var domain_match_array = window.location.href.match(/(.*)\/(upload|edit|subtitles)\.php/);
     if (!domain_match_array){
         return;
     }
-    var site = '';
-    if (domain_match_array[1].match(/nexushd/i)){
-        site = 'nhd';
-    } else if (domain_match_array[1].match(/pterclub/i)){
-        site = 'pter';
-    }
-    
+    var site = domain_match_array[1].match(/nexushd/i)
+        ? 'nhd'
+        : domain_match_array[1].match(/pterclub/i)
+        ? 'pter'
+        : '';
     var page = domain_match_array[2];
     if (!site || !page){
         return;
@@ -92,12 +90,8 @@
     console.log(`running in site ${site} and page ${page}`);
     // initialization 
     var btn_bingo = $("<input>");
-    btn_bingo.attr({
-        "type":"button",
-        "name":"bingo_converter",
-        "value":"BINGO",
-        "style":"font-size: 11px; color: blue; margin-right: 3px",
-    });
+    var btn_bingo_sub = $("<input>");
+    
     // common
     // controls
     var name_box = null, small_desc_box = null, imdb_link_box = null, douban_link_box = null,
@@ -368,7 +362,7 @@
                     ? source_num_hdtv// hdtv
                     : torrent_title.match(/\Wweb\-?dl\W/i)
                     ? source_num_web_dl// web-dl
-                    : source_num_default// other
+                    : source_num_default;// other
             } else if (site == 'nhd'){
                 source_num = torrent_title.match(/\W(?:blu(?:e|\-)?ray|bdrip)\W/i)
                     ? source_num_bluray
@@ -397,7 +391,7 @@
                     ? standard_num_2160p
                     : torrent_title.match(/\Wdvd/i)
                     ? standard_num_sd
-                    : standard_num_default
+                    : standard_num_default;
             }
             standard_sel.val(stantdard_num);
         }
@@ -488,34 +482,109 @@
         }
         descr_box.focus();
     });
-    var td_1 = $("<td>");
-    td_1.attr({
-        "class":"embedded"
+    // subtitle uploading
+    btn_bingo_sub.click(function(){
+        var input_file = $('input[type="file"][name="file"]');
+        var title_box = $('input[type="text"][name="title"]');
+        var language_sel = $('select[name="sel_lang"]');
+        if (anonymous_check){
+            anonymous_check.checked = anonymous;
+        }
+        var lang_num_default = 0, lang_num_eng = 6, lang_num_chs = 25, lang_num_cht = 28,
+            lang_num_jap = 15, lang_num_fre = 9, lang_num_ger = 10, lang_num_ita = 14,
+            lang_num_kor = 16, lang_num_spa = 26, lang_num_other = 18;
+        var lang_num = lang_num_default;
+        var path_sub = input_file.val();
+        var file_name = /([^\\]+)$/.exec(path_sub)[1];
+        if (file_name){
+            title_box.val(file_name);
+            var lang = path_sub.replace(/.*\.(.*)\..*/i, "$1");
+            if (lang){
+                lang_num = lang.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || lang.match(/.+( |&)?(chs|cht|cn|zh)/)
+                    ? lang_num_other
+                    : lang.match(/chs/)
+                    ? lang_num_chs
+                    : lang.match(/cht/)
+                    ? lang_num_cht
+                    : lang.match(/eng/)
+                    ? lang_num_eng
+                    : lang.match(/jap|jp/)
+                    ? lang_num_jap
+                    : lang.match(/fre|fra/)
+                    ? lang_num_fre
+                    : lang.match(/ger/)
+                    ? lang_num_ger
+                    : lang.match(/ita/)
+                    ? lang_num_ita
+                    : lang.match(/kor/)
+                    ? lang_num_kor
+                    : lang.match(/spa/)
+                    ? lang_num_spa
+                    : lang_num_other;
+            }
+            console.log(`language: ${lang}`);
+            language_sel.val(lang_num);
+        } else{
+            console.log(`not able to get file name from path ${path_sub}`);
+        }
     });
-    var tr_1 = $("<tr>");
-    tr_1.attr({
-        "id":"multi_function"
-    });
-    var tbody_1 = $("<tbody>");
-    var table_1 = $("<table>");
-    table_1.attr({
-        "cellspaceing":"1",
-        "cellpadding":"2",
-        "border":"0",
-        "style":"margin-top:3px"
-    });
-    td_1.append(btn_bingo);
-    tr_1.append(td_1);
-    tbody_1.append(tr_1);
-    table_1.append(tbody_1);
-    $('#compose input[name="quote"]').closest('table').after(table_1);
-
-    var switcher = 0;
-    if(window.location.href.match(/moresmilies\.php/)){
-        switcher = 1;
+    if (page == 'upload' || page == 'edit'){
+        btn_bingo.attr({
+            "type":"button",
+            "name":"bingo_converter",
+            "value":"BINGO",
+            "style":"font-size: 11px; color: blue; margin-right: 3px",
+        });
+        var td_1 = $("<td>");
+        td_1.attr({
+            "class":"embedded"
+        });
+        var tr_1 = $("<tr>");
+        tr_1.attr({
+            "id":"multi_function"
+        });
+        var tbody_1 = $("<tbody>");
+        var table_1 = $("<table>");
+        table_1.attr({
+            "cellspaceing":"1",
+            "cellpadding":"2",
+            "border":"0",
+            "style":"margin-top:3px"
+        });
+        td_1.append(btn_bingo);
+        tr_1.append(td_1);
+        tbody_1.append(tr_1);
+        table_1.append(tbody_1);
+        $('#compose input[name="quote"]').closest('table').after(table_1);
+    
+        var switcher = 0;
+        if(window.location.href.match(/moresmilies\.php/)){
+            switcher = 1;
+        }
+        $("a[href*='SmileIT']").click(function(){
+            insert_tyt(this.getAttribute("href").match(/\[em\d+\]/)[0],switcher);
+            return false;
+        });
+    } else if (page == 'subtitles'){
+        var btn_upload_sub = $('input[type="submit"][value="上传文件"]');
+        var wrapper = btn_upload_sub[0].parentNode;
+        const styles = window.getComputedStyle(btn_upload_sub[0]);
+        btn_bingo_sub.attr({
+            "type":"button",
+            "name":"bingo_converter_sub",
+            "value":"BINGO",
+        });
+        if (styles.cssText){
+            btn_bingo_sub[0].style.cssText = styles.cssText;
+        } else{
+            const cssText = Object.values(styles).reduce(
+                (css, propertyName) =>
+                    `${css}${propertyName}:${styles.getPropertyValue(
+                        propertyName
+                    )};`
+            );
+            btn_bingo_sub[0].style.cssText = cssText
+        }
+        wrapper.append(btn_bingo_sub[0]);
     }
-    $("a[href*='SmileIT']").click(function(){
-        insert_tyt(this.getAttribute("href").match(/\[em\d+\]/)[0],switcher);
-        return false;
-    });
 })();
