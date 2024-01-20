@@ -118,15 +118,15 @@
                     }
                     else{
                         small_descr_array.push(T_title_array[1]);
-                        if(new_text.match(/产\s*地\s*.*?香港.*?\n/)){
+                        if(new_text.match(/产\s*地.*?香港/)){
                            cat_area = 2;
-                        }else if(new_text.match(/产\s*地\s*.*?台湾.*?\n/)){
+                        }else if(new_text.match(/产\s*地.*?台湾/)){
                            cat_area = 3;
-                        }else if(new_text.match(/产\s*地\s*韩国\n/)){
+                        }else if(new_text.match(/产\s*地\s*韩国/)){
                            cat_area = 5;
-                        }else if(new_text.match(/产\s*地\s*日本\n/)){
+                        }else if(new_text.match(/产\s*地\s*日本/)){
                            cat_area = 6;
-                        }else if(new_text.match(/产\s*地\s*印度\n/)){
+                        }else if(new_text.match(/产\s*地\s*印度/)){
                            cat_area = 7;
                         }else {
                            cat_area = 4;
@@ -235,35 +235,51 @@
                 var chinese_dub = false;
                 var cantonese_dub = false;
                 var mediainfo = mediainfo_array[1];
-                var subtitles = mediainfo.match(/Text.*?\nID[^\0]*?Forced.*?\n/gm);
+                var subtitles = mediainfo.match(/Text.*?\nID[^\0]*?Forced.*/gm);
                 if (subtitles){
                     console.log(`${subtitles.length} subtitles`);
                     subtitles.forEach((subtitle) => {
-                        if (subtitle.match(/Language\s*:\s*Chinese/i)){
-                            console.log('zhongzi');
-                            chinese_sub = true;
-                            return;
-                        } else if (subtitle.match(/Language\s*:\s*English/i)) {
-                            english_sub = true;
-                            console.log('ensub');
-                            return;
+                        var language_array = subtitle.match(/language\s*:(.*)/i);
+                        if (!language_array){
+                            language_array = subtitle.match(/title\s*:(.*)/i);
+                        }
+                        if (language_array){
+                            var language = language_array[1];
+                            if (language.match(/chinese|chs|cht/i)){
+                                console.log('zhongzi');
+                                chinese_sub = true;
+                                return;
+                            } else if (language.match(/english/i)) {
+                                english_sub = true;
+                                console.log('ensub');
+                                return;
+                            } else{
+                                console.log('other sub');
+                            }
+                        }
+                        else{
+                            console.log('no language specified for the subs');
                         }
                     });
                 }
-                var dubs = mediainfo.match(/Audio.*?\nID[^\0]*?Forced.*?\n/gm);
+                var dubs = mediainfo.match(/Audio.*\nID[^\0]*?Forced.*/gm);
                 if (dubs){
                     console.log(`${dubs.length} dubs`);
                     dubs.forEach((dub) => {
-                        if (dub.match(/Cantonese/i)) {
+                        if (dub.match(/cantonese/i)) {
                             cantonese_dub = true;
                             console.log('yueyu');
                             return;
-                        } else if (dub.match(/Chinese/i)){
+                        } else if (dub.match(/chinese/i)){
                             chinese_dub = true;
                             console.log('guoyu');
                             return;
+                        } else{
+                            console.log('other dub');
                         }
                     })
+                } else {
+                    console.log('no dub');
                 }
                 var zhongzi = document.getElementById('zhongzi');
                 var ensub = document.getElementById('ensub');
