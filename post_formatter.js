@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info and smilies
-// @version      1.1
+// @version      1.2
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        http://*.nexushd.org/*
 // @match        https://pterclub.com/*
