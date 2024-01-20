@@ -106,88 +106,90 @@
             new_text = compact_content(new_text);
             $("#descr").val(new_text);
             //=========================================================================================================
+            var name_box = null;
+            if(window.location.href.match(/upload\.php/)){
+                name_box = $("#name");
+            } else if(window.location.href.match(/edit\.php/)){
+                name_box = $("input[name='name']");
+            } else{
+                return;
+            }
+            // name 
+            var torrent_title = name_box.val();
+            torrent_title = torrent_title.replace(/\s+(?:mkv|mp4|iso|ts)\s*$/gi,"")
+                .replace(/^\[.*\]\s(\S)/gi,"$1");
+            name_box.val(torrent_title);
             if (new_text.match("◎")){
-                var T_title_array = new_text.match(/译\s*名\s*([^\/\n]+)(?:\/|\n)/);
-                var O_title_array = new_text.match(/片\s*名\s*([^\/\n]+)(?:\/|\n)/);
+                // container for small_desc (副标题)
                 var small_descr_array = [];
-                var cat_area = "";
-                if(T_title_array && O_title_array){
-                    if(new_text.match(/产\s*地\s*中国大陆\n/)){
-                        small_descr_array.push(O_title_array[1]);
-                        cat_area = 1;
-                    }
-                    else{
-                        small_descr_array.push(T_title_array[1]);
-                        if(new_text.match(/产\s*地.*?香港/)){
-                           cat_area = 2;
-                        }else if(new_text.match(/产\s*地.*?台湾/)){
-                           cat_area = 3;
-                        }else if(new_text.match(/产\s*地\s*韩国/)){
-                           cat_area = 5;
-                        }else if(new_text.match(/产\s*地\s*日本/)){
-                           cat_area = 6;
-                        }else if(new_text.match(/产\s*地\s*印度/)){
-                           cat_area = 7;
-                        }else {
-                           cat_area = 4;
-                        }
+                // name
+                var translated_title_array = new_text.match(/译\s*名\s*([^\/\n]+)(?:\/|\n)/);
+                var original_title_array = new_text.match(/片\s*名\s*([^\/\n]+)(?:\/|\n)/);
+                // area
+                var area_array = new_text.match(/产\s*地\s*(.*)\s*/);
+                var area = area_array ? area_array[1] : "";
+                if(translated_title_array && original_title_array){
+                    var translated_title = translated_title_array[1];
+                    var original_title = original_title_array[1];
+                    if (area.match(/中国大陆/)){
+                        small_descr_array.push(torrent_title.match(original_title) ? translated_title : original_title);
+                    } else{
+                        small_descr_array.push(translated_title);
                     }
                 }
-                $("select[name='team_sel']").val(cat_area);
+                // festival
                 var festival_array = new_text.match(/(\d{4})-\d{2}-\d{2}\((\S+电影节)\)/);
                 if(festival_array){
                     small_descr_array.push(festival_array[1]+festival_array[2]);
                 }
+                // category
                 var category_array = new_text.match(/类\s*别\s+([^\n]*)\s*\n/);
                 var category = "";
                 if(category_array){
                     category = category_array[1].replace(/\//g," / ");
                     small_descr_array.push(category);
                 }
-                var doub_link_array = new_text.match(/豆瓣\s*链\s*接\s+([^\s\n]+)\s*\n/);
-                if (doub_link_array){
-                    var douban_link = doub_link_array[1].replace(/\[url=(.*?)\].*?\[\/url\]/, "$1");
-                    $("input[name='douban']").val(douban_link);
-                }
-                else{
-                    $("input[name='douban']").val("");
-                }
-                var imdb_link_array = new_text.match(/IMDb\s*链\s*接\s+([^\s\n]+)\s*\n/i);
-                if(imdb_link_array){
-                    var imdb_link = imdb_link_array[1].replace(/\[url=(.*?)\].*?\[\/url\]/, "$1");
-                    $("input[name='url'][type='text']").val(imdb_link);
-                }
-                else{
-                    $("input[name='url'][type='text']").val("");
-                }
+                // directory
                 var director_array = new_text.match(/导\s*演\s+([^\w\n\s]*)\s*/);
                 if(director_array){
                     small_descr_array.push(director_array[1]);
                 }
+                // complete small_descr
                 var small_descr = small_descr_array.join(' | ');
                 $("input[name='small_descr']").val(small_descr);
-                var cata_num=0;
-                if(category.match('纪录')){
-                    //documentary
-                    cata_num=402;
-                }
-                else if(category.match('动画')){
-                    //animation
-                    cata_num=403;
-                }
-                else if(category.match('秀')){
-                    //tv show
-                    cata_num=405;
-                }
-                else if(new_text.match(/集\s*数\s+/g)){
-                    //tv series
-                    cata_num=404;
-                }
-                else if(category!==""){
-                    //movie
-                    cata_num=401;
-                }
+                // douban link
+                var doub_link_array = new_text.match(/豆瓣\s*链\s*接\s+([^\s\n]+)\s*\n/);
+                $("input[name='douban']").val(doub_link_array ? doub_link_array[1].replace(/\[url=(.*?)\].*?\[\/url\]/, "$1") : "");
+                // imdb link
+                var imdb_link_array = new_text.match(/IMDb\s*链\s*接\s+([^\s\n]+)\s*\n/i);
+                $("input[name='url'][type='text']").val(imdb_link_array ? imdb_link_array[1].replace(/\[url=(.*?)\].*?\[\/url\]/, "$1") : "");
+                // category selection
+                var cata_num = category.match('纪录')
+                    ? 402
+                    : category.match('动画')
+                    ? 403
+                    : new_text.match(/集\s*数\s+/g)
+                    ? 404
+                    : category.match('秀')
+                    ? 405
+                    : 401;
                $("#browsecat").val(cata_num);
+               var cat_area = area.match(/中国大陆/)
+                    ? 1
+                    : area.match(/香港/)
+                    ? 2
+                    : area.match(/台湾/)
+                    ? 3
+                    : area.match(/美国|加拿大|英国|法国|德国|希腊|匈牙利|爱尔兰|意大利|阿尔巴尼亚|安道尔|奥地利|白俄罗斯|比利时|波斯尼亚|黑塞哥维那|保加利亚|克罗地亚|塞浦路斯|捷克|丹麦|爱沙尼亚|法罗群岛|冰岛|芬兰|拉脱维亚|列支敦士登|立陶宛|卢森堡|马其顿|马耳他|摩尔多瓦|摩纳哥|荷兰|挪威|波兰|葡萄牙|罗马尼亚|俄罗斯|圣马力诺|塞黑|斯洛伐克|斯洛文尼亚|西班牙|瑞典|瑞士|乌克兰|梵蒂冈/)
+                    ? 4
+                    : area.match(/韩国/)
+                    ? 5
+                    : area.match(/日本/)
+                    ? 6
+                    : area.match(/印度/)
+                    ? 7
+                    : 0;
+                $("select[name='team_sel']").val(cat_area);
             }
             else{
                 $("input[name='douban']").val("");
@@ -197,37 +199,18 @@
                 $("select[name='team_sel']").val(0);
             }
             //=========================================================================================================
-            var name_box = null;
-            if(window.location.href.match(/upload\.php/)){
-                name_box = $("#name");
-            } else if(window.location.href.match(/edit\.php/)){
-                name_box = $("input[name='name']");
-            }
-            name_box.val(name_box.val().replace(/\s+(?:mkv|mp4|iso|ts)\s*$/gi,""));
-            name_box.val(name_box.val().replace(/^\[.*\]\s(\S)/gi,"$1"));
-            var title = name_box.val();
-            if(title!==""){
-                // remux
-                if(title.match(/\W(?:remux)\W/gi)){
-                    $("select[name='source_sel']").val(3);
-                }
-                // encode
-                else if(title.match(/\W(?:blu(?:e|\-)?ray|bdrip|dvdrip|webrip)\W/gi)){
-                    $("select[name='source_sel']").val(6);
-                }
-                // hdtv
-                else if(title.match(/\Whdtv\W/gi)){
-                    $("select[name='source_sel']").val(4);
-                }
-                // web-dl
-                else if(title.match(/\Wweb\-?dl\W/gi)){
-                    $("select[name='source_sel']").val(5);
-                }
-                // other
-                else {
-                    $("select[name='source_sel']").val(15);
-                }
-            }
+            // source
+            var source_num = torrent_title.match(/\W(?:remux)\W/gi)
+                ? 3// remux
+                : torrent_title.match(/\W(?:blu(?:e|\-)?ray|bdrip|dvdrip|webrip)\W/gi)
+                ? 6// encode
+                : torrent_title.match(/\Whdtv\W/gi)
+                ? 4// hdtv
+                : torrent_title.match(/\Wweb\-?dl\W/gi)
+                ? 5// web-dl
+                : 15// other
+            $("select[name='source_sel']").val(source_num);
+            // mediainfo
             var mediainfo_array = new_text.match(/\[hide\s*=\s*mediainfo\].*?(General\s*?Unique\s*?ID[^\0]*?)\[\/hide\]/im);
             if (mediainfo_array){
                 var chinese_sub = false;
