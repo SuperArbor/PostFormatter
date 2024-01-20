@@ -219,12 +219,12 @@
                     $("select[name='source_sel']").val(15);
                 }
             }
-            var chinese_sub = false;
-            var english_sub = false;
-            var chinese_dub = false;
-            var cantonese_dub = false;
             var mediainfo_array = new_text.match(/\[hide\s*=\s*mediainfo\].*?(General\s*?Unique\s*?ID[^\0]*?)\[\/hide\]/im);
             if (mediainfo_array){
+                var chinese_sub = false;
+                var english_sub = false;
+                var chinese_dub = false;
+                var cantonese_dub = false;
                 var mediainfo = mediainfo_array[1];
                 var subtitles = mediainfo.match(/Text.*?\nID[^\0]*?Forced.*?\n/gm);
                 if (subtitles){
