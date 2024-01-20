@@ -109,15 +109,15 @@
             if (new_text.match("◎")){
                 var T_title_array = new_text.match(/译\s*名\s*([^\/\n]+)(?:\/|\n)/);
                 var O_title_array = new_text.match(/片\s*名\s*([^\/\n]+)(?:\/|\n)/);
-                var ch_title="";
+                var small_descr_array = [];
                 var cat_area = "";
-                if(T_title_array&&O_title_array){
+                if(T_title_array && O_title_array){
                     if(new_text.match(/产\s*地\s*中国大陆\n/)){
-                        ch_title = O_title_array[1]+" | ";
+                        small_descr_array.push(O_title_array[1]);
                         cat_area = 1;
                     }
                     else{
-                        ch_title = T_title_array[1]+" | ";
+                        small_descr_array.push(T_title_array[1]);
                         if(new_text.match(/产\s*地\s*.*?香港.*?\n/)){
                            cat_area = 2;
                         }else if(new_text.match(/产\s*地\s*.*?台湾.*?\n/)){
@@ -135,14 +135,14 @@
                 }
                 $("select[name='team_sel']").val(cat_area);
                 var festival_array = new_text.match(/(\d{4})-\d{2}-\d{2}\((\S+电影节)\)/);
-                var festival = "";
                 if(festival_array){
-                    festival = festival_array[1]+festival_array[2]+" | ";
+                    small_descr_array.push(festival_array[1]+festival_array[2]);
                 }
-                var catagory_array = new_text.match(/类\s*别\s+([^\n]*)\s*\n/);
-                var catagory = "";
-                if(catagory_array){
-                    catagory = catagory_array[1].replace(/\//g," / ")+" | ";
+                var category_array = new_text.match(/类\s*别\s+([^\n]*)\s*\n/);
+                var category = "";
+                if(category_array){
+                    category = category_array[1].replace(/\//g," / ");
+                    small_descr_array.push(category);
                 }
                 var doub_link_array = new_text.match(/豆瓣\s*链\s*接\s+([^\s\n]+)\s*\n/);
                 if (doub_link_array){
@@ -161,26 +161,30 @@
                     $("input[name='url'][type='text']").val("");
                 }
                 var director_array = new_text.match(/导\s*演\s+([^\w\n\s]*)\s*/);
-                var director="";
                 if(director_array){
-                    director=director_array[1];
+                    small_descr_array.push(director_array[1]);
                 }
-                var subtitle = ch_title+festival+catagory+director;
-                $("input[name='small_descr']").val(subtitle);
+                var small_descr = small_descr_array.join(' | ');
+                $("input[name='small_descr']").val(small_descr);
                 var cata_num=0;
-                if(catagory.match('纪录')){
+                if(category.match('纪录')){
+                    //documentary
                     cata_num=402;
                 }
-                else if(catagory.match('动画')){
+                else if(category.match('动画')){
+                    //animation
                     cata_num=403;
                 }
-                else if(catagory.match('秀')){
+                else if(category.match('秀')){
+                    //tv show
                     cata_num=405;
                 }
                 else if(new_text.match(/集\s*数\s+/g)){
+                    //tv series
                     cata_num=404;
                 }
-                else if(catagory!==""){
+                else if(category!==""){
+                    //movie
                     cata_num=401;
                 }
                $("#browsecat").val(cata_num);
@@ -203,18 +207,23 @@
             name_box.val(name_box.val().replace(/^\[.*\]\s(\S)/gi,"$1"));
             var title = name_box.val();
             if(title!==""){
+                // remux
                 if(title.match(/\W(?:remux)\W/gi)){
                     $("select[name='source_sel']").val(3);
                 }
+                // encode
                 else if(title.match(/\W(?:blu(?:e|\-)?ray|bdrip|dvdrip|webrip)\W/gi)){
                     $("select[name='source_sel']").val(6);
                 }
+                // hdtv
                 else if(title.match(/\Whdtv\W/gi)){
                     $("select[name='source_sel']").val(4);
                 }
+                // web-dl
                 else if(title.match(/\Wweb\-?dl\W/gi)){
                     $("select[name='source_sel']").val(5);
                 }
+                // other
                 else {
                     $("select[name='source_sel']").val(15);
                 }
