@@ -8,6 +8,8 @@
 // @require      https://code.jquery.com/jquery-migrate-1.0.0.js
 // @grant        none
 // @icon         http://www.nexushd.org/favicon.ico
+// @namespace    d8e7078b-abee-407d-bcb6-096b59eeac17
+// @license      MIT
 // ==/UserScript==
 (function() {
     'use strict';
