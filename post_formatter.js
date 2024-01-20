@@ -1,9 +1,10 @@
 // ==UserScript==
-// @name         Post Formatter For PterClub
+// @name         Post Formatter
 // @description  Format upload info and smilies
 // @version      1.1
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
-// @include      /^https?:\/\/(pterclub\.com|\w*\.nexushd\.org)\/.*\/
+// @match        http://*.nexushd.org/*
+// @match        https://pterclub.com/*
 // @require      https://cdn.staticfile.org/jquery/2.1.4/jquery.js
 // @require      https://code.jquery.com/jquery-migrate-1.0.0.js
 // @grant        none
@@ -102,7 +103,8 @@
     var name_box = null, small_desc_box = null, imdb_link_box = null, douban_link_box = null,
         descr_box = null, category_sel = null, source_sel = null;
     // anonymously publishing
-    const anonymous = true;    
+    var anonymous_check = null;
+    const anonymous = false;    
     // values
     var cate_num_default = 0, cate_num_movie = 0, cate_num_documentary = 0, cate_num_animation = 0, 
         cate_num_tv_series = 0, cate_num_tv_show = 0;
@@ -138,6 +140,7 @@
         standard_sel = $("select[name='standard_sel']");
         processing_sel = $("select[name='processing_sel']");
         codec_sel = $("select[name='codec_sel']");
+        anonymous_check = $("input[name='uplver'][type='checkbox']")[0];
 
         cate_num_default = 0;
         cate_num_movie = 101;
@@ -187,6 +190,7 @@
         descr_box = $("#descr");
         category_sel = $("#browsecat");
         source_sel = $("select[name='source_sel']");
+        anonymous_check = $("input[name='uplver'][type='checkbox']")[0];
 
         area_sel = $("select[name='team_sel']");
         zhongzi_check = document.getElementById('zhongzi');
@@ -223,6 +227,9 @@
     }
     // function definition
     btn_bingo.click(function(){
+        if (anonymous_check){
+            anonymous_check.checked = anonymous;
+        }
         var old_text = descr_box.val();
         var new_text = old_text.replace(/(\[\/?)([A-Z]+)((?:=(?:[^\r\n\t\f\v \[\]])+)?\])/g, function(match, p1, p2, p3) {
             p2 = p2.toLowerCase();
