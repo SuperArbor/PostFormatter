@@ -320,29 +320,28 @@
             if (new_text.match("◎")){
                 var T_title_array = new_text.match(/译\s*名\s*([^\/\n]+)(?:\/|\n)/);
                 var O_title_array = new_text.match(/片\s*名\s*([^\/\n]+)(?:\/|\n)/);
-                var ch_title="";
-                if(T_title_array&&O_title_array){
+                var small_descr_array = [];
+                if(T_title_array && O_title_array){
                     if(new_text.match(/产\s*地\s*中国大陆\n/)){
-                        ch_title = O_title_array[1]+" | ";
+                        small_descr_array.push(O_title_array[1]);
                     }
                     else{
-                        ch_title = T_title_array[1]+" | ";
+                        small_descr_array.push(T_title_array[1]);
                     }
                 }
                 var festival_array = new_text.match(/(\d{4})-\d{2}-\d{2}\((\S+电影节)\)/);
-                var festival = "";
                 if(festival_array){
-                    festival = festival_array[1]+festival_array[2]+" | ";
+                    small_descr_array.push(festival_array[1]+festival_array[2]);
                 }
-                var catagory_array = new_text.match(/类\s*别\s+([^\n]*)\s*\n/);
-                var catagory = "";
-                if(catagory_array){
-                    catagory = catagory_array[1].replace(/\//g," / ")+" | ";
+                var category_array = new_text.match(/类\s*别\s+([^\n]*)\s*\n/);
+                var category = "";
+                if(category_array){
+                    category = category_array[1].replace(/\//g," / ");
+                    small_descr_array.push(category);
                 }
                 var doub_score_array = new_text.match(/豆\s*瓣\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/);
-                var doub_score = "";
                 if(doub_score_array){
-                    doub_score = "豆瓣 "+doub_score_array[1]+"（"+doub_score_array[2]+"） | ";
+                    small_descr_array.push("豆瓣 "+doub_score_array[1]+"（"+doub_score_array[2]+"）");
                 }
                 var doub_link_array = new_text.match(/豆瓣\s*链\s*接\s+([^\s\n]+)\s*\n/);
                 if (doub_link_array){
@@ -353,9 +352,8 @@
                     $("input[name='douban_url']").val("");
                 }
                 var imdb_score_array = new_text.match(/IMDb\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/i);
-                var imdb_score = "";
                 if(imdb_score_array){
-                    imdb_score = "IMDb "+imdb_score_array[1]+"（"+imdb_score_array[2]+"） | ";
+                    small_descr_array.push("IMDb "+imdb_score_array[1]+"（"+imdb_score_array[2]+"）");
                 }
                 var imdb_link_array = new_text.match(/IMDb\s*链\s*接\s+([^\s\n]+)\s*\n/i);
                 if(imdb_link_array){
@@ -366,26 +364,25 @@
                     $("input[name='url'][type='text']").val("");
                 }
                 var director_array = new_text.match(/导\s*演\s+([^\w\n\s]*)\s*/);
-                var director="";
                 if(director_array){
-                    director=director_array[1];
+                    small_descr_array.push(director_array[1])
                 }
-                var subtitle = ch_title+festival+catagory+doub_score+imdb_score+director;
-                $("input[name='small_descr']").val(subtitle);
+                var small_descr = small_descr_array.join(' | ');
+                $("input[name='small_descr']").val(small_descr);
                 var cata_num=0;
-                if(catagory.match('纪录')){
+                if(category.match('纪录')){
                     cata_num=104;
                 }
-                else if(catagory.match('动画')){
+                else if(category.match('动画')){
                     cata_num=105;
                 }
-                else if(catagory.match('秀')){
+                else if(category.match('秀')){
                     cata_num=103;
                 }
                 else if(new_text.match(/集\s*数\s+/g)){
                     cata_num=102;
                 }
-                else if(catagory!==""){
+                else if(category!==""){
                     cata_num=101;
                 }
                 $("#browsecat").val(cata_num);
