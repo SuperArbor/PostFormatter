@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info and smilies
-// @version      1.2
+// @version      1.2.1
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        http://*.nexushd.org/*
 // @match        https://pterclub.com/*
+// @match        https://pt.sjtu.edu.cn/*
 // @require      https://cdn.staticfile.org/jquery/2.1.4/jquery.js
 // @require      https://code.jquery.com/jquery-migrate-1.0.0.js
 // @grant        none
@@ -82,6 +83,8 @@
         ? 'nhd'
         : domain_match_array[1].match(/pterclub/i)
         ? 'pter'
+        : domain_match_array[1].match(/pt\.sjtu/i)
+        ? 'putao'
         : '';
     var page = domain_match_array[2];
     if (!site || !page){
@@ -98,32 +101,44 @@
         descr_box = null, category_sel = null, source_sel = null;
     // anonymously publishing
     var anonymous_check = null;
-    const anonymous = false;    
-    // values
-    var cate_num_default = 0, cate_num_movie = 0, cate_num_documentary = 0, cate_num_animation = 0, 
-        cate_num_tv_series = 0, cate_num_tv_show = 0;
+    const anonymous = true;   
+    // this is normally useful even when area_sel == null. 
+    var area_cn_ml = false, area_hk = false, area_tw = false, area_eu_ame = false, area_kor = false, area_jap = false,
+        area_ind = false, area_asia = false, area_other = false;
+    var area_num_default = 0, area_num_cn_ml = 1, area_num_hk = 2, area_num_tw = 3, 
+        area_num_eu_ame = 4, area_num_kor = 5, arae_num_jap = 6, area_num_ind = 7, area_num_other = 8;
+    // categories
+    var cate_num_default = 0, cate_num_movie = 1, cate_num_documentary = 2, cate_num_animation = 3, 
+        cate_num_tv_series = 4, cate_num_tv_show = 5;
     var source_num_default = 0, source_num_uhd = 0, source_num_bluray = 0, 
         source_num_remux = 0, source_num_hddvd = 0, source_num_dvd = 0, 
         source_num_encode = 0, source_num_web_dl = 0, source_num_web_rip = 0, 
         source_num_hdtv = 0, source_num_tv = 0, source_num_other = 0;
-
+    var tag_box = 'box';
     // site-specific 
     //controls
     // pter
     var area_sel = null;
     var zhongzi_check = null, ensub_check = null, guoyu_check = null, yueyu_check = null;
-    var area_num_default = 0, area_num_china_mainland = 0, area_num_hongkong = 0, area_num_taiwan = 0, 
-        area_num_eu_and_america = 0, area_num_koria = 0, arae_num_japan = 0, area_num_india = 0, area_num_other = 0;
-    // nhd
+     // nhd
     var standard_sel = null, processing_sel = null, codec_sel = null;
     var standard_num_default =0, standard_num_1080p = 0, standard_num_1080i = 0, 
-        standard_num_720p = 0, standard_num_2160p = 0, standard_num_sd = 0;
+        standard_num_720p = 0, standard_num_2160p = 0, standard_num_sd = 0, standard_num_other = 0;
     var process_num_default = 0, process_num_raw = 0, process_num_encode = 0;
     var codec_num_default = 0, codec_num_h_264 = 0, codec_num_h_265 = 0, codec_num_vc_1 = 0, codec_num_xvid = 0,
         codec_num_mpeg_2 = 0, codec_num_flac = 0, codec_num_other = 15;
-
+    //putao
+    var oday_check = null;
+    var cate_num_movie_cn =0, cate_num_movie_eu_ame = 0, cate_num_movie_asia = 0, cate_num_tv_series_hk_tw = 0,
+        cate_num_tv_series_asia = 0, cate_num_tv_series_cn_ml = 0, cate_num_tv_series_eu_ame = 0,
+        cate_num_tv_show_cn_ml = 0, cate_num_tv_show_eu_ame = 0, cate_num_tv_show_hk_tw = 0, cate_num_tv_show_jp_kor = 0;
     if (site == 'nhd'){
-        name_box = $("#name");
+        tag_box = 'box';
+        if (page == 'upload') {
+            name_box = $("#name");
+        } else{
+            name_box = $("input[type='text'][name='name']");
+        }
         small_desc_box = $("input[name='small_descr']");
         imdb_link_box = $("input[name='url'][type='text']");
         douban_link_box = $("input[name='douban_url']");
@@ -173,10 +188,11 @@
         codec_num_flac = 10;
         codec_num_other = 15;
     } else if (site == 'pter'){
+        tag_box = 'hide';
         if (page == 'upload') {
             name_box = $("#name");
         } else{
-            name_box = $("input[name='name']");
+            name_box = $("input[type='text'][name='name']");
         }
         small_desc_box = $("input[name='small_descr']");
         imdb_link_box = $("input[name='url'][type='text']");
@@ -210,14 +226,63 @@
         source_num_other = 15;
 
         area_num_default = 0;
-        area_num_china_mainland = 1;
-        area_num_hongkong = 2;
-        area_num_taiwan = 3;
-        area_num_eu_and_america = 4;
-        area_num_koria = 5;
-        arae_num_japan = 6;
-        area_num_india = 7;
+        area_num_cn_ml = 1;
+        area_num_hk = 2;
+        area_num_tw = 3;
+        area_num_eu_ame = 4;
+        area_num_kor = 5;
+        arae_num_jap = 6;
+        area_num_ind = 7;
         area_num_other = 8;
+    } else if (site = 'putao'){
+        tag_box = 'box';
+        if (page == 'upload') {
+            name_box = $("#name");
+        } else{
+            name_box = $("input[type='text'][name='name']");
+        }
+        small_desc_box = $("input[name='small_descr']");
+        imdb_link_box = $("input[name='url'][type='text']");
+        douban_link_box = $("input[name='douban_url']");
+        descr_box = $("#descr");
+        category_sel = $("#browsecat");
+
+        standard_sel = $("select[name='standard_sel']");
+        codec_sel = $("select[name='codec_sel']");
+        anonymous_check = $("input[name='uplver'][type='checkbox']")[0];
+        oday_check = $("input[name='isoday'][type='checkbox']")[0];
+
+        cate_num_default = 0;
+        cate_num_documentary = 406;
+        cate_num_animation = 431;
+        cate_num_movie_cn = 401;
+        cate_num_movie_eu_ame = 402;
+        cate_num_movie_asia = 403;
+        cate_num_tv_series_hk_tw = 407;
+        cate_num_tv_series_asia = 408;
+        cate_num_tv_series_cn_ml = 409;
+        cate_num_tv_series_eu_ame = 410;
+        cate_num_tv_show_cn_ml = 411;
+        cate_num_tv_show_hk_tw = 412;
+        cate_num_tv_show_eu_ame = 413;
+        cate_num_tv_show_jp_kor = 414;
+
+        standard_num_default = 0;
+        standard_num_1080p = 1;
+        standard_num_1080i = 2;
+        standard_num_720p = 3;
+        standard_num_2160p = 6;
+        standard_num_sd = 4;
+        standard_num_other = 5;
+
+        codec_num_default = 0;
+        codec_num_h_264 = 1;
+        codec_num_vc_1 = 2;
+        codec_num_xvid = 3;
+        codec_num_mpeg_2 = 4;
+        codec_num_flac = 5;
+        codec_num_h_265 = 10;
+        codec_num_other = 9;
     }
     // function definition
     btn_bingo.click(function(){
@@ -264,13 +329,43 @@
             // area
             var area_array = new_text.match(/产\s*地\s*(.*)\s*/);
             var area = area_array ? area_array[1] : "";
+            if (area.match(/中国大陆/)){
+                area_cn_ml = true;
+            } else if (area.match(/香港/)){
+                area_hk = true;
+            } else if (area.match(/台湾/)){
+                area_tw = true;
+            } else if (area.match(/美国|加拿大|英国|法国|德国|希腊|匈牙利|爱尔兰|意大利|阿尔巴尼亚|安道尔|奥地利|白俄罗斯|比利时|波斯尼亚|黑塞哥维那|保加利亚|克罗地亚|塞浦路斯|捷克|丹麦|爱沙尼亚|法罗群岛|冰岛|芬兰|拉脱维亚|列支敦士登|立陶宛|卢森堡|马其顿|马耳他|摩尔多瓦|摩纳哥|荷兰|挪威|波兰|葡萄牙|罗马尼亚|俄罗斯|圣马力诺|塞黑|斯洛伐克|斯洛文尼亚|西班牙|瑞典|瑞士|乌克兰|梵蒂冈/)){
+                area_eu_ame = true;
+            } else if (area.match(/印度|韩国|日本|新加坡|泰国|印度尼西亚|菲律宾|越南|土耳其|老挝|柬埔寨|缅甸|马来西亚|文莱|东帝汶|尼泊尔|不丹|孟加拉国|巴基斯坦|斯里兰卡|马尔代夫|阿富汗|伊拉克|伊朗|叙利亚|约旦|黎巴嫩|以色列|巴勒斯坦|沙特阿拉伯|阿曼|也门|格鲁吉亚|亚美尼亚|塞浦路斯|哈萨克斯坦|吉尔吉斯斯坦|塔吉克斯坦|乌兹别克斯坦|土库曼斯坦|蒙古|朝鲜/)){
+                area_asia = true;
+                if (area.match(area.match(/韩国/))){
+                    area_kor = true;
+                } else if (area.match(/日本/)){
+                    area_jap = true;
+                } else if (area.match(/印度/)){
+                    area_ind = true;
+                }
+            } else{
+                area_other = true;
+            }
             if(translated_title_array && original_title_array){
                 var translated_title = translated_title_array[1];
                 var original_title = original_title_array[1];
-                if (area.match(/中国大陆/)){
-                    small_descr_array.push(torrent_title.match(original_title) ? translated_title : original_title);
-                } else{
-                    small_descr_array.push(translated_title);
+                if (site == 'nhd' || site == 'pter'){
+                    if (area_cn_ml){
+                        small_descr_array.push(torrent_title.match(original_title) ? translated_title : original_title);
+                    } else{
+                        small_descr_array.push(translated_title);
+                    }
+                } else if (site == 'putao'){
+                    if (area_cn_ml){
+                        torrent_title = torrent_title.match(original_title) ? torrent_title : `[${original_title}] ${torrent_title}`;
+                        name_box.val(torrent_title)
+                    } else{
+                        torrent_title = torrent_title.match(translated_title) ? torrent_title : `[${translated_title}] ${torrent_title}`;
+                        name_box.val(torrent_title)
+                    }
                 }
             }
             // festival
@@ -285,8 +380,17 @@
                 category = category_array[1].replace(/\//g," / ");
                 small_descr_array.push(category);
             }
+            var cate_num = category.match('纪录')
+                ? cate_num_documentary
+                : category.match('动画')
+                ? cate_num_animation
+                : new_text.match(/集\s*数\s+/g)
+                ? cate_num_tv_series
+                : category.match('秀')
+                ? cate_num_tv_show
+                : cate_num_movie;
             // douban and imdb score in small_desc
-            if (site == 'nhd'){
+            if (site == 'nhd' || site == 'putao'){
                 var doub_score_array = new_text.match(/豆\s*瓣\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/);
                 if(doub_score_array){
                     small_descr_array.push("豆瓣 "+doub_score_array[1]+"（"+doub_score_array[2]+"）");
@@ -305,47 +409,73 @@
             var small_descr = small_descr_array.join(' | ');
             small_desc_box.val(small_descr);
             // douban link
-            var doub_link_array = new_text.match(/豆瓣\s*链\s*接\s+([^\s\n]+)\s*\n/);
+            var doub_link_array = new_text.match(/豆瓣\s*链\s*接.+(https:\/\/.*)\s*/);
             douban_link_box.val(doub_link_array ? doub_link_array[1].replace(/\[url=(.*?)\].*?\[\/url\]/, "$1") : "");
             // imdb link
-            var imdb_link_array = new_text.match(/IMDb\s*链\s*接\s+([^\s\n]+)\s*\n/i);
+            var imdb_link_array = new_text.match(/IMDb\s*链\s*接.+(https:\/\/.*)\s*/i);
             imdb_link_box.val(imdb_link_array ? imdb_link_array[1].replace(/\[url=(.*?)\].*?\[\/url\]/, "$1") : "");
-            
-            // category selection
-            if (category_sel){
-                var cate_num = 0;
-                cate_num = category.match('纪录')
-                    ? cate_num_documentary
-                    : category.match('动画')
-                    ? cate_num_animation
-                    : new_text.match(/集\s*数\s+/g)
-                    ? cate_num_tv_series
-                    : category.match('秀')
-                    ? cate_num_tv_show
-                    : cate_num_movie;
-               category_sel.val(cate_num);
-            }
             // area selection
             if (area_sel){
                 var area_num = area_num_default;
                 if (site == 'pter'){
-                    area_num = area.match(/中国大陆/)
-                    ? area_num_china_mainland
-                    : area.match(/香港/)
-                    ? area_num_hongkong
-                    : area.match(/台湾/)
-                    ? area_num_taiwan
-                    : area.match(/美国|加拿大|英国|法国|德国|希腊|匈牙利|爱尔兰|意大利|阿尔巴尼亚|安道尔|奥地利|白俄罗斯|比利时|波斯尼亚|黑塞哥维那|保加利亚|克罗地亚|塞浦路斯|捷克|丹麦|爱沙尼亚|法罗群岛|冰岛|芬兰|拉脱维亚|列支敦士登|立陶宛|卢森堡|马其顿|马耳他|摩尔多瓦|摩纳哥|荷兰|挪威|波兰|葡萄牙|罗马尼亚|俄罗斯|圣马力诺|塞黑|斯洛伐克|斯洛文尼亚|西班牙|瑞典|瑞士|乌克兰|梵蒂冈/)
-                    ? area_num_eu_and_america
-                    : area.match(/韩国/)
-                    ? area_num_koria
-                    : area.match(/日本/)
-                    ? arae_num_japan
-                    : area.match(/印度/)
-                    ? area_num_india
-                    : area_num_other;
-                }
+                    area_num = area_cn_ml
+                        ? area_num_cn_ml
+                        : area_hk
+                        ? area_num_hk
+                        : area_tw
+                        ? area_num_tw
+                        : area_eu_ame
+                        ? area_num_eu_ame
+                        : area_kor
+                        ? area_num_kor
+                        : area_jap
+                        ? arae_num_jap
+                        : area_ind
+                        ? area_num_ind
+                        : area_num_other;
+                } 
                 area_sel.val(area_num);
+            }
+            // category selection
+            if (category_sel){
+                if(site == 'putao'){
+                    if (cate_num == cate_num_movie){
+                        cate_num = area_cn_ml
+                            ? cate_num_movie_cn
+                            : area_eu_ame
+                            ? cate_num_movie_eu_ame
+                            : area_asia
+                            ? cate_num_movie_asia
+                            : cate_num_movie_eu_ame;
+                    } else if (cate_num == cate_num_documentary){
+                        // for clarification
+                        cate_num = cate_num_documentary;
+                    } else if (cate_num == cate_num_animation){
+                        // for clarification
+                        cate_num = cate_num_animation;
+                    } else if (cate_num == cate_num_tv_series){
+                        cate_num = area_hk || area_tw 
+                            ? cate_num_tv_series_hk_tw
+                            : area_asia
+                            ? cate_num_tv_series_asia
+                            : area_cn_ml
+                            ? cate_num_tv_series_cn_ml
+                            : area_eu_ame
+                            ? cate_num_tv_series_eu_ame
+                            : cate_num_tv_series_eu_ame;
+                    } else if (cate_num == cate_num_tv_show){
+                        cate_num = area_cn_ml
+                            ? cate_num_tv_show_cn_ml
+                            : area_hk || area_tw
+                            ? cate_num_tv_show_hk_tw
+                            : area_eu_ame
+                            ? cate_num_tv_show_eu_ame
+                            : area_jap || area_kor
+                            ? cate_num_tv_show_jp_kor
+                            : cate_num_default;
+                    }
+                }
+                category_sel.val(cate_num);
             }
         }
         //=========================================================================================================
@@ -378,9 +508,10 @@
             }
             source_sel.val(source_num);
         }
+        // resolution
         if(standard_sel){
             var stantdard_num = standard_num_default;
-            if (site == 'nhd'){
+            if (site == 'nhd' || site == 'putao'){
                 stantdard_num = torrent_title.match(/\W1080p\W/i)
                     ? standard_num_1080p
                     : torrent_title.match(/\W1080i\W/i)
@@ -395,6 +526,7 @@
             }
             standard_sel.val(stantdard_num);
         }
+        // processing
         if (processing_sel){
             var process_num = process_num_default;
             if(site == 'nhd'){
@@ -404,15 +536,18 @@
             }
             processing_sel.val(process_num);
         }
+        // codec
         if (codec_sel){
             var codec_num = codec_num_default;
-            if (site == 'nhd'){
+            if (site == 'nhd' || site == 'putao'){
                 codec_num = torrent_title.match(/\W(?:h|x)\.?264\W/i)
                     ? codec_num_h_264
                     : torrent_title.match(/\W(?:h|x)\.?265\W/i)
                     ? codec_num_h_265
                     : torrent_title.match(/\Wmpeg-2/i)
                     ? codec_num_mpeg_2
+                    : torrent_title.match(/\Wxvid/i)
+                    ? codec_num_xvid
                     : torrent_title.match(/\Wflac/i)
                     ? codec_num_flac
                     : codec_num_default;
