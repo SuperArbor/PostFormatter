@@ -6,6 +6,7 @@
 // @match        http://*.nexushd.org/*
 // @match        https://pterclub.com/*
 // @match        https://pt.sjtu.edu.cn/*
+// @match        https://kp.m-team.cc/*
 // @require      https://cdn.staticfile.org/jquery/2.1.4/jquery.js
 // @require      https://code.jquery.com/jquery-migrate-1.0.0.js
 // @grant        none
@@ -15,7 +16,6 @@
 // ==/UserScript==
 (function () {
   'use strict'
-  const BOX_TAG_DEFAULT = 'box'
   function insertTyt (myValue, switcher) {
     let objTarget
     if (switcher === 1) {
@@ -102,7 +102,9 @@
       ? 'pter'
       : domainMatchArray[1].match(/pt\.sjtu/i)
         ? 'putao'
-        : ''
+        : domainMatchArray[1].match(/m-team/i)
+          ? 'mteam'
+          : ''
   const page = domainMatchArray[2]
   if (!site || !page) {
     return
@@ -162,33 +164,39 @@
     // categories
     let cateNumDefault = 0; let cateNumMovie = 1; let cateNumDocumentary = 2; let cateNumAnimation = 3
     let cateNumTvSeries = 4; let cateNumTvShow = 5
-    let sourceNumDefault = 0; let sourceNumBluray = 0
-    let sourceNumRemux = 0; let sourceNumHddvd = 0; let sourceNumDvd = 0
-    let sourceNumEncode = 0; let sourceNumWebDl = 0; let sourceNumWebrip = 0
-    let sourceNumHdtv = 0
+    // sources
+    let sourceNumDefault = 0; let sourceNumBluray = 1; let sourceNumRemux = 2
+    let sourceNumHddvd = 3; let sourceNumDvd = 4; let sourceNumEncode = 5; let sourceNumWebDl = 6
+    let sourceNumWebrip = 7; let sourceNumHdtv = 8
     // 站点支持的box标签类型
-    let targetTagBox = BOX_TAG_DEFAULT
+    let targetTagBox = ''
     // 其他站点的box标签类型（需要统一替换）
     let otherTagBoxes = ''
+    // box是否支持添加说明[box=descr][/box]
+    let boxSupportDescr = false
     // site-specific
-    // controls
-    // pter
+    // (pter) areas
     let areaSel = null
-    let zhongziCheck = null; let ensubCheck = null; let guoyuCheck = null; let yueyuCheck = null
-    // nhd
+    let chsubCheck = null; let ensubCheck = null; let chdubCheck = null; let cantodubCheck = null
+    // (nhd, mteam) standard
     let standardSel = null; let processingSel = null; let codecSel = null
-    let standardNumDefault = 0; let standardNum1080p = 0; let standardNum1080i = 0
-    let standardNum720p = 0; let standardNum2160p = 0; let standardNumSd = 0
-    let processNumDefault = 0; let processNumRaw = 0; let processNumEncode = 0
-    let codecNumDefault = 0; let codecNumH264 = 0; let codecNumH265 = 0; let codecNumXvid = 0
-    let codecNumMpeg2 = 0; let codecNumFlac = 0
-    // putao
-    let cateNumMovieCnMl = 0; let cateNumMovieEuAme = 0; let cateNumMovieAsia = 0; let cateNumTvSeriesHkTw = 0
-    let cateNumTvSeriesAsia = 0; let cateNumTvSeriesCnMl = 0; let cateNumTvSeriesEuAme = 0
-    let cateNumTvShowCnMl = 0; let cateNumTvShowEuAme = 0; let cateNumTvShowHkTw = 0; let cateNumTvShowJpKor = 0
+    let standardNumDefault = 0; let standardNum1080p = 1; let standardNum1080i = 2
+    let standardNum720p = 3; let standardNum2160p = 4; let standardNumSd = 5
+    // (nhd) processing
+    let processNumDefault = 0; let processNumRaw = 1; let processNumEncode = 2
+    // (nhd, mteam) codec
+    let codecNumDefault = 0; let codecNumH264 = 1; let codecNumH265 = 2; let codecNumXvid = 3
+    let codecNumMpeg2 = 4; let codecNumFlac = 5
+    // (putao) categories
+    let cateNumMovieCnMl = 0; let cateNumMovieEuAme = 1; let cateNumMovieAsia = 2; let cateNumTvSeriesHkTw = 3
+    let cateNumTvSeriesAsia = 4; let cateNumTvSeriesCnMl = 5; let cateNumTvSeriesEuAme = 6
+    let cateNumTvShowCnMl = 7; let cateNumTvShowEuAme = 8; let cateNumTvShowHkTw = 9; let cateNumTvShowJpKor = 10
+    // (mteam) categories
+    let cateNumMovieHd = 2; let cateNumMovieRemux = 5; let cateNumTvSeriesHd = 7
     if (site === 'nhd') {
       targetTagBox = 'box'
-      otherTagBoxes = ['hide', 'spoiler'].join('|')
+      boxSupportDescr = true
+      otherTagBoxes = ['hide', 'spoiler', 'expand'].join('|')
       if (page === 'upload') {
         nameBox = $('#name')
       } else {
@@ -205,41 +213,15 @@
       processingSel = $("select[name='processing_sel']")
       codecSel = $("select[name='codec_sel']")
 
-      cateNumDefault = 0
-      cateNumMovie = 101
-      cateNumTvSeries = 102
-      cateNumTvShow = 103
-      cateNumDocumentary = 104
-      cateNumAnimation = 105
-
-      sourceNumDefault = 0
-      sourceNumBluray = 1
-      sourceNumHddvd = 2
-      sourceNumDvd = 3
-      sourceNumHdtv = 4
-      sourceNumWebDl = 7
-      sourceNumWebrip = 9
-
-      standardNumDefault = 0
-      standardNum1080p = 1
-      standardNum1080i = 2
-      standardNum720p = 3
-      standardNum2160p = 6
-      standardNumSd = 4
-
-      processNumDefault = 0
-      processNumRaw = 1
-      processNumEncode = 2
-
-      codecNumDefault = 0
-      codecNumH264 = 1
-      codecNumH265 = 2
-      codecNumXvid = 4
-      codecNumMpeg2 = 5
-      codecNumFlac = 10
+      cateNumDefault = 0; cateNumMovie = 101; cateNumTvSeries = 102; cateNumTvShow = 103; cateNumDocumentary = 104; cateNumAnimation = 105
+      sourceNumDefault = 0; sourceNumBluray = 1; sourceNumHddvd = 2; sourceNumDvd = 3; sourceNumHdtv = 4; sourceNumWebDl = 7; sourceNumWebrip = 9
+      standardNumDefault = 0; standardNum1080p = 1; standardNum1080i = 2; standardNum720p = 3; standardNum2160p = 6; standardNumSd = 4
+      processNumDefault = 0; processNumRaw = 1; processNumEncode = 2
+      codecNumDefault = 0; codecNumH264 = 1; codecNumH265 = 2; codecNumXvid = 4; codecNumMpeg2 = 5; codecNumFlac = 10
     } else if (site === 'pter') {
       targetTagBox = 'hide'
-      otherTagBoxes = ['box', 'spoiler'].join('|')
+      boxSupportDescr = true
+      otherTagBoxes = ['box', 'spoiler', 'expand'].join('|')
       if (page === 'upload') {
         nameBox = $('#name')
       } else {
@@ -253,38 +235,18 @@
       sourceSel = $("select[name='source_sel']")
 
       areaSel = $("select[name='team_sel']")
-      zhongziCheck = document.getElementById('zhongzi')
-      ensubCheck = document.getElementById('ensub')
-      guoyuCheck = document.getElementById('guoyu')
-      yueyuCheck = document.getElementById('yueyu')
+      chsubCheck = $('#zhongzi')[0]
+      ensubCheck = $('#ensub')[0]
+      chdubCheck = $('#guoyu')[0]
+      cantodubCheck = $('#yueyu')[0]
 
-      cateNumDefault = 0
-      cateNumMovie = 401
-      cateNumTvSeries = 404
-      cateNumTvShow = 405
-      cateNumDocumentary = 402
-      cateNumAnimation = 403
-
-      sourceNumDefault = 0
-      sourceNumBluray = 2
-      sourceNumRemux = 3
-      sourceNumEncode = 6
-      sourceNumHdtv = 4
-      sourceNumWebDl = 5
-      sourceNumDvd = 7
-
-      areaNumDefault = 0
-      areaNumCnMl = 1
-      areaNumHk = 2
-      areaNumTw = 3
-      areaNumEuAme = 4
-      areaNumKor = 5
-      areaNumJap = 6
-      areaNumInd = 7
-      areaNumOther = 8
+      cateNumDefault = 0; cateNumMovie = 401; cateNumTvSeries = 404; cateNumTvShow = 405; cateNumDocumentary = 402; cateNumAnimation = 403
+      sourceNumDefault = 0; sourceNumBluray = 2; sourceNumRemux = 3; sourceNumEncode = 6; sourceNumHdtv = 4; sourceNumWebDl = 5; sourceNumDvd = 7
+      areaNumDefault = 0; areaNumCnMl = 1; areaNumHk = 2; areaNumTw = 3; areaNumEuAme = 4; areaNumKor = 5; areaNumJap = 6; areaNumInd = 7; areaNumOther = 8
     } else if (site === 'putao') {
       targetTagBox = ''
-      otherTagBoxes = ['box', 'hide', 'spoiler'].join('|')
+      boxSupportDescr = true
+      otherTagBoxes = ['box', 'hide', 'spoiler', 'expand'].join('|')
       if (page === 'upload') {
         nameBox = $('#name')
       } else {
@@ -299,34 +261,37 @@
       standardSel = $("select[name='standard_sel']")
       codecSel = $("select[name='codec_sel']")
 
-      cateNumDefault = 0
-      cateNumDocumentary = 406
-      cateNumAnimation = 431
-      cateNumMovieCnMl = 401
-      cateNumMovieEuAme = 402
-      cateNumMovieAsia = 403
-      cateNumTvSeriesHkTw = 407
-      cateNumTvSeriesAsia = 408
-      cateNumTvSeriesCnMl = 409
-      cateNumTvSeriesEuAme = 410
-      cateNumTvShowCnMl = 411
-      cateNumTvShowHkTw = 412
-      cateNumTvShowEuAme = 413
-      cateNumTvShowJpKor = 414
+      cateNumDefault = 0; cateNumDocumentary = 406; cateNumAnimation = 431; cateNumMovieCnMl = 401; cateNumMovieEuAme = 402
+      cateNumMovieAsia = 403; cateNumTvSeriesHkTw = 407; cateNumTvSeriesAsia = 408; cateNumTvSeriesCnMl = 409; cateNumTvSeriesEuAme = 410
+      cateNumTvShowCnMl = 411; cateNumTvShowHkTw = 412; cateNumTvShowEuAme = 413; cateNumTvShowJpKor = 414
 
-      standardNumDefault = 0
-      standardNum1080p = 1
-      standardNum1080i = 2
-      standardNum720p = 3
-      standardNum2160p = 6
-      standardNumSd = 4
+      standardNumDefault = 0; standardNum1080p = 1; standardNum1080i = 2; standardNum720p = 3; standardNum2160p = 6; standardNumSd = 4
+      codecNumDefault = 0; codecNumH264 = 1; codecNumXvid = 3; codecNumMpeg2 = 4; codecNumFlac = 5; codecNumH265 = 10
+    } else if (site === 'mteam') {
+      targetTagBox = 'expand'
+      boxSupportDescr = false
+      otherTagBoxes = ['box', 'hide', 'spoiler'].join('|')
+      if (page === 'upload') {
+        nameBox = $('#name')
+      } else {
+        nameBox = $("input[type='text'][name='name']")
+      }
+      smallDescBox = $("input[name='small_descr']")
+      imdbLinkBox = $("input[name='url'][type='text']")
+      descrBox = $('#descr')
+      categorySel = $('#browsecat')
 
-      codecNumDefault = 0
-      codecNumH264 = 1
-      codecNumXvid = 3
-      codecNumMpeg2 = 4
-      codecNumFlac = 5
-      codecNumH265 = 10
+      standardSel = $("select[name='standard_sel']")
+      areaSel = $("select[name='processing_sel']")
+      codecSel = $("select[name='codec_sel']")
+
+      chsubCheck = $("input[type='checkbox'][name='l_sub']")[0]
+      chdubCheck = $("input[type='checkbox'][name='l_dub']")[0]
+
+      cateNumDefault = 0; cateNumMovieHd = 419; cateNumMovieRemux = 439; cateNumTvSeriesHd = 402; cateNumDocumentary = 404; cateNumAnimation = 405
+      areaNumCnMl = 1; areaNumEuAme = 2; areaNumHk = 3; areaNumTw = 3; areaNumJap = 4; areaNumKor = 5; areaNumOther = 6
+      standardNumDefault = 0; standardNum1080p = 1; standardNum1080i = 2; standardNum720p = 3; standardNum2160p = 6; standardNumSd = 5
+      codecNumDefault = 0; codecNumH264 = 1; codecNumH265 = 16; codecNumXvid = 3; codecNumMpeg2 = 4; codecNumFlac = 5
     }
     // function definition
     btnBingo.click(function () {
@@ -339,12 +304,15 @@
         return p1 + p2 + p3
       })
       // 替换为当前box标签类型
-      const rePat = '\\[(\\/)?(?:' + otherTagBoxes + ')((?:=[^\\]]+)?)\\]'
+      const regex1 = RegExp('\\[(\\/)?(?:' + otherTagBoxes + ')((?:=[^\\]]+)?)\\]', 'g')
+      // 替换mediainfo格式
+      const regex2 = /\[mediainfo\]([^\0]*?)\[\/mediainfo\]/gi
       // 对于不支持box标签的站，统一替换为'quote'标签
-      const replacement = targetTagBox || 'quote'
-      const regex1 = RegExp(rePat, 'g')
-      newText = newText.replace(regex1, '[$1' + replacement + '$2]')
-        .replace(/\[mediainfo\]([^\0]*?)\[\/mediainfo\]/gi, '[' + replacement + '=mediainfo]$1[/' + replacement + ']')
+      const replaceTag = targetTagBox || 'quote'
+      // 对于不支持[box=...]形式的，去除box后面的内容
+      const replaceContent1 = boxSupportDescr ? '[$1' + replaceTag + '$2]' : '[$1' + replaceTag + ']'
+      const replaceContent2 = boxSupportDescr ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']' : '[' + replaceTag + ']$1[/' + replaceTag + ']'
+      newText = newText.replace(regex1, replaceContent1).replace(regex2, replaceContent2)
       // NHD mediainfo style
       newText = newText.replace(/\[pre\]/g, '[font=courier new]')
       newText = newText.replace(/\[\/pre\]/g, '[/font]')
@@ -370,9 +338,91 @@
       //= ========================================================================================================
       // name
       let torTitle = nameBox.val()
-      torTitle = torTitle.replace(/\s+(?:mkv|mp4|iso|ts)\s*$/gi, '')
+      torTitle = torTitle
+        // 去除.torrent后缀
+        .replace(/(.*)\.torrent/gi, '$1')
+        // 去除视频文件后缀
+        .replace(/\s+(?:mkv|mp4|iso|ts)\s*$/gi, '')
+        // 去除'[] '开头的内容
         .replace(/^\[.*\]\s(\S)/gi, '$1')
       nameBox.val(torTitle)
+      //= ========================================================================================================
+      // checking torrent name
+      // source
+      let sourceNum = sourceNumDefault
+      if (site === 'pter' || site === 'mteam') {
+        sourceNum = torTitle.match(/\W(?:remux)\W/i)
+          ? sourceNumRemux// remux
+          : torTitle.match(/\W(?:blu(?:e|-)?ray|bdrip|dvdrip|webrip)\W/i)
+            ? sourceNumEncode// encode
+            : torTitle.match(/\Whdtv\W/i)
+              ? sourceNumHdtv// hdtv
+              : torTitle.match(/\Wweb-?dl\W/i)
+                ? sourceNumWebDl// web-dl
+                : sourceNumDefault// other
+      } else if (site === 'nhd') {
+        sourceNum = torTitle.match(/\W(?:blu(?:e|-)?ray|bdrip)\W/i)
+          ? sourceNumBluray
+          : torTitle.match(/\Whdtv\W/i)
+            ? sourceNumHddvd
+            : torTitle.match(/\Wdvd/i)
+              ? sourceNumDvd
+              : torTitle.match(/\Wweb-?dl\W/i)
+                ? sourceNumWebDl
+                : torTitle.match(/\Wwebrip\W/i)
+                  ? sourceNumWebrip
+                  : sourceNumDefault
+      }
+      if (sourceSel) {
+        sourceSel.val(sourceNum)
+      }
+      // resolution
+      let stantdardNum = standardNumDefault
+      if (site === 'nhd' || site === 'putao' || site === 'mteam') {
+        stantdardNum = torTitle.match(/\W1080p\W/i)
+          ? standardNum1080p
+          : torTitle.match(/\W1080i\W/i)
+            ? standardNum1080i
+            : torTitle.match(/\W720p\W/i)
+              ? standardNum720p
+              : torTitle.match(/\W(?:2160p|4k)\W/i)
+                ? standardNum2160p
+                : torTitle.match(/\Wdvd/i)
+                  ? standardNumSd
+                  : standardNumDefault
+      }
+      if (standardSel) {
+        standardSel.val(stantdardNum)
+      }
+      // processing
+      let processNum = processNumDefault
+      if (site === 'nhd') {
+        processNum = torTitle.match(/\W(?:remux|web-?dl)\W/i)
+          ? processNumRaw
+          : processNumEncode
+      }
+      if (processingSel) {
+        processingSel.val(processNum)
+      }
+      // codec
+      let codecNum = codecNumDefault
+      if (site === 'nhd' || site === 'putao' || site === 'mteam') {
+        codecNum = torTitle.match(/\W(?:h|x)\.?264\W/i)
+          ? codecNumH264
+          : torTitle.match(/\W(?:h|x)\.?265\W/i)
+            ? codecNumH265
+            : torTitle.match(/\Wmpeg-2/i)
+              ? codecNumMpeg2
+              : torTitle.match(/\Wxvid/i)
+                ? codecNumXvid
+                : torTitle.match(/\Wflac/i)
+                  ? codecNumFlac
+                  : codecNumDefault
+      }
+      if (codecSel) {
+        codecSel.val(codecNum)
+      }
+      //= ========================================================================================================
       // checking movie info
       if (newText.match('◎')) {
         // container for small_desc (副标题)
@@ -404,7 +454,7 @@
         if (translatedTitleArray && originalTitleArray) {
           const transTitle = translatedTitleArray[1]
           const oriTitle = originalTitleArray[1]
-          if (site === 'nhd' || site === 'pter') {
+          if (site === 'nhd' || site === 'pter' || site === 'mteam') {
             if (areaCnMl) {
               smallDescrArray.push(torTitle.match(oriTitle) ? transTitle : oriTitle)
             } else {
@@ -429,7 +479,7 @@
         const categoryArray = newText.match(/类\s*别\s+([^\n]*)\s*\n/)
         let category = ''
         if (categoryArray) {
-          category = categoryArray[1].replace(/\//g, ' / ')
+          category = categoryArray[1].replace(/([^ ])\/([^ ])/g, '$1 / $2')
           smallDescrArray.push(category)
         }
         let cateNum = category.match('纪录')
@@ -461,11 +511,15 @@
         const smallDescr = smallDescrArray.join(' | ')
         smallDescBox.val(smallDescr)
         // douban link
-        const doubanLinkArray = newText.match(/豆瓣\s*链\s*接.+(https:\/\/.*)\s*/)
-        doubanLinkBox.val(doubanLinkArray ? doubanLinkArray[1].replace(/\[url=(.*?)\].*?\[\/url\]/, '$1') : '')
+        if (doubanLinkBox) {
+          const doubanLinkArray = newText.match(/豆瓣\s*链\s*接.+(https:\/\/.*)\s*/)
+          doubanLinkBox.val(doubanLinkArray ? doubanLinkArray[1].replace(/\[url=(.*?)\].*?\[\/url\]/, '$1') : '')
+        }
         // imdb link
-        const imdbLinkArray = newText.match(/IMDb\s*链\s*接.+(https:\/\/.*)\s*/i)
-        imdbLinkBox.val(imdbLinkArray ? imdbLinkArray[1].replace(/\[url=(.*?)\].*?\[\/url\]/, '$1') : '')
+        if (imdbLinkBox) {
+          const imdbLinkArray = newText.match(/IMDb\s*链\s*接.+(https:\/\/.*)\s*/i)
+          imdbLinkBox.val(imdbLinkArray ? imdbLinkArray[1].replace(/\[url=(.*?)\].*?\[\/url\]/, '$1') : '')
+        }
         // area selection
         if (areaSel) {
           let areaNum = areaNumDefault
@@ -485,6 +539,18 @@
                         : areaInd
                           ? areaNumInd
                           : areaNumOther
+          } else if (site === 'mteam') {
+            areaNum = areaCnMl
+              ? areaNumCnMl
+              : areaEuAme
+                ? areaNumEuAme
+                : areaHk || areaTw
+                  ? areaNumHk
+                  : areaJap
+                    ? areaNumJap
+                    : areaKor
+                      ? areaNumKor
+                      : areaNumOther
           }
           areaSel.val(areaNum)
         }
@@ -526,88 +592,35 @@
                       ? cateNumTvShowJpKor
                       : cateNumDefault
             }
+          } else if (site === 'mteam') {
+            if (cateNum === cateNumMovie) {
+              cateNum = sourceNum === sourceNumRemux
+                ? cateNumMovieRemux
+                : sourceNum === sourceNumEncode || sourceNum === sourceNumHdtv || sourceNum === sourceNumHddvd || sourceNum === sourceNumWebDl
+                  ? cateNumMovieHd
+                  : cateNumDefault
+            } else if (cateNum === cateNumTvSeries || cateNum === cateNumTvShow) {
+              cateNum = sourceNum === sourceNumEncode || sourceNum === sourceNumHdtv || sourceNum === sourceNumHddvd || sourceNum === sourceNumWebDl
+                ? cateNumTvSeriesHd
+                : cateNumDefault
+            } else if (cateNum === cateNumDocumentary) {
+              cateNum = cateNumDocumentary
+            } else if (cateNum === cateNumAnimation) {
+              cateNum = cateNumAnimation
+            } else {
+              cateNum = cateNumDefault
+            }
           }
           categorySel.val(cateNum)
         }
       }
       //= ========================================================================================================
-      // checking torrent name
-      // source
-      if (sourceSel) {
-        let sourceNum = sourceNumDefault
-        if (site === 'pter') {
-          sourceNum = torTitle.match(/\W(?:remux)\W/i)
-            ? sourceNumRemux// remux
-            : torTitle.match(/\W(?:blu(?:e|-)?ray|bdrip|dvdrip|webrip)\W/i)
-              ? sourceNumEncode// encode
-              : torTitle.match(/\Whdtv\W/i)
-                ? sourceNumHdtv// hdtv
-                : torTitle.match(/\Wweb-?dl\W/i)
-                  ? sourceNumWebDl// web-dl
-                  : sourceNumDefault// other
-        } else if (site === 'nhd') {
-          sourceNum = torTitle.match(/\W(?:blu(?:e|-)?ray|bdrip)\W/i)
-            ? sourceNumBluray
-            : torTitle.match(/\Whdtv\W/i)
-              ? sourceNumHddvd
-              : torTitle.match(/\Wdvd/i)
-                ? sourceNumDvd
-                : torTitle.match(/\Wweb-?dl\W/i)
-                  ? sourceNumWebDl
-                  : torTitle.match(/\Wwebrip\W/i)
-                    ? sourceNumWebrip
-                    : sourceNumDefault
-        }
-        sourceSel.val(sourceNum)
-      }
-      // resolution
-      if (standardSel) {
-        let stantdardNum = standardNumDefault
-        if (site === 'nhd' || site === 'putao') {
-          stantdardNum = torTitle.match(/\W1080p\W/i)
-            ? standardNum1080p
-            : torTitle.match(/\W1080i\W/i)
-              ? standardNum1080i
-              : torTitle.match(/\W720p\W/i)
-                ? standardNum720p
-                : torTitle.match(/\W(?:2160p|4k)\W/i)
-                  ? standardNum2160p
-                  : torTitle.match(/\Wdvd/i)
-                    ? standardNumSd
-                    : standardNumDefault
-        }
-        standardSel.val(stantdardNum)
-      }
-      // processing
-      if (processingSel) {
-        let processNum = processNumDefault
-        if (site === 'nhd') {
-          processNum = torTitle.match(/\W(?:remux|web-?dl)\W/i)
-            ? processNumRaw
-            : processNumEncode
-        }
-        processingSel.val(processNum)
-      }
-      // codec
-      if (codecSel) {
-        let codecNum = codecNumDefault
-        if (site === 'nhd' || site === 'putao') {
-          codecNum = torTitle.match(/\W(?:h|x)\.?264\W/i)
-            ? codecNumH264
-            : torTitle.match(/\W(?:h|x)\.?265\W/i)
-              ? codecNumH265
-              : torTitle.match(/\Wmpeg-2/i)
-                ? codecNumMpeg2
-                : torTitle.match(/\Wxvid/i)
-                  ? codecNumXvid
-                  : torTitle.match(/\Wflac/i)
-                    ? codecNumFlac
-                    : codecNumDefault
-        }
-        codecSel.val(codecNum)
-      }
       // checking mediainfo
-      if (zhongziCheck && ensubCheck && guoyuCheck && yueyuCheck) {
+      let chineseSub = false
+      let englishSub = false
+      let chineseDub = false
+      let cantoneseDub = false
+      if (site === 'pter' || site === 'mteam') {
         const tagForMediainfo = targetTagBox || 'quote'
         const regexStr = '\\[' +
                     tagForMediainfo + '\\s*=\\s*mediainfo\\].*?(General\\s*?Unique\\s*?ID[^\\0]*?)\\[\\/' +
@@ -615,10 +628,6 @@
         const regex2 = RegExp(regexStr, 'im')
         const mediainfoArray = newText.match(regex2)
         if (mediainfoArray) {
-          let chineseSub = false
-          let englishSub = false
-          let chineseDub = false
-          let cantoneseDub = false
           const mediainfo = mediainfoArray[1]
           const subtitles = mediainfo.match(/Text.*?\nID[^\0]*?Forced.*/gm)
           if (subtitles) {
@@ -661,18 +670,36 @@
           } else {
             console.log('no dub')
           }
-          zhongziCheck.checked = chineseSub
-          ensubCheck.checked = englishSub
-          guoyuCheck.checked = chineseDub
-          yueyuCheck.checked = cantoneseDub
+          if (site === 'pter') {
+            if (chsubCheck && ensubCheck && chdubCheck && cantodubCheck) {
+              chsubCheck.checked = chineseSub
+              ensubCheck.checked = englishSub
+              chdubCheck.checked = chineseDub
+              cantodubCheck.checked = cantoneseDub
+            }
+          } else if (site === 'mteam') {
+            if (chsubCheck && chdubCheck) {
+              chsubCheck.checked = chineseSub
+              chdubCheck.checked = chineseDub
+            }
+          }
         }
       }
       descrBox.focus()
     })
   } else if (page === 'subtitles') {
-    const inputFile = $('input[type="file"][name="file"]')
-    const titleBox = $('input[type="text"][name="title"]')
-    const languageSel = $('select[name="sel_lang"]')
+    //= ========================================================================================================
+    // 字幕页面
+    let inputFile = null; let titleBox = null; let languageSel = null
+    if (site === 'nhd' || site === 'pter' || site === 'putao') {
+      inputFile = $('input[type="file"][name="file"]')
+      titleBox = $('input[type="text"][name="title"]')
+      languageSel = $('select[name="sel_lang"]')
+    } else if (site === 'mteam') {
+      inputFile = $('input[type="file"][name="file[]"]')
+      titleBox = $('input[type="text"][name="title[]"]')
+      languageSel = $('select[name="sel_lang[]"]')
+    }
     if (!inputFile) {
       return
     }
@@ -681,37 +708,58 @@
       if (anonymousCheck) {
         anonymousCheck.checked = anonymous
       }
-      const langNumDefault = 0; const langNumEng = 6; const langNumChs = 25; const langNumCht = 28
-      const langNumJap = 15; const langNumFre = 9; const langNumGer = 10; const langNumIta = 14
-      const langNumKor = 16; const langNumSpa = 26; const langNumOther = 18
-      let langNum = langNumDefault
+      let langNumEng = 1; let langNumChs = 2; let langNumCht = 3
+      let langNumJap = 4; let langNumFre = 5; let langNumGer = 6; let langNumIta = 7
+      let langNumKor = 8; let langNumSpa = 9; let langNumOther = 10
+      let langNum = 0
       const pathSub = inputFile.val()
       const fileName = /([^\\]+)$/.exec(pathSub)[1]
       if (fileName) {
         titleBox.val(fileName)
         const lang = pathSub.replace(/.*\.(.*)\..*/i, '$1')
         if (lang) {
-          langNum = lang.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || lang.match(/.+( |&)?(chs|cht|cn|zh)/)
-            ? langNumOther
-            : lang.match(/chs/)
-              ? langNumChs
-              : lang.match(/cht/)
-                ? langNumCht
-                : lang.match(/eng/)
-                  ? langNumEng
-                  : lang.match(/jap|jp/)
-                    ? langNumJap
-                    : lang.match(/fre|fra/)
-                      ? langNumFre
-                      : lang.match(/ger/)
-                        ? langNumGer
-                        : lang.match(/ita/)
-                          ? langNumIta
-                          : lang.match(/kor/)
-                            ? langNumKor
-                            : lang.match(/spa/)
-                              ? langNumSpa
-                              : langNumOther
+          if (site === 'nhd' || site === 'pter' || site === 'putao') {
+            langNumEng = 6; langNumChs = 25; langNumCht = 28
+            langNumJap = 15; langNumFre = 9; langNumGer = 10; langNumIta = 14
+            langNumKor = 16; langNumSpa = 26; langNumOther = 18
+            langNum = lang.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || lang.match(/.+( |&)?(chs|cht|cn|zh)/)
+              ? langNumOther
+              : lang.match(/chs/)
+                ? langNumChs
+                : lang.match(/cht/)
+                  ? langNumCht
+                  : lang.match(/eng/)
+                    ? langNumEng
+                    : lang.match(/jap|jp/)
+                      ? langNumJap
+                      : lang.match(/fre|fra/)
+                        ? langNumFre
+                        : lang.match(/ger/)
+                          ? langNumGer
+                          : lang.match(/ita/)
+                            ? langNumIta
+                            : lang.match(/kor/)
+                              ? langNumKor
+                              : lang.match(/spa/)
+                                ? langNumSpa
+                                : langNumOther
+          } else if (site === 'mteam') {
+            langNumEng = 6; langNumChs = 25; langNumCht = 28
+            langNumJap = 15; langNumKor = 16; langNumOther = 18
+            langNum = lang.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || lang.match(/.+( |&)?(chs|cht|cn|zh)/)
+              ? langNumOther
+              : lang.match(/chs/)
+                ? langNumChs
+                : lang.match(/cht/)
+                  ? langNumCht
+                  : lang.match(/eng/)
+                    ? langNumEng
+                    : lang.match(/jap|jp/)
+                      ? langNumJap
+                      : lang.match(/kor/)
+                        ? langNumKor
+                        : langNumOther
+          }
         }
         console.log(`language: ${lang}`)
         languageSel.val(langNum)
