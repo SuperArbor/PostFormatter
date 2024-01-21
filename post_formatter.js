@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info and smilies
-// @version      1.2.1
+// @version      1.2.2
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        http://*.nexushd.org/*
 // @match        https://pterclub.com/*
@@ -13,730 +13,711 @@
 // @namespace    d8e7078b-abee-407d-bcb6-096b59eeac17
 // @license      MIT
 // ==/UserScript==
-(function() {
-    'use strict';
-    const BOX_TAG_DEFAULT = 'box';
-    function insert_tyt(myValue,switcher){
-        var obj_target;
-        if(switcher===1){
-            obj_target=$("#compose textarea",window.opener.document)[0];
-        }
-        else if(switcher===0){
-            if($("#compose textarea").length){
-                obj_target=$("#compose textarea")[0];
-            }
-            else if($("#shbox_text").length){
-                obj_target=$("#shbox_text")[0];
-            }
-        }
-        else{
-            return false;
-        }
-        var match_obj = /(\n\[\/|\](\[\/|$))/.exec(myValue);
-        var startPos = obj_target.selectionStart;
-        var endPos = obj_target.selectionEnd;
-        obj_target.value = obj_target.value.substring(0, startPos) + myValue + obj_target.value.substring(endPos, obj_target.value.length);
-        obj_target.selectionEnd = startPos + myValue.length;
-        obj_target.focus();
-        if(match_obj){
-            obj_target.setSelectionRange(startPos+match_obj.index+1, startPos+match_obj.index+1);
-        }
-        return true;
+(function () {
+  'use strict'
+  const BOX_TAG_DEFAULT = 'box'
+  function insertTyt (myValue, switcher) {
+    let objTarget
+    if (switcher === 1) {
+      objTarget = $('#compose textarea', window.opener.document)[0]
+    } else if (switcher === 0) {
+      if ($('#compose textarea').length) {
+        objTarget = $('#compose textarea')[0]
+      } else if ($('#shbox_text').length) {
+        objTarget = $('#shbox_text')[0]
+      }
+    } else {
+      return false
     }
-    function nestExplode(input_text, target_box_tag){
-        var output_text,c;
-        var pat_1 = '\\['
-            + target_box_tag + '((?:=[^\\]]+)?\\](?:(?!\\[\\/'
-            + target_box_tag + '\\])[\\s\\S])*\\['
-            + target_box_tag + '(?:=[^\\]]+)?\\])';
-        var pat_2 = '(\\[\\/'
-            + target_box_tag + '\\](?:(?!\\['
-            + target_box_tag + '(?:=[^\\]]+)?\\])[\\s\\S])*)\\[\\/'
-            + target_box_tag + '\\]';
-        var regex_1 = RegExp(pat_1, 'g');
-        var regex_2 = RegExp(pat_2, 'g');
-        do{
-            output_text = input_text.replace(regex_1, "[quote$1").replace(regex_2, "$1[/quote]");
-            c=(input_text!=output_text);
-            input_text=output_text;
-        }while(c);
-        return output_text;
+    const matchObj = /(\n\[\/|\](\[\/|$))/.exec(myValue)
+    const startPos = objTarget.selectionStart
+    const endPos = objTarget.selectionEnd
+    objTarget.value = objTarget.value.substring(0, startPos) + myValue + objTarget.value.substring(endPos, objTarget.value.length)
+    objTarget.selectionEnd = startPos + myValue.length
+    objTarget.focus()
+    if (matchObj) {
+      objTarget.setSelectionRange(startPos + matchObj.index + 1, startPos + matchObj.index + 1)
     }
-    function switchBoxQuote(input_text, target_box_tag){
-        var output_text,c;
-        var pat = '(\\[)(?:' 
-            + target_box_tag + '|_x~bTYt_)((?:=[^\\]]+)?\\](?:(?!\\[\\/(?:' 
-            + target_box_tag + '|_x~bTYt_)\\])[\\s\\S])*\\[)quote((?:=[^\\]]+)?\\](?:(?!\\[\\/quote\\])[\\s\\S])*\\[\\/)quote((?:=[^\\]]+)?\\](?:(?!\\[(?:' 
-            + target_box_tag + '|_x~bTYt_)(?:=[^\\]]+)?\\])[\\s\\S])*\\[\\/)(?:' 
-            + target_box_tag + '|_x~bTYt_)(\\])';
-        var regex = RegExp(pat, 'g');
-        do{
-            output_text = input_text.replace(regex, "$1_x~bTYt_$2_e~qTYt_$3_e~qTYt_$4_x~bTYt_$5");
-            c=(input_text!=output_text);
-            input_text=output_text;
-        }while(c);
-        output_text = output_text.replace(/_x~bTYt_/g, "quote");
-        output_text = output_text.replace(/_e~qTYt_/g, target_box_tag);
-        return output_text;
-    }
-    function compact_content(input_text, target_box_tag){
-        var output_text,c;
-        var pat_1 = '(\\[\\/?(?:' + target_box_tag + ')(?:=[^\\]]+)?\\])\\s+(\\S)';
-        var pat_2 = '(\\S)\\s+(\\[\\/?(?:' + target_box_tag + ')(?:=[^\\]]+)?\\])';
-        var pat_3 = '(\\[' + target_box_tag + '(?:=[^\\]]+)?\\](?:(?!\\[\\/)[\\s\\S])*\\[(?:font|b|i|u|color|size)(?:=[^\\]]+)?\\])\\n+([^\\n])';
-        var regex_1 = RegExp(pat_1, 'g');
-        var regex_2 = RegExp(pat_2, 'g');
-        var regex_3 = RegExp(pat_3, 'g');
-        do{
-            output_text = input_text.replace(regex_1, "$1$2").replace(regex_2, "$1$2").replace(regex_3, "$1$2");
-            c=(input_text!=output_text);
-            input_text=output_text;
-        }while(c);
-        return output_text;
-    }
-    //============================================================
-    var domain_match_array = window.location.href.match(/(.*)\/(upload|edit|subtitles)\.php/);
-    if (!domain_match_array){
-        return;
-    }
-    var site = domain_match_array[1].match(/nexushd/i)
-        ? 'nhd'
-        : domain_match_array[1].match(/pterclub/i)
-        ? 'pter'
-        : domain_match_array[1].match(/pt\.sjtu/i)
+    return true
+  }
+  function nestExplode (inputText, targetBoxTag) {
+    let outputText, c
+    const pat1 = '\\[' +
+            targetBoxTag + '((?:=[^\\]]+)?\\](?:(?!\\[\\/' +
+            targetBoxTag + '\\])[\\s\\S])*\\[' +
+            targetBoxTag + '(?:=[^\\]]+)?\\])'
+    const pat2 = '(\\[\\/' +
+            targetBoxTag + '\\](?:(?!\\[' +
+            targetBoxTag + '(?:=[^\\]]+)?\\])[\\s\\S])*)\\[\\/' +
+            targetBoxTag + '\\]'
+    const regex1 = RegExp(pat1, 'g')
+    const regex2 = RegExp(pat2, 'g')
+    do {
+      outputText = inputText.replace(regex1, '[quote$1').replace(regex2, '$1[/quote]')
+      c = (inputText !== outputText)
+      inputText = outputText
+    } while (c)
+    return outputText
+  }
+  function switchBoxQuote (inputText, targetBoxTag) {
+    let outputText, c
+    const pat = '(\\[)(?:' +
+            targetBoxTag + '|_x~bTYt_)((?:=[^\\]]+)?\\](?:(?!\\[\\/(?:' +
+            targetBoxTag + '|_x~bTYt_)\\])[\\s\\S])*\\[)quote((?:=[^\\]]+)?\\](?:(?!\\[\\/quote\\])[\\s\\S])*\\[\\/)quote((?:=[^\\]]+)?\\](?:(?!\\[(?:' +
+            targetBoxTag + '|_x~bTYt_)(?:=[^\\]]+)?\\])[\\s\\S])*\\[\\/)(?:' +
+            targetBoxTag + '|_x~bTYt_)(\\])'
+    const regex = RegExp(pat, 'g')
+    do {
+      outputText = inputText.replace(regex, '$1_x~bTYt_$2_e~qTYt_$3_e~qTYt_$4_x~bTYt_$5')
+      c = (inputText !== outputText)
+      inputText = outputText
+    } while (c)
+    outputText = outputText.replace(/_x~bTYt_/g, 'quote')
+    outputText = outputText.replace(/_e~qTYt_/g, targetBoxTag)
+    return outputText
+  }
+  function compactContent (inputText, targetBoxTag) {
+    let outputText, c
+    const pat1 = '(\\[\\/?(?:' + targetBoxTag + ')(?:=[^\\]]+)?\\])\\s+(\\S)'
+    const pat2 = '(\\S)\\s+(\\[\\/?(?:' + targetBoxTag + ')(?:=[^\\]]+)?\\])'
+    const pat3 = '(\\[' + targetBoxTag + '(?:=[^\\]]+)?\\](?:(?!\\[\\/)[\\s\\S])*\\[(?:font|b|i|u|color|size)(?:=[^\\]]+)?\\])\\n+([^\\n])'
+    const regex1 = RegExp(pat1, 'g')
+    const regex2 = RegExp(pat2, 'g')
+    const regex3 = RegExp(pat3, 'g')
+    do {
+      outputText = inputText.replace(regex1, '$1$2').replace(regex2, '$1$2').replace(regex3, '$1$2')
+      c = (inputText !== outputText)
+      inputText = outputText
+    } while (c)
+    return outputText
+  }
+  //= ===========================================================
+  const domainMatchArray = window.location.href.match(/(.*)\/(upload|edit|subtitles)\.php/)
+  if (!domainMatchArray) {
+    return
+  }
+  const site = domainMatchArray[1].match(/nexushd/i)
+    ? 'nhd'
+    : domainMatchArray[1].match(/pterclub/i)
+      ? 'pter'
+      : domainMatchArray[1].match(/pt\.sjtu/i)
         ? 'putao'
-        : '';
-    var page = domain_match_array[2];
-    if (!site || !page){
-        return;
+        : ''
+  const page = domainMatchArray[2]
+  if (!site || !page) {
+    return
+  }
+  // 匿名发布开关
+  const anonymous = true
+  console.log(`running in site ${site} and page ${page}`)
+  if (page === 'upload' || page === 'edit') {
+    const btnBingo = $('<input>')
+    btnBingo.attr({
+      type: 'button',
+      name: 'bingo_converter',
+      value: 'BINGO',
+      style: 'font-size: 11px; color: blue; margin-right: 3px'
+    })
+    const td1 = $('<td>')
+    td1.attr({
+      class: 'embedded'
+    })
+    const tr1 = $('<tr>')
+    tr1.attr({
+      id: 'multi_function'
+    })
+    const tbody1 = $('<tbody>')
+    const table1 = $('<table>')
+    table1.attr({
+      cellspaceing: '1',
+      cellpadding: '2',
+      border: '0',
+      style: 'margin-top:3px'
+    })
+    td1.append(btnBingo)
+    tr1.append(td1)
+    tbody1.append(tr1)
+    table1.append(tbody1)
+    $('#compose input[name="quote"]').closest('table').after(table1)
+
+    let switcher = 0
+    if (window.location.href.match(/moresmilies\.php/)) {
+      switcher = 1
     }
-    // 匿名发布开关
-    const anonymous = true;   
-    console.log(`running in site ${site} and page ${page}`);
-    if (page == 'upload' || page == 'edit'){
-        var btn_bingo = $("<input>");
-        btn_bingo.attr({
-            "type":"button",
-            "name":"bingo_converter",
-            "value":"BINGO",
-            "style":"font-size: 11px; color: blue; margin-right: 3px",
-        });
-        var td_1 = $("<td>");
-        td_1.attr({
-            "class":"embedded"
-        });
-        var tr_1 = $("<tr>");
-        tr_1.attr({
-            "id":"multi_function"
-        });
-        var tbody_1 = $("<tbody>");
-        var table_1 = $("<table>");
-        table_1.attr({
-            "cellspaceing":"1",
-            "cellpadding":"2",
-            "border":"0",
-            "style":"margin-top:3px"
-        });
-        td_1.append(btn_bingo);
-        tr_1.append(td_1);
-        tbody_1.append(tr_1);
-        table_1.append(tbody_1);
-        $('#compose input[name="quote"]').closest('table').after(table_1);
-    
-        var switcher = 0;
-        if(window.location.href.match(/moresmilies\.php/)){
-            switcher = 1;
+    $("a[href*='SmileIT']").click(function () {
+      insertTyt(this.getAttribute('href').match(/\[em\d+\]/)[0], switcher)
+      return false
+    })
+    const anonymousCheck = $("input[name='uplver'][type='checkbox']")[0]
+    // initialization
+    // common
+    // controls
+    let nameBox = null; let smallDescBox = null; let imdbLinkBox = null; let doubanLinkBox = null
+    let descrBox = null; let categorySel = null; let sourceSel = null
+    // this is normally useful even when area_sel == null.
+    let areaCnMl = false; let areaHk = false; let areaTw = false; let areaEuAme = false; let areaKor = false; let areaJap = false
+    let areaInd = false; let areaAsia = false
+    let areaNumDefault = 0; let areaNumCnMl = 1; let areaNumHk = 2; let areaNumTw = 3
+    let areaNumEuAme = 4; let areaNumKor = 5; let areaNumJap = 6; let areaNumInd = 7; let areaNumOther = 8
+    // categories
+    let cateNumDefault = 0; let cateNumMovie = 1; let cateNumDocumentary = 2; let cateNumAnimation = 3
+    let cateNumTvSeries = 4; let cateNumTvShow = 5
+    let sourceNumDefault = 0; let sourceNumBluray = 0
+    let sourceNumRemux = 0; let sourceNumHddvd = 0; let sourceNumDvd = 0
+    let sourceNumEncode = 0; let sourceNumWebDl = 0; let sourceNumWebrip = 0
+    let sourceNumHdtv = 0
+    // 站点支持的box标签类型
+    let targetTagBox = BOX_TAG_DEFAULT
+    // 其他站点的box标签类型（需要统一替换）
+    let otherTagBoxes = ''
+    // site-specific
+    // controls
+    // pter
+    let areaSel = null
+    let zhongziCheck = null; let ensubCheck = null; let guoyuCheck = null; let yueyuCheck = null
+    // nhd
+    let standardSel = null; let processingSel = null; let codecSel = null
+    let standardNumDefault = 0; let standardNum1080p = 0; let standardNum1080i = 0
+    let standardNum720p = 0; let standardNum2160p = 0; let standardNumSd = 0
+    let processNumDefault = 0; let processNumRaw = 0; let processNumEncode = 0
+    let codecNumDefault = 0; let codecNumH264 = 0; let codecNumH265 = 0; let codecNumXvid = 0
+    let codecNumMpeg2 = 0; let codecNumFlac = 0
+    // putao
+    let cateNumMovieCnMl = 0; let cateNumMovieEuAme = 0; let cateNumMovieAsia = 0; let cateNumTvSeriesHkTw = 0
+    let cateNumTvSeriesAsia = 0; let cateNumTvSeriesCnMl = 0; let cateNumTvSeriesEuAme = 0
+    let cateNumTvShowCnMl = 0; let cateNumTvShowEuAme = 0; let cateNumTvShowHkTw = 0; let cateNumTvShowJpKor = 0
+    if (site === 'nhd') {
+      targetTagBox = 'box'
+      otherTagBoxes = ['hide', 'spoiler'].join('|')
+      if (page === 'upload') {
+        nameBox = $('#name')
+      } else {
+        nameBox = $("input[type='text'][name='name']")
+      }
+      smallDescBox = $("input[name='small_descr']")
+      imdbLinkBox = $("input[name='url'][type='text']")
+      doubanLinkBox = $("input[name='douban_url']")
+      descrBox = $('#descr')
+      categorySel = $('#browsecat')
+      sourceSel = $("select[name='source_sel']")
+
+      standardSel = $("select[name='standard_sel']")
+      processingSel = $("select[name='processing_sel']")
+      codecSel = $("select[name='codec_sel']")
+
+      cateNumDefault = 0
+      cateNumMovie = 101
+      cateNumTvSeries = 102
+      cateNumTvShow = 103
+      cateNumDocumentary = 104
+      cateNumAnimation = 105
+
+      sourceNumDefault = 0
+      sourceNumBluray = 1
+      sourceNumHddvd = 2
+      sourceNumDvd = 3
+      sourceNumHdtv = 4
+      sourceNumWebDl = 7
+      sourceNumWebrip = 9
+
+      standardNumDefault = 0
+      standardNum1080p = 1
+      standardNum1080i = 2
+      standardNum720p = 3
+      standardNum2160p = 6
+      standardNumSd = 4
+
+      processNumDefault = 0
+      processNumRaw = 1
+      processNumEncode = 2
+
+      codecNumDefault = 0
+      codecNumH264 = 1
+      codecNumH265 = 2
+      codecNumXvid = 4
+      codecNumMpeg2 = 5
+      codecNumFlac = 10
+    } else if (site === 'pter') {
+      targetTagBox = 'hide'
+      otherTagBoxes = ['box', 'spoiler'].join('|')
+      if (page === 'upload') {
+        nameBox = $('#name')
+      } else {
+        nameBox = $("input[type='text'][name='name']")
+      }
+      smallDescBox = $("input[name='small_descr']")
+      imdbLinkBox = $("input[name='url'][type='text']")
+      doubanLinkBox = $("input[name='douban']")
+      descrBox = $('#descr')
+      categorySel = $('#browsecat')
+      sourceSel = $("select[name='source_sel']")
+
+      areaSel = $("select[name='team_sel']")
+      zhongziCheck = document.getElementById('zhongzi')
+      ensubCheck = document.getElementById('ensub')
+      guoyuCheck = document.getElementById('guoyu')
+      yueyuCheck = document.getElementById('yueyu')
+
+      cateNumDefault = 0
+      cateNumMovie = 401
+      cateNumTvSeries = 404
+      cateNumTvShow = 405
+      cateNumDocumentary = 402
+      cateNumAnimation = 403
+
+      sourceNumDefault = 0
+      sourceNumBluray = 2
+      sourceNumRemux = 3
+      sourceNumEncode = 6
+      sourceNumHdtv = 4
+      sourceNumWebDl = 5
+      sourceNumDvd = 7
+
+      areaNumDefault = 0
+      areaNumCnMl = 1
+      areaNumHk = 2
+      areaNumTw = 3
+      areaNumEuAme = 4
+      areaNumKor = 5
+      areaNumJap = 6
+      areaNumInd = 7
+      areaNumOther = 8
+    } else if (site === 'putao') {
+      targetTagBox = ''
+      otherTagBoxes = ['box', 'hide', 'spoiler'].join('|')
+      if (page === 'upload') {
+        nameBox = $('#name')
+      } else {
+        nameBox = $("input[type='text'][name='name']")
+      }
+      smallDescBox = $("input[name='small_descr']")
+      imdbLinkBox = $("input[name='url'][type='text']")
+      doubanLinkBox = $("input[name='douban_url']")
+      descrBox = $('#descr')
+      categorySel = $('#browsecat')
+
+      standardSel = $("select[name='standard_sel']")
+      codecSel = $("select[name='codec_sel']")
+
+      cateNumDefault = 0
+      cateNumDocumentary = 406
+      cateNumAnimation = 431
+      cateNumMovieCnMl = 401
+      cateNumMovieEuAme = 402
+      cateNumMovieAsia = 403
+      cateNumTvSeriesHkTw = 407
+      cateNumTvSeriesAsia = 408
+      cateNumTvSeriesCnMl = 409
+      cateNumTvSeriesEuAme = 410
+      cateNumTvShowCnMl = 411
+      cateNumTvShowHkTw = 412
+      cateNumTvShowEuAme = 413
+      cateNumTvShowJpKor = 414
+
+      standardNumDefault = 0
+      standardNum1080p = 1
+      standardNum1080i = 2
+      standardNum720p = 3
+      standardNum2160p = 6
+      standardNumSd = 4
+
+      codecNumDefault = 0
+      codecNumH264 = 1
+      codecNumXvid = 3
+      codecNumMpeg2 = 4
+      codecNumFlac = 5
+      codecNumH265 = 10
+    }
+    // function definition
+    btnBingo.click(function () {
+      if (anonymousCheck) {
+        anonymousCheck.checked = anonymous
+      }
+      const oldText = descrBox.val()
+      let newText = oldText.replace(/(\[\/?)([A-Z]+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, function (match, p1, p2, p3) {
+        p2 = p2.toLowerCase()
+        return p1 + p2 + p3
+      })
+      // 替换为当前box标签类型
+      const rePat = '\\[(\\/)?(?:' + otherTagBoxes + ')((?:=[^\\]]+)?)\\]'
+      // 对于不支持box标签的站，统一替换为'quote'标签
+      const replacement = targetTagBox || 'quote'
+      const regex1 = RegExp(rePat, 'g')
+      newText = newText.replace(regex1, '[$1' + replacement + '$2]')
+        .replace(/\[mediainfo\]([^\0]*?)\[\/mediainfo\]/gi, '[' + replacement + '=mediainfo]$1[/' + replacement + ']')
+      // NHD mediainfo style
+      newText = newText.replace(/\[pre\]/g, '[font=courier new]')
+      newText = newText.replace(/\[\/pre\]/g, '[/font]')
+      if (targetTagBox) {
+        newText = nestExplode(newText, targetTagBox)
+        newText = switchBoxQuote(newText, targetTagBox)
+      }
+      newText = newText.replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, function (matches) {
+        return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
+      })
+      newText = newText.replace(/\[(\/)?align(=\w*)?\]/g, '')
+      newText = newText.replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
+      newText = newText.replace(/\[size=(\d+)\]/g, function (match, p1) {
+        if (parseInt(p1) > 7) {
+          return ('[size=7]')
         }
-        $("a[href*='SmileIT']").click(function(){
-            insert_tyt(this.getAttribute("href").match(/\[em\d+\]/)[0],switcher);
-            return false;
-        });
-        var anonymous_check = $("input[name='uplver'][type='checkbox']")[0];
-        // initialization 
-        // common
-        // controls
-        var name_box = null, small_desc_box = null, imdb_link_box = null, douban_link_box = null,
-            descr_box = null, category_sel = null, source_sel = null;
-        // this is normally useful even when area_sel == null. 
-        var area_cn_ml = false, area_hk = false, area_tw = false, area_eu_ame = false, area_kor = false, area_jap = false,
-            area_ind = false, area_asia = false, area_other = false;
-        var area_num_default = 0, area_num_cn_ml = 1, area_num_hk = 2, area_num_tw = 3, 
-            area_num_eu_ame = 4, area_num_kor = 5, arae_num_jap = 6, area_num_ind = 7, area_num_other = 8;
-        // categories
-        var cate_num_default = 0, cate_num_movie = 1, cate_num_documentary = 2, cate_num_animation = 3, 
-            cate_num_tv_series = 4, cate_num_tv_show = 5;
-        var source_num_default = 0, source_num_uhd = 0, source_num_bluray = 0, 
-            source_num_remux = 0, source_num_hddvd = 0, source_num_dvd = 0, 
-            source_num_encode = 0, source_num_web_dl = 0, source_num_web_rip = 0, 
-            source_num_hdtv = 0, source_num_tv = 0, source_num_other = 0;
-        // 站点支持的box标签类型
-        var target_tag_box = BOX_TAG_DEFAULT;
-        // 其他站点的box标签类型（需要统一替换）
-        var other_tag_boxes = '';
-        // site-specific 
-        //controls
-        // pter
-        var area_sel = null;
-        var zhongzi_check = null, ensub_check = null, guoyu_check = null, yueyu_check = null;
-        // nhd
-        var standard_sel = null, processing_sel = null, codec_sel = null;
-        var standard_num_default =0, standard_num_1080p = 0, standard_num_1080i = 0, 
-            standard_num_720p = 0, standard_num_2160p = 0, standard_num_sd = 0, standard_num_other = 0;
-        var process_num_default = 0, process_num_raw = 0, process_num_encode = 0;
-        var codec_num_default = 0, codec_num_h_264 = 0, codec_num_h_265 = 0, codec_num_vc_1 = 0, codec_num_xvid = 0,
-            codec_num_mpeg_2 = 0, codec_num_flac = 0, codec_num_other = 15;
-        //putao
-        var cate_num_movie_cn =0, cate_num_movie_eu_ame = 0, cate_num_movie_asia = 0, cate_num_tv_series_hk_tw = 0,
-            cate_num_tv_series_asia = 0, cate_num_tv_series_cn_ml = 0, cate_num_tv_series_eu_ame = 0,
-            cate_num_tv_show_cn_ml = 0, cate_num_tv_show_eu_ame = 0, cate_num_tv_show_hk_tw = 0, cate_num_tv_show_jp_kor = 0;
-        if (site == 'nhd'){
-            target_tag_box = 'box';
-            other_tag_boxes = ['hide', 'spoiler'].join('|');
-            if (page == 'upload') {
-                name_box = $("#name");
-            } else{
-                name_box = $("input[type='text'][name='name']");
-            }
-            small_desc_box = $("input[name='small_descr']");
-            imdb_link_box = $("input[name='url'][type='text']");
-            douban_link_box = $("input[name='douban_url']");
-            descr_box = $("#descr");
-            category_sel = $("#browsecat");
-            source_sel = $("select[name='source_sel']");
-
-            standard_sel = $("select[name='standard_sel']");
-            processing_sel = $("select[name='processing_sel']");
-            codec_sel = $("select[name='codec_sel']");
-
-            cate_num_default = 0;
-            cate_num_movie = 101;
-            cate_num_tv_series = 102;
-            cate_num_tv_show = 103;
-            cate_num_documentary = 104;
-            cate_num_animation = 105;
-
-            source_num_default = 0;
-            source_num_bluray = 1;
-            source_num_hddvd = 2;
-            source_num_dvd = 3;
-            source_num_hdtv = 4;
-            source_num_tv = 5;
-            source_num_web_dl = 7;    
-            source_num_web_rip = 9;
-            source_num_other = 6;
-            
-            standard_num_default = 0;
-            standard_num_1080p = 1;
-            standard_num_1080i = 2;
-            standard_num_720p = 3;
-            standard_num_2160p = 6;
-            standard_num_sd = 4;
-
-            process_num_default = 0;
-            process_num_raw = 1;
-            process_num_encode = 2;
-
-            codec_num_default = 0;
-            codec_num_h_264 = 1;
-            codec_num_h_265 = 2;
-            codec_num_vc_1 = 3;
-            codec_num_xvid = 4;
-            codec_num_mpeg_2 = 5;
-            codec_num_flac = 10;
-            codec_num_other = 15;
-        } else if (site == 'pter'){
-            target_tag_box = 'hide';
-            other_tag_boxes = ['box', 'spoiler'].join('|');
-            if (page == 'upload') {
-                name_box = $("#name");
-            } else{
-                name_box = $("input[type='text'][name='name']");
-            }
-            small_desc_box = $("input[name='small_descr']");
-            imdb_link_box = $("input[name='url'][type='text']");
-            douban_link_box = $("input[name='douban']");
-            descr_box = $("#descr");
-            category_sel = $("#browsecat");
-            source_sel = $("select[name='source_sel']");
-
-            area_sel = $("select[name='team_sel']");
-            zhongzi_check = document.getElementById('zhongzi');
-            ensub_check = document.getElementById('ensub');
-            guoyu_check = document.getElementById('guoyu');
-            yueyu_check = document.getElementById('yueyu');
-
-            cate_num_default = 0;
-            cate_num_movie = 401;
-            cate_num_tv_series = 404;
-            cate_num_tv_show = 405;
-            cate_num_documentary = 402;
-            cate_num_animation = 403;
-            
-            source_num_default = 0;
-            source_num_uhd = 1;
-            source_num_bluray = 2;
-            source_num_remux = 3;
-            source_num_encode = 6;
-            source_num_hdtv = 4;
-            source_num_web_dl = 5;
-            source_num_dvd = 7;
-            source_num_other = 15;
-
-            area_num_default = 0;
-            area_num_cn_ml = 1;
-            area_num_hk = 2;
-            area_num_tw = 3;
-            area_num_eu_ame = 4;
-            area_num_kor = 5;
-            arae_num_jap = 6;
-            area_num_ind = 7;
-            area_num_other = 8;
-        } else if (site = 'putao'){
-            target_tag_box = '';
-            other_tag_boxes = ['box', 'hide', 'spoiler'].join('|');
-            if (page == 'upload') {
-                name_box = $("#name");
-            } else{
-                name_box = $("input[type='text'][name='name']");
-            }
-            small_desc_box = $("input[name='small_descr']");
-            imdb_link_box = $("input[name='url'][type='text']");
-            douban_link_box = $("input[name='douban_url']");
-            descr_box = $("#descr");
-            category_sel = $("#browsecat");
-
-            standard_sel = $("select[name='standard_sel']");
-            codec_sel = $("select[name='codec_sel']");
-
-            cate_num_default = 0;
-            cate_num_documentary = 406;
-            cate_num_animation = 431;
-            cate_num_movie_cn = 401;
-            cate_num_movie_eu_ame = 402;
-            cate_num_movie_asia = 403;
-            cate_num_tv_series_hk_tw = 407;
-            cate_num_tv_series_asia = 408;
-            cate_num_tv_series_cn_ml = 409;
-            cate_num_tv_series_eu_ame = 410;
-            cate_num_tv_show_cn_ml = 411;
-            cate_num_tv_show_hk_tw = 412;
-            cate_num_tv_show_eu_ame = 413;
-            cate_num_tv_show_jp_kor = 414;
-
-            standard_num_default = 0;
-            standard_num_1080p = 1;
-            standard_num_1080i = 2;
-            standard_num_720p = 3;
-            standard_num_2160p = 6;
-            standard_num_sd = 4;
-            standard_num_other = 5;
-
-            codec_num_default = 0;
-            codec_num_h_264 = 1;
-            codec_num_vc_1 = 2;
-            codec_num_xvid = 3;
-            codec_num_mpeg_2 = 4;
-            codec_num_flac = 5;
-            codec_num_h_265 = 10;
-            codec_num_other = 9;
+        return (match)
+      })
+      if (targetTagBox) {
+        newText = compactContent(newText, targetTagBox)
+      }
+      descrBox.val(newText)
+      //= ========================================================================================================
+      // name
+      let torTitle = nameBox.val()
+      torTitle = torTitle.replace(/\s+(?:mkv|mp4|iso|ts)\s*$/gi, '')
+        .replace(/^\[.*\]\s(\S)/gi, '$1')
+      nameBox.val(torTitle)
+      // checking movie info
+      if (newText.match('◎')) {
+        // container for small_desc (副标题)
+        const smallDescrArray = []
+        // name
+        const translatedTitleArray = newText.match(/译\s*名\s*([^/\n]+)(?:\/|\n)/)
+        const originalTitleArray = newText.match(/片\s*名\s*([^/\n]+)(?:\/|\n)/)
+        // area
+        const areaArray = newText.match(/产\s*地\s*(.*)\s*/)
+        const area = areaArray ? areaArray[1] : ''
+        if (area.match(/中国大陆/)) {
+          areaCnMl = true
+        } else if (area.match(/香港/)) {
+          areaHk = true
+        } else if (area.match(/台湾/)) {
+          areaTw = true
+        } else if (area.match(/美国|加拿大|英国|法国|德国|希腊|匈牙利|爱尔兰|意大利|阿尔巴尼亚|安道尔|奥地利|白俄罗斯|比利时|波斯尼亚|黑塞哥维那|保加利亚|克罗地亚|塞浦路斯|捷克|丹麦|爱沙尼亚|法罗群岛|冰岛|芬兰|拉脱维亚|列支敦士登|立陶宛|卢森堡|马其顿|马耳他|摩尔多瓦|摩纳哥|荷兰|挪威|波兰|葡萄牙|罗马尼亚|俄罗斯|圣马力诺|塞黑|斯洛伐克|斯洛文尼亚|西班牙|瑞典|瑞士|乌克兰|梵蒂冈/)) {
+          areaEuAme = true
+        } else if (area.match(/印度|韩国|日本|新加坡|泰国|印度尼西亚|菲律宾|越南|土耳其|老挝|柬埔寨|缅甸|马来西亚|文莱|东帝汶|尼泊尔|不丹|孟加拉国|巴基斯坦|斯里兰卡|马尔代夫|阿富汗|伊拉克|伊朗|叙利亚|约旦|黎巴嫩|以色列|巴勒斯坦|沙特阿拉伯|阿曼|也门|格鲁吉亚|亚美尼亚|塞浦路斯|哈萨克斯坦|吉尔吉斯斯坦|塔吉克斯坦|乌兹别克斯坦|土库曼斯坦|蒙古|朝鲜/)) {
+          areaAsia = true
+          if (area.match(area.match(/韩国/))) {
+            areaKor = true
+          } else if (area.match(/日本/)) {
+            areaJap = true
+          } else if (area.match(/印度/)) {
+            areaInd = true
+          }
         }
-        // function definition
-        btn_bingo.click(function(){
-            if (anonymous_check){
-                anonymous_check.checked = anonymous;
+        if (translatedTitleArray && originalTitleArray) {
+          const transTitle = translatedTitleArray[1]
+          const oriTitle = originalTitleArray[1]
+          if (site === 'nhd' || site === 'pter') {
+            if (areaCnMl) {
+              smallDescrArray.push(torTitle.match(oriTitle) ? transTitle : oriTitle)
+            } else {
+              smallDescrArray.push(transTitle)
             }
-            var old_text = descr_box.val();
-            var new_text = old_text.replace(/(\[\/?)([A-Z]+)((?:=(?:[^\r\n\t\f\v \[\]])+)?\])/g, function(match, p1, p2, p3) {
-                p2 = p2.toLowerCase();
-                return p1+p2+p3;
-            });
-            // 替换为当前box标签类型
-            var re_pat = '\\[(\\/)?(?:' + other_tag_boxes + ')((?:=[^\\]]+)?)\\]';
-            // 对于不支持box标签的站，统一替换为'quote'标签
-            var replacement = target_tag_box ? target_tag_box : "quote";
-            var regex = RegExp(re_pat, 'g');
-            new_text = new_text.replace(regex, "[$1" + replacement + "$2]")
-                .replace(/\[mediainfo\]([^\0]*?)\[\/mediainfo\]/gi, "[" + replacement + "=mediainfo]$1[/" + replacement + "]");
-            //NHD mediainfo style
-            new_text = new_text.replace(/\[pre\]/g,"[font=courier new]");
-            new_text = new_text.replace(/\[\/pre\]/g,"[/font]");
-            if (target_tag_box){
-                new_text = nestExplode(new_text, target_tag_box);
-                new_text = switchBoxQuote(new_text, target_tag_box);
+          } else if (site === 'putao') {
+            if (areaCnMl) {
+              torTitle = torTitle.match(oriTitle) ? torTitle : `[${oriTitle}] ${torTitle}`
+              nameBox.val(torTitle)
+            } else {
+              torTitle = torTitle.match(transTitle) ? torTitle : `[${transTitle}] ${torTitle}`
+              nameBox.val(torTitle)
             }
-            new_text = new_text.replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g,function(matches){
-                return(matches.replace(/\[align(=\w*)?\]/g,"\n"));
-            });
-            new_text = new_text.replace(/\[(\/)?align(=\w*)?\]/g,"");
-            new_text = new_text.replace(/^\s*([\s\S]*\S)\s*$/g,"$1");//是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
-            new_text = new_text.replace(/\[size=(\d+)\]/g, function(match, p1){
-                if(parseInt(p1)>7){
-                    return('[size=7]');
-                }
-                return(match);
-            });
-            if (target_tag_box){
-                new_text = compact_content(new_text, target_tag_box);
-            }
-            descr_box.val(new_text);
-            //=========================================================================================================
-            // name 
-            var torrent_title = name_box.val();
-            torrent_title = torrent_title.replace(/\s+(?:mkv|mp4|iso|ts)\s*$/gi,"")
-                .replace(/^\[.*\]\s(\S)/gi,"$1");
-            name_box.val(torrent_title);
-            // checking movie info
-            if (new_text.match("◎")){
-                // container for small_desc (副标题)
-                var small_descr_array = [];
-                // name
-                var translated_title_array = new_text.match(/译\s*名\s*([^\/\n]+)(?:\/|\n)/);
-                var original_title_array = new_text.match(/片\s*名\s*([^\/\n]+)(?:\/|\n)/);
-                // area
-                var area_array = new_text.match(/产\s*地\s*(.*)\s*/);
-                var area = area_array ? area_array[1] : "";
-                if (area.match(/中国大陆/)){
-                    area_cn_ml = true;
-                } else if (area.match(/香港/)){
-                    area_hk = true;
-                } else if (area.match(/台湾/)){
-                    area_tw = true;
-                } else if (area.match(/美国|加拿大|英国|法国|德国|希腊|匈牙利|爱尔兰|意大利|阿尔巴尼亚|安道尔|奥地利|白俄罗斯|比利时|波斯尼亚|黑塞哥维那|保加利亚|克罗地亚|塞浦路斯|捷克|丹麦|爱沙尼亚|法罗群岛|冰岛|芬兰|拉脱维亚|列支敦士登|立陶宛|卢森堡|马其顿|马耳他|摩尔多瓦|摩纳哥|荷兰|挪威|波兰|葡萄牙|罗马尼亚|俄罗斯|圣马力诺|塞黑|斯洛伐克|斯洛文尼亚|西班牙|瑞典|瑞士|乌克兰|梵蒂冈/)){
-                    area_eu_ame = true;
-                } else if (area.match(/印度|韩国|日本|新加坡|泰国|印度尼西亚|菲律宾|越南|土耳其|老挝|柬埔寨|缅甸|马来西亚|文莱|东帝汶|尼泊尔|不丹|孟加拉国|巴基斯坦|斯里兰卡|马尔代夫|阿富汗|伊拉克|伊朗|叙利亚|约旦|黎巴嫩|以色列|巴勒斯坦|沙特阿拉伯|阿曼|也门|格鲁吉亚|亚美尼亚|塞浦路斯|哈萨克斯坦|吉尔吉斯斯坦|塔吉克斯坦|乌兹别克斯坦|土库曼斯坦|蒙古|朝鲜/)){
-                    area_asia = true;
-                    if (area.match(area.match(/韩国/))){
-                        area_kor = true;
-                    } else if (area.match(/日本/)){
-                        area_jap = true;
-                    } else if (area.match(/印度/)){
-                        area_ind = true;
-                    }
-                } else{
-                    area_other = true;
-                }
-                if(translated_title_array && original_title_array){
-                    var translated_title = translated_title_array[1];
-                    var original_title = original_title_array[1];
-                    if (site == 'nhd' || site == 'pter'){
-                        if (area_cn_ml){
-                            small_descr_array.push(torrent_title.match(original_title) ? translated_title : original_title);
-                        } else{
-                            small_descr_array.push(translated_title);
-                        }
-                    } else if (site == 'putao'){
-                        if (area_cn_ml){
-                            torrent_title = torrent_title.match(original_title) ? torrent_title : `[${original_title}] ${torrent_title}`;
-                            name_box.val(torrent_title)
-                        } else{
-                            torrent_title = torrent_title.match(translated_title) ? torrent_title : `[${translated_title}] ${torrent_title}`;
-                            name_box.val(torrent_title)
-                        }
-                    }
-                }
-                // festival
-                var festival_array = new_text.match(/(\d{4})-\d{2}-\d{2}\((\S+电影节)\)/);
-                if(festival_array){
-                    small_descr_array.push(festival_array[1]+festival_array[2]);
-                }
-                // category
-                var category_array = new_text.match(/类\s*别\s+([^\n]*)\s*\n/);
-                var category = "";
-                if(category_array){
-                    category = category_array[1].replace(/\//g," / ");
-                    small_descr_array.push(category);
-                }
-                var cate_num = category.match('纪录')
-                    ? cate_num_documentary
-                    : category.match('动画')
-                    ? cate_num_animation
-                    : new_text.match(/集\s*数\s+/g)
-                    ? cate_num_tv_series
-                    : category.match('秀')
-                    ? cate_num_tv_show
-                    : cate_num_movie;
+          }
+        }
+        // festival
+        const festivalArray = newText.match(/(\d{4})-\d{2}-\d{2}\((\S+电影节)\)/)
+        if (festivalArray) {
+          smallDescrArray.push(festivalArray[1] + festivalArray[2])
+        }
+        // category
+        const categoryArray = newText.match(/类\s*别\s+([^\n]*)\s*\n/)
+        let category = ''
+        if (categoryArray) {
+          category = categoryArray[1].replace(/\//g, ' / ')
+          smallDescrArray.push(category)
+        }
+        let cateNum = category.match('纪录')
+          ? cateNumDocumentary
+          : category.match('动画')
+            ? cateNumAnimation
+            : newText.match(/集\s*数\s+/g)
+              ? cateNumTvSeries
+              : category.match('秀')
+                ? cateNumTvShow
+                : cateNumMovie
                 // douban and imdb score in small_desc
-                if (site == 'nhd' || site == 'putao'){
-                    var doub_score_array = new_text.match(/豆\s*瓣\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/);
-                    if(doub_score_array){
-                        small_descr_array.push("豆瓣 "+doub_score_array[1]+"（"+doub_score_array[2]+"）");
-                    }
-                    var imdb_score_array = new_text.match(/IMDb\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/i);
-                    if(imdb_score_array){
-                        small_descr_array.push("IMDb "+imdb_score_array[1]+"（"+imdb_score_array[2]+"）");
-                    }
-                }
-                // director
-                var director_array = new_text.match(/导\s*演\s+([^\w\n\s]*)\s*/);
-                if(director_array){
-                    small_descr_array.push(director_array[1]);
-                }
-                // complete small_descr
-                var small_descr = small_descr_array.join(' | ');
-                small_desc_box.val(small_descr);
-                // douban link
-                var doub_link_array = new_text.match(/豆瓣\s*链\s*接.+(https:\/\/.*)\s*/);
-                douban_link_box.val(doub_link_array ? doub_link_array[1].replace(/\[url=(.*?)\].*?\[\/url\]/, "$1") : "");
-                // imdb link
-                var imdb_link_array = new_text.match(/IMDb\s*链\s*接.+(https:\/\/.*)\s*/i);
-                imdb_link_box.val(imdb_link_array ? imdb_link_array[1].replace(/\[url=(.*?)\].*?\[\/url\]/, "$1") : "");
-                // area selection
-                if (area_sel){
-                    var area_num = area_num_default;
-                    if (site == 'pter'){
-                        area_num = area_cn_ml
-                            ? area_num_cn_ml
-                            : area_hk
-                            ? area_num_hk
-                            : area_tw
-                            ? area_num_tw
-                            : area_eu_ame
-                            ? area_num_eu_ame
-                            : area_kor
-                            ? area_num_kor
-                            : area_jap
-                            ? arae_num_jap
-                            : area_ind
-                            ? area_num_ind
-                            : area_num_other;
-                    } 
-                    area_sel.val(area_num);
-                }
-                // category selection
-                if (category_sel){
-                    if(site == 'putao'){
-                        if (cate_num == cate_num_movie){
-                            cate_num = area_cn_ml
-                                ? cate_num_movie_cn
-                                : area_eu_ame
-                                ? cate_num_movie_eu_ame
-                                : area_asia
-                                ? cate_num_movie_asia
-                                : cate_num_movie_eu_ame;
-                        } else if (cate_num == cate_num_documentary){
-                            // for clarification
-                            cate_num = cate_num_documentary;
-                        } else if (cate_num == cate_num_animation){
-                            // for clarification
-                            cate_num = cate_num_animation;
-                        } else if (cate_num == cate_num_tv_series){
-                            cate_num = area_hk || area_tw 
-                                ? cate_num_tv_series_hk_tw
-                                : area_asia
-                                ? cate_num_tv_series_asia
-                                : area_cn_ml
-                                ? cate_num_tv_series_cn_ml
-                                : area_eu_ame
-                                ? cate_num_tv_series_eu_ame
-                                : cate_num_tv_series_eu_ame;
-                        } else if (cate_num == cate_num_tv_show){
-                            cate_num = area_cn_ml
-                                ? cate_num_tv_show_cn_ml
-                                : area_hk || area_tw
-                                ? cate_num_tv_show_hk_tw
-                                : area_eu_ame
-                                ? cate_num_tv_show_eu_ame
-                                : area_jap || area_kor
-                                ? cate_num_tv_show_jp_kor
-                                : cate_num_default;
-                        }
-                    }
-                    category_sel.val(cate_num);
-                }
-            }
-            //=========================================================================================================
-            // checking torrent name
-            // source
-            if (source_sel){
-                var source_num = source_num_default;
-                if (site == 'pter'){
-                    source_num = torrent_title.match(/\W(?:remux)\W/i)
-                        ? source_num_remux// remux
-                        : torrent_title.match(/\W(?:blu(?:e|\-)?ray|bdrip|dvdrip|webrip)\W/i)
-                        ? source_num_encode// encode
-                        : torrent_title.match(/\Whdtv\W/i)
-                        ? source_num_hdtv// hdtv
-                        : torrent_title.match(/\Wweb\-?dl\W/i)
-                        ? source_num_web_dl// web-dl
-                        : source_num_default;// other
-                } else if (site == 'nhd'){
-                    source_num = torrent_title.match(/\W(?:blu(?:e|\-)?ray|bdrip)\W/i)
-                        ? source_num_bluray
-                        : torrent_title.match(/\Whdtv\W/i)
-                        ? source_num_hddvd
-                        : torrent_title.match(/\Wdvd/i)
-                        ? source_num_dvd
-                        : torrent_title.match(/\Wweb\-?dl\W/i)
-                        ? source_num_web_dl
-                        : torrent_title.match(/\Wwebrip\W/i)
-                        ? source_num_web_rip
-                        : source_num_default;
-                }
-                source_sel.val(source_num);
-            }
-            // resolution
-            if(standard_sel){
-                var stantdard_num = standard_num_default;
-                if (site == 'nhd' || site == 'putao'){
-                    stantdard_num = torrent_title.match(/\W1080p\W/i)
-                        ? standard_num_1080p
-                        : torrent_title.match(/\W1080i\W/i)
-                        ? standard_num_1080i
-                        : torrent_title.match(/\W720p\W/i)
-                        ? standard_num_720p
-                        : torrent_title.match(/\W(?:2160p|4k)\W/i)
-                        ? standard_num_2160p
-                        : torrent_title.match(/\Wdvd/i)
-                        ? standard_num_sd
-                        : standard_num_default;
-                }
-                standard_sel.val(stantdard_num);
-            }
-            // processing
-            if (processing_sel){
-                var process_num = process_num_default;
-                if(site == 'nhd'){
-                    process_num = torrent_title.match(/\W(?:remux|web\-?dl)\W/i)
-                        ? process_num_raw
-                        : process_num_encode;
-                }
-                processing_sel.val(process_num);
-            }
-            // codec
-            if (codec_sel){
-                var codec_num = codec_num_default;
-                if (site == 'nhd' || site == 'putao'){
-                    codec_num = torrent_title.match(/\W(?:h|x)\.?264\W/i)
-                        ? codec_num_h_264
-                        : torrent_title.match(/\W(?:h|x)\.?265\W/i)
-                        ? codec_num_h_265
-                        : torrent_title.match(/\Wmpeg-2/i)
-                        ? codec_num_mpeg_2
-                        : torrent_title.match(/\Wxvid/i)
-                        ? codec_num_xvid
-                        : torrent_title.match(/\Wflac/i)
-                        ? codec_num_flac
-                        : codec_num_default;
-                }
-                codec_sel.val(codec_num);
-            }
-            // checking mediainfo
-            if (zhongzi_check && ensub_check && guoyu_check && yueyu_check){
-                var tag_for_mediainfo = target_tag_box ? target_tag_box : 'quote';
-                var regex_str = '\\[' 
-                    + tag_for_mediainfo + '\\s*=\\s*mediainfo\\].*?(General\\s*?Unique\\s*?ID[^\\0]*?)\\[\\/' 
-                    + tag_for_mediainfo + '\\]';
-                var regex = RegExp(regex_str, 'im');
-                var mediainfo_array = new_text.match(regex);
-                if (mediainfo_array){
-                    var chinese_sub = false;
-                    var english_sub = false;
-                    var chinese_dub = false;
-                    var cantonese_dub = false;
-                    var mediainfo = mediainfo_array[1];
-                    var subtitles = mediainfo.match(/Text.*?\nID[^\0]*?Forced.*/gm);
-                    if (subtitles){
-                        console.log(`${subtitles.length} subtitles`);
-                        subtitles.forEach((subtitle) => {
-                            var language_array = subtitle.match(/language\s*:(.*)/i);
-                            if (!language_array){
-                                language_array = subtitle.match(/title\s*:(.*)/i);
-                            }
-                            if (language_array){
-                                var language = language_array[1];
-                                if (language.match(/chinese|chs|cht/i)){
-                                    console.log('zhongzi');
-                                    chinese_sub = true;
-                                    return;
-                                } else if (language.match(/english/i)) {
-                                    english_sub = true;
-                                    console.log('ensub');
-                                    return;
-                                } else{
-                                    console.log('other sub');
-                                }
-                            }
-                            else{
-                                console.log('no language specified for the subs');
-                            }
-                        });
-                    }
-                    var dubs = mediainfo.match(/Audio.*\nID[^\0]*?Forced.*/gm);
-                    if (dubs){
-                        console.log(`${dubs.length} dubs`);
-                        dubs.forEach((dub) => {
-                            if (dub.match(/cantonese/i)) {
-                                cantonese_dub = true;
-                                console.log('yueyu');
-                                return;
-                            } else if (dub.match(/chinese/i)){
-                                chinese_dub = true;
-                                console.log('guoyu');
-                                return;
-                            } else{
-                                console.log('other dub');
-                            }
-                        })
-                    } else {
-                        console.log('no dub');
-                    }
-                    zhongzi_check.checked = chinese_sub;
-                    ensub_check.checked = english_sub;
-                    guoyu_check.checked = chinese_dub;
-                    yueyu_check.checked = cantonese_dub;
-                }
-            }
-            descr_box.focus();
-        });
-    } else if (page == 'subtitles'){
-        var input_file = $('input[type="file"][name="file"]');
-        var title_box = $('input[type="text"][name="title"]');
-        var language_sel = $('select[name="sel_lang"]');
-        if (!input_file){
-            return;
+        if (site === 'nhd' || site === 'putao') {
+          const doubScoreArray = newText.match(/豆\s*瓣\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/)
+          if (doubScoreArray) {
+            smallDescrArray.push('豆瓣 ' + doubScoreArray[1] + '（' + doubScoreArray[2] + '）')
+          }
+          const imdbScoreArray = newText.match(/IMDb\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/i)
+          if (imdbScoreArray) {
+            smallDescrArray.push('IMDb ' + imdbScoreArray[1] + '（' + imdbScoreArray[2] + '）')
+          }
         }
-        var anonymous_check = $("input[name='uplver'][type='checkbox']")[0];
-        input_file.change(function(){
-            if (anonymous_check){
-                anonymous_check.checked = anonymous;
+        // director
+        const directorArray = newText.match(/导\s*演\s+([^\w\n\s]*)\s*/)
+        if (directorArray) {
+          smallDescrArray.push(directorArray[1])
+        }
+        // complete small_descr
+        const smallDescr = smallDescrArray.join(' | ')
+        smallDescBox.val(smallDescr)
+        // douban link
+        const doubanLinkArray = newText.match(/豆瓣\s*链\s*接.+(https:\/\/.*)\s*/)
+        doubanLinkBox.val(doubanLinkArray ? doubanLinkArray[1].replace(/\[url=(.*?)\].*?\[\/url\]/, '$1') : '')
+        // imdb link
+        const imdbLinkArray = newText.match(/IMDb\s*链\s*接.+(https:\/\/.*)\s*/i)
+        imdbLinkBox.val(imdbLinkArray ? imdbLinkArray[1].replace(/\[url=(.*?)\].*?\[\/url\]/, '$1') : '')
+        // area selection
+        if (areaSel) {
+          let areaNum = areaNumDefault
+          if (site === 'pter') {
+            areaNum = areaCnMl
+              ? areaNumCnMl
+              : areaHk
+                ? areaNumHk
+                : areaTw
+                  ? areaNumTw
+                  : areaEuAme
+                    ? areaNumEuAme
+                    : areaKor
+                      ? areaNumKor
+                      : areaJap
+                        ? areaNumJap
+                        : areaInd
+                          ? areaNumInd
+                          : areaNumOther
+          }
+          areaSel.val(areaNum)
+        }
+        // category selection
+        if (categorySel) {
+          if (site === 'putao') {
+            if (cateNum === cateNumMovie) {
+              cateNum = areaCnMl
+                ? cateNumMovieCnMl
+                : areaEuAme
+                  ? cateNumMovieEuAme
+                  : areaAsia
+                    ? cateNumMovieAsia
+                    : cateNumMovieEuAme
+            } else if (cateNum === cateNumDocumentary) {
+              // for clarification
+              cateNum = cateNumDocumentary
+            } else if (cateNum === cateNumAnimation) {
+              // for clarification
+              cateNum = cateNumAnimation
+            } else if (cateNum === cateNumTvSeries) {
+              cateNum = areaHk || areaTw
+                ? cateNumTvSeriesHkTw
+                : areaAsia
+                  ? cateNumTvSeriesAsia
+                  : areaCnMl
+                    ? cateNumTvSeriesCnMl
+                    : areaEuAme
+                      ? cateNumTvSeriesEuAme
+                      : cateNumTvSeriesEuAme
+            } else if (cateNum === cateNumTvShow) {
+              cateNum = areaCnMl
+                ? cateNumTvShowCnMl
+                : areaHk || areaTw
+                  ? cateNumTvShowHkTw
+                  : areaEuAme
+                    ? cateNumTvShowEuAme
+                    : areaJap || areaKor
+                      ? cateNumTvShowJpKor
+                      : cateNumDefault
             }
-            var lang_num_default = 0, lang_num_eng = 6, lang_num_chs = 25, lang_num_cht = 28,
-            lang_num_jap = 15, lang_num_fre = 9, lang_num_ger = 10, lang_num_ita = 14,
-            lang_num_kor = 16, lang_num_spa = 26, lang_num_other = 18;
-            var lang_num = lang_num_default;
-            var path_sub = input_file.val();
-            var file_name = /([^\\]+)$/.exec(path_sub)[1];
-                if (file_name){
-                    title_box.val(file_name);
-                    var lang = path_sub.replace(/.*\.(.*)\..*/i, "$1");
-                    if (lang){
-                        lang_num = lang.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || lang.match(/.+( |&)?(chs|cht|cn|zh)/)
-                            ? lang_num_other
-                            : lang.match(/chs/)
-                            ? lang_num_chs
-                            : lang.match(/cht/)
-                            ? lang_num_cht
-                            : lang.match(/eng/)
-                            ? lang_num_eng
-                            : lang.match(/jap|jp/)
-                            ? lang_num_jap
-                            : lang.match(/fre|fra/)
-                            ? lang_num_fre
-                            : lang.match(/ger/)
-                            ? lang_num_ger
-                            : lang.match(/ita/)
-                            ? lang_num_ita
-                            : lang.match(/kor/)
-                            ? lang_num_kor
-                            : lang.match(/spa/)
-                            ? lang_num_spa
-                            : lang_num_other;
-                    }
-                    console.log(`language: ${lang}`);
-                    language_sel.val(lang_num);
-                } else{
-                    console.log(`not able to get file name from path ${path_sub}`);
+          }
+          categorySel.val(cateNum)
+        }
+      }
+      //= ========================================================================================================
+      // checking torrent name
+      // source
+      if (sourceSel) {
+        let sourceNum = sourceNumDefault
+        if (site === 'pter') {
+          sourceNum = torTitle.match(/\W(?:remux)\W/i)
+            ? sourceNumRemux// remux
+            : torTitle.match(/\W(?:blu(?:e|-)?ray|bdrip|dvdrip|webrip)\W/i)
+              ? sourceNumEncode// encode
+              : torTitle.match(/\Whdtv\W/i)
+                ? sourceNumHdtv// hdtv
+                : torTitle.match(/\Wweb-?dl\W/i)
+                  ? sourceNumWebDl// web-dl
+                  : sourceNumDefault// other
+        } else if (site === 'nhd') {
+          sourceNum = torTitle.match(/\W(?:blu(?:e|-)?ray|bdrip)\W/i)
+            ? sourceNumBluray
+            : torTitle.match(/\Whdtv\W/i)
+              ? sourceNumHddvd
+              : torTitle.match(/\Wdvd/i)
+                ? sourceNumDvd
+                : torTitle.match(/\Wweb-?dl\W/i)
+                  ? sourceNumWebDl
+                  : torTitle.match(/\Wwebrip\W/i)
+                    ? sourceNumWebrip
+                    : sourceNumDefault
+        }
+        sourceSel.val(sourceNum)
+      }
+      // resolution
+      if (standardSel) {
+        let stantdardNum = standardNumDefault
+        if (site === 'nhd' || site === 'putao') {
+          stantdardNum = torTitle.match(/\W1080p\W/i)
+            ? standardNum1080p
+            : torTitle.match(/\W1080i\W/i)
+              ? standardNum1080i
+              : torTitle.match(/\W720p\W/i)
+                ? standardNum720p
+                : torTitle.match(/\W(?:2160p|4k)\W/i)
+                  ? standardNum2160p
+                  : torTitle.match(/\Wdvd/i)
+                    ? standardNumSd
+                    : standardNumDefault
+        }
+        standardSel.val(stantdardNum)
+      }
+      // processing
+      if (processingSel) {
+        let processNum = processNumDefault
+        if (site === 'nhd') {
+          processNum = torTitle.match(/\W(?:remux|web-?dl)\W/i)
+            ? processNumRaw
+            : processNumEncode
+        }
+        processingSel.val(processNum)
+      }
+      // codec
+      if (codecSel) {
+        let codecNum = codecNumDefault
+        if (site === 'nhd' || site === 'putao') {
+          codecNum = torTitle.match(/\W(?:h|x)\.?264\W/i)
+            ? codecNumH264
+            : torTitle.match(/\W(?:h|x)\.?265\W/i)
+              ? codecNumH265
+              : torTitle.match(/\Wmpeg-2/i)
+                ? codecNumMpeg2
+                : torTitle.match(/\Wxvid/i)
+                  ? codecNumXvid
+                  : torTitle.match(/\Wflac/i)
+                    ? codecNumFlac
+                    : codecNumDefault
+        }
+        codecSel.val(codecNum)
+      }
+      // checking mediainfo
+      if (zhongziCheck && ensubCheck && guoyuCheck && yueyuCheck) {
+        const tagForMediainfo = targetTagBox || 'quote'
+        const regexStr = '\\[' +
+                    tagForMediainfo + '\\s*=\\s*mediainfo\\].*?(General\\s*?Unique\\s*?ID[^\\0]*?)\\[\\/' +
+                    tagForMediainfo + '\\]'
+        const regex2 = RegExp(regexStr, 'im')
+        const mediainfoArray = newText.match(regex2)
+        if (mediainfoArray) {
+          let chineseSub = false
+          let englishSub = false
+          let chineseDub = false
+          let cantoneseDub = false
+          const mediainfo = mediainfoArray[1]
+          const subtitles = mediainfo.match(/Text.*?\nID[^\0]*?Forced.*/gm)
+          if (subtitles) {
+            console.log(`${subtitles.length} subtitles`)
+            subtitles.forEach((subtitle) => {
+              let languageArray = subtitle.match(/language\s*:(.*)/i)
+              if (!languageArray) {
+                languageArray = subtitle.match(/title\s*:(.*)/i)
+              }
+              if (languageArray) {
+                const language = languageArray[1]
+                if (language.match(/chinese|chs|cht/i)) {
+                  console.log('zhongzi')
+                  chineseSub = true
+                } else if (language.match(/english/i)) {
+                  englishSub = true
+                  console.log('ensub')
+                } else {
+                  console.log('other sub')
                 }
+              } else {
+                console.log('no language specified for the subs')
+              }
             })
+          }
+          const dubs = mediainfo.match(/Audio.*\nID[^\0]*?Forced.*/gm)
+          if (dubs) {
+            console.log(`${dubs.length} dubs`)
+            dubs.forEach((dub) => {
+              if (dub.match(/cantonese/i)) {
+                cantoneseDub = true
+                console.log('yueyu')
+              } else if (dub.match(/chinese/i)) {
+                chineseDub = true
+                console.log('guoyu')
+              } else {
+                console.log('other dub')
+              }
+            })
+          } else {
+            console.log('no dub')
+          }
+          zhongziCheck.checked = chineseSub
+          ensubCheck.checked = englishSub
+          guoyuCheck.checked = chineseDub
+          yueyuCheck.checked = cantoneseDub
+        }
+      }
+      descrBox.focus()
+    })
+  } else if (page === 'subtitles') {
+    const inputFile = $('input[type="file"][name="file"]')
+    const titleBox = $('input[type="text"][name="title"]')
+    const languageSel = $('select[name="sel_lang"]')
+    if (!inputFile) {
+      return
     }
-})();
+    const anonymousCheck = $("input[name='uplver'][type='checkbox']")[0]
+    inputFile.change(function () {
+      if (anonymousCheck) {
+        anonymousCheck.checked = anonymous
+      }
+      const langNumDefault = 0; const langNumEng = 6; const langNumChs = 25; const langNumCht = 28
+      const langNumJap = 15; const langNumFre = 9; const langNumGer = 10; const langNumIta = 14
+      const langNumKor = 16; const langNumSpa = 26; const langNumOther = 18
+      let langNum = langNumDefault
+      const pathSub = inputFile.val()
+      const fileName = /([^\\]+)$/.exec(pathSub)[1]
+      if (fileName) {
+        titleBox.val(fileName)
+        const lang = pathSub.replace(/.*\.(.*)\..*/i, '$1')
+        if (lang) {
+          langNum = lang.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || lang.match(/.+( |&)?(chs|cht|cn|zh)/)
+            ? langNumOther
+            : lang.match(/chs/)
+              ? langNumChs
+              : lang.match(/cht/)
+                ? langNumCht
+                : lang.match(/eng/)
+                  ? langNumEng
+                  : lang.match(/jap|jp/)
+                    ? langNumJap
+                    : lang.match(/fre|fra/)
+                      ? langNumFre
+                      : lang.match(/ger/)
+                        ? langNumGer
+                        : lang.match(/ita/)
+                          ? langNumIta
+                          : lang.match(/kor/)
+                            ? langNumKor
+                            : lang.match(/spa/)
+                              ? langNumSpa
+                              : langNumOther
+        }
+        console.log(`language: ${lang}`)
+        languageSel.val(langNum)
+      } else {
+        console.log(`not able to get file name from path ${pathSub}`)
+      }
+    })
+  }
+})()
