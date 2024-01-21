@@ -4,11 +4,13 @@
 
 （1）用于PT站自动填写种子发布页面的表格。
 
-（2）在原[NHD PostFormatter](https://update.greasyfork.org/scripts/36224/Post%20Formatter.user.js)的基础上改动扩充。感谢原作者TYT@NexusHD！
+（2）辅助功能：字幕文件上传页面，也可以根据上传的文件路径自动填写字幕标题和选择语言类型。
 
-（3）辅助功能：字幕文件上传页面，也可以根据上传的文件路径自动填写字幕标题和选择语言类型。
+（3）目前支持NHD、PuTao、PterClub、M-Team几个站。
 
-（3）目前支持NHD、PuTao、PterClub几个站。
+（4）各个PT站BB代码支持情况不同，同一个种子的描述内容在各站的显示效果会有一定区别。
+
+（5）在原[NHD PostFormatter](https://update.greasyfork.org/scripts/36224/Post%20Formatter.user.js)的基础上改动扩充。感谢原作者TYT@NexusHD！
 
 ## 使用方法
 
