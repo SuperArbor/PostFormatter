@@ -14,6 +14,7 @@
 // @namespace    d8e7078b-abee-407d-bcb6-096b59eeac17
 // @license      MIT
 // ==/UserScript==
+const $ = window.jQuery;
 (function () {
   'use strict'
   function insertTyt (myValue, switcher) {
