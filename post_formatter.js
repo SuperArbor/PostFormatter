@@ -514,12 +514,12 @@
         smallDescBox.val(smallDescr)
         // douban link
         if (doubanLinkBox) {
-          const doubanLinkArray = newText.match(/豆瓣\s*链\s*接.+(https:\/\/.*)\s*/)
+          const doubanLinkArray = newText.match(/豆瓣\s*链\s*接.+(https?:\/\/movie\.douban\.com\/subject\/\d+\/?)/)
           doubanLinkBox.val(doubanLinkArray ? doubanLinkArray[1].replace(/\[url=(.*?)\].*?\[\/url\]/, '$1') : '')
         }
         // imdb link
         if (imdbLinkBox) {
-          const imdbLinkArray = newText.match(/IMDb\s*链\s*接.+(https:\/\/.*)\s*/i)
+          const imdbLinkArray = newText.match(/IMDb\s*链\s*接.+(https?:\/\/www\.imdb\.com\/title\/tt\d+\/?)/i)
           imdbLinkBox.val(imdbLinkArray ? imdbLinkArray[1].replace(/\[url=(.*?)\].*?\[\/url\]/, '$1') : '')
         }
         // area selection
