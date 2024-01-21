@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info and smilies
-// @version      1.2.3
+// @version      1.2.4
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        http://*.nexushd.org/*
 // @match        https://pterclub.com/*
@@ -622,9 +622,9 @@
       let cantoneseDub = false
       if (site === 'pter' || site === 'mteam') {
         const tagForMediainfo = targetTagBox || 'quote'
-        const regexStr = '\\[' +
-                    tagForMediainfo + '\\s*=\\s*mediainfo\\].*?(General\\s*?Unique\\s*?ID[^\\0]*?)\\[\\/' +
-                    tagForMediainfo + '\\]'
+        const regexStr = boxSupportDescr
+          ? '\\[' + tagForMediainfo + '\\s*=\\s*mediainfo\\].*?(General\\s*?Unique\\s*?ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
+          : '\\[' + tagForMediainfo + '\\].*?(General\\s*?Unique\\s*?ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
         const regex2 = RegExp(regexStr, 'im')
         const mediainfoArray = newText.match(regex2)
         if (mediainfoArray) {
