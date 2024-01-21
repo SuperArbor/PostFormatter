@@ -15,6 +15,7 @@
 // ==/UserScript==
 (function() {
     'use strict';
+    const BOX_TAG_DEFAULT = 'box';
     function insert_tyt(myValue,switcher){
         var obj_target;
         if(switcher===1){
@@ -42,37 +43,72 @@
         }
         return true;
     }
-    function nestExplode(input_text){
+    function nestExplode(input_text, target_box_tag){
         var output_text,c;
         do{
-            output_text = input_text.replace(/\[hide((?:=[^\]]+)?\](?:(?!\[\/hide\])[\s\S])*\[hide(?:=[^\]]+)?\])/g,"[quote$1");
-            output_text = output_text.replace(/(\[\/hide\](?:(?!\[hide(?:=[^\]]+)?\])[\s\S])*)\[\/hide\]/g,"$1[/quote]");
+            if (target_box_tag = 'hide'){
+                output_text = input_text.replace(/\[hide((?:=[^\]]+)?\](?:(?!\[\/hide\])[\s\S])*\[hide(?:=[^\]]+)?\])/g,"[quote$1");
+                output_text = output_text.replace(/(\[\/hide\](?:(?!\[hide(?:=[^\]]+)?\])[\s\S])*)\[\/hide\]/g,"$1[/quote]");
+            } else if (target_box_tag = 'box'){
+                output_text = input_text.replace(/\[box((?:=[^\]]+)?\](?:(?!\[\/box\])[\s\S])*\[box(?:=[^\]]+)?\])/g,"[quote$1");
+                output_text = output_text.replace(/(\[\/box\](?:(?!\[box(?:=[^\]]+)?\])[\s\S])*)\[\/box\]/g,"$1[/quote]");
+            } else if (target_box_tag == 'spoiler') {
+                output_text = input_text.replace(/\[spoiler((?:=[^\]]+)?\](?:(?!\[\/spoiler\])[\s\S])*\[spoiler(?:=[^\]]+)?\])/g,"[quote$1");
+                output_text = output_text.replace(/(\[\/spoiler\](?:(?!\[spoiler(?:=[^\]]+)?\])[\s\S])*)\[\/spoiler\]/g,"$1[/quote]");
+            }
             c=(input_text!=output_text);
             input_text=output_text;
         }while(c);
         return output_text;
     }
-    function switchBoxQuote(input_text){
+    function switchBoxQuote(input_text, target_box_tag){
         var output_text,c;
         do{
-            output_text = input_text.replace(/(\[)(?:hide|_x~bTYt_)((?:=[^\]]+)?\](?:(?!\[\/(?:hide|_x~bTYt_)\])[\s\S])*\[)quote((?:=[^\]]+)?\](?:(?!\[\/quote\])[\s\S])*\[\/)quote((?:=[^\]]+)?\](?:(?!\[(?:hide|_x~bTYt_)(?:=[^\]]+)?\])[\s\S])*\[\/)(?:hide|_x~bTYt_)(\])/g,"$1_x~bTYt_$2_e~qTYt_$3_e~qTYt_$4_x~bTYt_$5");
+            if (target_box_tag = 'hide'){
+                output_text = input_text.replace(/(\[)(?:hide|_x~bTYt_)((?:=[^\]]+)?\](?:(?!\[\/(?:hide|_x~bTYt_)\])[\s\S])*\[)quote((?:=[^\]]+)?\](?:(?!\[\/quote\])[\s\S])*\[\/)quote((?:=[^\]]+)?\](?:(?!\[(?:hide|_x~bTYt_)(?:=[^\]]+)?\])[\s\S])*\[\/)(?:hide|_x~bTYt_)(\])/g,"$1_x~bTYt_$2_e~qTYt_$3_e~qTYt_$4_x~bTYt_$5");
+            } else if (target_box_tag = 'box'){
+                output_text = input_text.replace(/(\[)(?:box|_x~bTYt_)((?:=[^\]]+)?\](?:(?!\[\/(?:box|_x~bTYt_)\])[\s\S])*\[)quote((?:=[^\]]+)?\](?:(?!\[\/quote\])[\s\S])*\[\/)quote((?:=[^\]]+)?\](?:(?!\[(?:box|_x~bTYt_)(?:=[^\]]+)?\])[\s\S])*\[\/)(?:box|_x~bTYt_)(\])/g,"$1_x~bTYt_$2_e~qTYt_$3_e~qTYt_$4_x~bTYt_$5");
+            } else if (target_box_tag == 'spoiler'){
+                output_text = input_text.replace(/(\[)(?:spoiler|_x~bTYt_)((?:=[^\]]+)?\](?:(?!\[\/(?:spoiler|_x~bTYt_)\])[\s\S])*\[)quote((?:=[^\]]+)?\](?:(?!\[\/quote\])[\s\S])*\[\/)quote((?:=[^\]]+)?\](?:(?!\[(?:spoiler|_x~bTYt_)(?:=[^\]]+)?\])[\s\S])*\[\/)(?:spoiler|_x~bTYt_)(\])/g,"$1_x~bTYt_$2_e~qTYt_$3_e~qTYt_$4_x~bTYt_$5");
+            }
             c=(input_text!=output_text);
             input_text=output_text;
         }while(c);
-        output_text = output_text.replace(/_x~bTYt_/g,"quote");
-        output_text = output_text.replace(/_e~qTYt_/g,"hide");
+        output_text = output_text.replace(/_x~bTYt_/g, "quote");
+        output_text = output_text.replace(/_e~qTYt_/g, target_box_tag);
         return output_text;
     }
-    function compact_content(input_text){
+    function compact_content(input_text, target_box_tag){
         var output_text,c;
         do{
-            output_text = input_text.replace(/(\[\/?(?:quote|hide|code)(?:=[^\]]+)?\])\s+(\S)/g,"$1$2");
-            output_text = output_text.replace(/(\S)\s+(\[\/?(?:quote|hide|code)(?:=[^\]]+)?\])/g,"$1$2");
-            output_text = output_text.replace(/(\[quote|hide|code(?:=[^\]]+)?\](?:(?!\[\/)[\s\S])*\[(?:font|b|i|u|color|size)(?:=[^\]]+)?\])\n+([^\n])/g,"$1$2");
+            if (target_box_tag == 'hide'){
+                output_text = input_text.replace(/(\[\/?(?:quote|hide|code)(?:=[^\]]+)?\])\s+(\S)/g,"$1$2");
+                output_text = output_text.replace(/(\S)\s+(\[\/?(?:quote|hide|code)(?:=[^\]]+)?\])/g,"$1$2");
+                output_text = output_text.replace(/(\[quote|hide|code(?:=[^\]]+)?\](?:(?!\[\/)[\s\S])*\[(?:font|b|i|u|color|size)(?:=[^\]]+)?\])\n+([^\n])/g,"$1$2");
+            } else if (target_box_tag = 'box'){
+                output_text = input_text.replace(/(\[\/?(?:quote|box|code)(?:=[^\]]+)?\])\s+(\S)/g,"$1$2");
+                output_text = output_text.replace(/(\S)\s+(\[\/?(?:quote|box|code)(?:=[^\]]+)?\])/g,"$1$2");
+                output_text = output_text.replace(/(\[quote|box|code(?:=[^\]]+)?\](?:(?!\[\/)[\s\S])*\[(?:font|b|i|u|color|size)(?:=[^\]]+)?\])\n+([^\n])/g,"$1$2");
+            } else if (target_box_tag = 'spoiler'){
+                output_text = input_text.replace(/(\[\/?(?:quote|spoiler|code)(?:=[^\]]+)?\])\s+(\S)/g,"$1$2");
+                output_text = output_text.replace(/(\S)\s+(\[\/?(?:quote|spoiler|code)(?:=[^\]]+)?\])/g,"$1$2");
+                output_text = output_text.replace(/(\[quote|spoiler|code(?:=[^\]]+)?\](?:(?!\[\/)[\s\S])*\[(?:font|b|i|u|color|size)(?:=[^\]]+)?\])\n+([^\n])/g,"$1$2");
+            }
             c=(input_text!=output_text);
             input_text=output_text;
         }while(c);
         return output_text;
+    }
+    function escapeRegExp(stringToGoIntoTheRegex) {
+        return stringToGoIntoTheRegex.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    }
+    function compose_regex_with_switched_tag(original_pattern, source_tag, target_tag){
+        if (target_tag == source_tag){
+            return original_pattern;
+        }
+        var regex = RegExp(source_tag, 'g');
+        var new_pattern = escapeRegExp(original_pattern).replace(regex, target_tag);
+        return new_pattern;
     }
     //============================================================
     var domain_match_array = window.location.href.match(/(.*)\/(upload|edit|subtitles)\.php/);
@@ -114,7 +150,7 @@
         source_num_remux = 0, source_num_hddvd = 0, source_num_dvd = 0, 
         source_num_encode = 0, source_num_web_dl = 0, source_num_web_rip = 0, 
         source_num_hdtv = 0, source_num_tv = 0, source_num_other = 0;
-    var tag_box = 'box';
+    var target_tag_box = BOX_TAG_DEFAULT;
     // site-specific 
     //controls
     // pter
@@ -133,7 +169,7 @@
         cate_num_tv_series_asia = 0, cate_num_tv_series_cn_ml = 0, cate_num_tv_series_eu_ame = 0,
         cate_num_tv_show_cn_ml = 0, cate_num_tv_show_eu_ame = 0, cate_num_tv_show_hk_tw = 0, cate_num_tv_show_jp_kor = 0;
     if (site == 'nhd'){
-        tag_box = 'box';
+        target_tag_box = 'box';
         if (page == 'upload') {
             name_box = $("#name");
         } else{
@@ -188,7 +224,7 @@
         codec_num_flac = 10;
         codec_num_other = 15;
     } else if (site == 'pter'){
-        tag_box = 'hide';
+        target_tag_box = 'hide';
         if (page == 'upload') {
             name_box = $("#name");
         } else{
@@ -235,7 +271,7 @@
         area_num_ind = 7;
         area_num_other = 8;
     } else if (site = 'putao'){
-        tag_box = 'box';
+        target_tag_box = '';
         if (page == 'upload') {
             name_box = $("#name");
         } else{
@@ -294,12 +330,23 @@
             p2 = p2.toLowerCase();
             return p1+p2+p3;
         });
-        new_text = new_text.replace(/\[(\/)?(?:spoiler|box)((?:=[^\]]+)?)\]/g,"[$1hide$2]");
-        new_text = new_text.replace(/\[mediainfo\]([^\0]*?)\[\/mediainfo\]/gi,"[hide=mediainfo]$1[/hide]");    //NHD mediainfo style
+        if (target_tag_box == 'hide'){
+            new_text = new_text.replace(/\[(\/)?(?:spoiler|box)((?:=[^\]]+)?)\]/g, "[$1hide$2]");
+            new_text = new_text.replace(/\[mediainfo\]([^\0]*?)\[\/mediainfo\]/gi, "[hide=mediainfo]$1[/hide]");  
+        } else if (target_tag_box == 'box'){
+            new_text = new_text.replace(/\[(\/)?(?:spoiler|hide)((?:=[^\]]+)?)\]/g, "[$1box$2]");
+        } else if (target_tag_box == 'spoiler'){
+            new_text = new_text.replace(/\[(\/)?(?:box|hide)((?:=[^\]]+)?)\]/g, "[$1spoiler$2]");
+            new_text = new_text.replace(/\[mediainfo\]([^\0]*?)\[\/mediainfo\]/gi, "[spoiler=mediainfo]$1[/spoiler]");  
+        } else if (target_tag_box == ''){
+            new_text = new_text.replace(/\[(\/)?(?:spoiler|box|hide)((?:=[^\]]+)?)\]/g, "[$1quote$2]");
+            new_text = new_text.replace(/\[mediainfo\]([^\0]*?)\[\/mediainfo\]/gi, "[quote=mediainfo]$1[/quote]");  
+        }
+         //NHD mediainfo style
         new_text = new_text.replace(/\[pre\]/g,"[font=courier new]");
         new_text = new_text.replace(/\[\/pre\]/g,"[/font]");
-        new_text = nestExplode(new_text);
-        new_text = switchBoxQuote(new_text);
+        new_text = nestExplode(new_text, target_tag_box);
+        new_text = switchBoxQuote(new_text, target_tag_box);
         new_text = new_text.replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g,function(matches){
             return(matches.replace(/\[align(=\w*)?\]/g,"\n"));
         });
@@ -311,7 +358,7 @@
             }
             return(match);
         });
-        new_text = compact_content(new_text);
+        new_text = compact_content(new_text, target_tag_box);
         descr_box.val(new_text);
         //=========================================================================================================
         // name 
@@ -556,7 +603,16 @@
         }
         // checking mediainfo
         if (zhongzi_check && ensub_check && guoyu_check && yueyu_check){
-            var mediainfo_array = new_text.match(/\[hide\s*=\s*mediainfo\].*?(General\s*?Unique\s*?ID[^\0]*?)\[\/hide\]/im);
+            var mediainfo_array = [];
+            if (target_tag_box == 'hide'){
+                mediainfo_array = new_text.match(/\[hide\s*=\s*mediainfo\].*?(General\s*?Unique\s*?ID[^\0]*?)\[\/hide\]/im);
+            } else if (target_tag_box == 'box'){
+                mediainfo_array = new_text.match(/\[box\s*=\s*mediainfo\].*?(General\s*?Unique\s*?ID[^\0]*?)\[\/box\]/im);
+            } else if (target_tag_box == 'spoiler') {
+                mediainfo_array = new_text.match(/\[spoiler\s*=\s*mediainfo\].*?(General\s*?Unique\s*?ID[^\0]*?)\[\/spoiler\]/im);
+            } else if (target_tag_box == ''){
+                mediainfo_array = new_text.match(/\[quote\s*=\s*mediainfo\].*?(General\s*?Unique\s*?ID[^\0]*?)\[\/quote\]/im);
+            }
             if (mediainfo_array){
                 var chinese_sub = false;
                 var english_sub = false;
