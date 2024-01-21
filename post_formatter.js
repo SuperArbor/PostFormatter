@@ -91,7 +91,8 @@
     } while (c)
     return outputText
   }
-  //= ===========================================================
+  //= ========================================================================================================
+  // Main
   const domainMatchArray = window.location.href.match(/(.*)\/(upload|edit|subtitles)\.php/)
   if (!domainMatchArray) {
     return
@@ -113,6 +114,8 @@
   const anonymous = true
   console.log(`running in site ${site} and page ${page}`)
   if (page === 'upload' || page === 'edit') {
+    //= ========================================================================================================
+    // 上传和编辑种子页面
     const btnBingo = $('<input>')
     btnBingo.attr({
       type: 'button',
@@ -141,7 +144,6 @@
     tbody1.append(tr1)
     table1.append(tbody1)
     $('#compose input[name="quote"]').closest('table').after(table1)
-
     let switcher = 0
     if (window.location.href.match(/moresmilies\.php/)) {
       switcher = 1
@@ -151,23 +153,22 @@
       return false
     })
     const anonymousCheck = $("input[name='uplver'][type='checkbox']")[0]
+    //= ========================================================================================================
     // initialization
-    // common
-    // controls
+    // common controls
     let nameBox = null; let smallDescBox = null; let imdbLinkBox = null; let doubanLinkBox = null
     let descrBox = null; let categorySel = null; let sourceSel = null
     // this is normally useful even when area_sel == null.
-    let areaCnMl = false; let areaHk = false; let areaTw = false; let areaEuAme = false; let areaKor = false; let areaJap = false
-    let areaInd = false; let areaAsia = false
+    let areaCnMl = false; let areaHk = false; let areaTw = false; let areaEuAme = false; let areaKor = false
+    let areaJap = false; let areaInd = false; let areaAsia = false
     let areaNumDefault = 0; let areaNumCnMl = 1; let areaNumHk = 2; let areaNumTw = 3
     let areaNumEuAme = 4; let areaNumKor = 5; let areaNumJap = 6; let areaNumInd = 7; let areaNumOther = 8
     // categories
     let cateNumDefault = 0; let cateNumMovie = 1; let cateNumDocumentary = 2; let cateNumAnimation = 3
     let cateNumTvSeries = 4; let cateNumTvShow = 5
     // sources
-    let sourceNumDefault = 0; let sourceNumBluray = 1; let sourceNumRemux = 2
-    let sourceNumHddvd = 3; let sourceNumDvd = 4; let sourceNumEncode = 5; let sourceNumWebDl = 6
-    let sourceNumWebrip = 7; let sourceNumHdtv = 8
+    let sourceNumDefault = 0; let sourceNumBluray = 1; let sourceNumRemux = 2; let sourceNumHddvd = 3
+    let sourceNumDvd = 4; let sourceNumEncode = 5; let sourceNumWebDl = 6; let sourceNumWebrip = 7; let sourceNumHdtv = 8
     // 站点支持的box标签类型
     let targetTagBox = ''
     // 其他站点的box标签类型（需要统一替换）
@@ -178,8 +179,9 @@
     // (pter) areas
     let areaSel = null
     let chsubCheck = null; let ensubCheck = null; let chdubCheck = null; let cantodubCheck = null
-    // (nhd, mteam) standard
+    // (nhd, mteam) controls
     let standardSel = null; let processingSel = null; let codecSel = null
+    // (nhd, mteam) standards
     let standardNumDefault = 0; let standardNum1080p = 1; let standardNum1080i = 2
     let standardNum720p = 3; let standardNum2160p = 4; let standardNumSd = 5
     // (nhd) processing
@@ -193,6 +195,7 @@
     let cateNumTvShowCnMl = 7; let cateNumTvShowEuAme = 8; let cateNumTvShowHkTw = 9; let cateNumTvShowJpKor = 10
     // (mteam) categories
     let cateNumMovieHd = 2; let cateNumMovieRemux = 5; let cateNumTvSeriesHd = 7
+    // site definitions
     if (site === 'nhd') {
       targetTagBox = 'box'
       boxSupportDescr = true
@@ -305,17 +308,16 @@
       })
       // 替换为当前box标签类型
       const regex1 = RegExp('\\[(\\/)?(?:' + otherTagBoxes + ')((?:=[^\\]]+)?)\\]', 'g')
-      // 替换mediainfo格式
+      // NHD mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
       const regex2 = /\[mediainfo\]([^\0]*?)\[\/mediainfo\]/gi
       // 对于不支持box标签的站，统一替换为'quote'标签
       const replaceTag = targetTagBox || 'quote'
       // 对于不支持[box=...]形式的，去除box后面的内容
       const replaceContent1 = boxSupportDescr ? '[$1' + replaceTag + '$2]' : '[$1' + replaceTag + ']'
+      // 替换mediainfo格式
       const replaceContent2 = boxSupportDescr ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']' : '[' + replaceTag + ']$1[/' + replaceTag + ']'
       newText = newText.replace(regex1, replaceContent1).replace(regex2, replaceContent2)
-      // NHD mediainfo style
-      newText = newText.replace(/\[pre\]/g, '[font=courier new]')
-      newText = newText.replace(/\[\/pre\]/g, '[/font]')
+      newText = newText.replace(/\[pre\]/g, '[font=courier new]').replace(/\[\/pre\]/g, '[/font]')
       if (targetTagBox) {
         newText = nestExplode(newText, targetTagBox)
         newText = switchBoxQuote(newText, targetTagBox)
@@ -323,19 +325,21 @@
       newText = newText.replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, function (matches) {
         return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
       })
-      newText = newText.replace(/\[(\/)?align(=\w*)?\]/g, '')
-      newText = newText.replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
-      newText = newText.replace(/\[size=(\d+)\]/g, function (match, p1) {
-        if (parseInt(p1) > 7) {
-          return ('[size=7]')
-        }
-        return (match)
-      })
+      newText = newText
+        .replace(/\[(\/)?align(=\w*)?\]/g, '')
+        .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
+        .replace(/\[size=(\d+)\]/g, function (match, p1) {
+          if (parseInt(p1) > 7) {
+            return ('[size=7]')
+          }
+          return (match)
+        })
       if (targetTagBox) {
         newText = compactContent(newText, targetTagBox)
       }
       descrBox.val(newText)
       //= ========================================================================================================
+      // checking torrent name
       // name
       let torTitle = nameBox.val()
       torTitle = torTitle
@@ -346,8 +350,6 @@
         // 去除'[] '开头的内容
         .replace(/^\[.*\]\s(\S)/gi, '$1')
       nameBox.val(torTitle)
-      //= ========================================================================================================
-      // checking torrent name
       // source
       let sourceNum = sourceNumDefault
       if (site === 'pter' || site === 'mteam') {
@@ -491,7 +493,7 @@
               : category.match('秀')
                 ? cateNumTvShow
                 : cateNumMovie
-                // douban and imdb score in small_desc
+        // douban and imdb score in small_desc
         if (site === 'nhd' || site === 'putao') {
           const doubScoreArray = newText.match(/豆\s*瓣\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/)
           if (doubScoreArray) {
@@ -640,18 +642,20 @@
               if (languageArray) {
                 const language = languageArray[1]
                 if (language.match(/chinese|chs|cht/i)) {
-                  console.log('zhongzi')
+                  console.log('Chinese sub')
                   chineseSub = true
                 } else if (language.match(/english/i)) {
                   englishSub = true
-                  console.log('ensub')
+                  console.log('Englis sub')
                 } else {
-                  console.log('other sub')
+                  console.log('Other sub')
                 }
               } else {
-                console.log('no language specified for the subs')
+                console.log('No language specified for the sub')
               }
             })
+          } else {
+            console.log('No subs')
           }
           const dubs = mediainfo.match(/Audio.*\nID[^\0]*?Forced.*/gm)
           if (dubs) {
@@ -659,16 +663,16 @@
             dubs.forEach((dub) => {
               if (dub.match(/cantonese/i)) {
                 cantoneseDub = true
-                console.log('yueyu')
+                console.log('Cantonese dub')
               } else if (dub.match(/chinese/i)) {
                 chineseDub = true
-                console.log('guoyu')
+                console.log('Chinese Mandarin dub')
               } else {
-                console.log('other dub')
+                console.log('Other dub')
               }
             })
           } else {
-            console.log('no dub')
+            console.log('No dubs')
           }
           if (site === 'pter') {
             if (chsubCheck && ensubCheck && chdubCheck && cantodubCheck) {
