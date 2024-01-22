@@ -214,6 +214,8 @@ const $ = window.jQuery;
     let otherTagBoxes = ''
     // box是否支持添加说明[box=descr][/box]
     let boxSupportDescr = false
+    // 其他不支持的标签（如center）
+    let unsupportedTags = ''
     // site-specific
     // (pter) areas
     let areaSel = null
@@ -247,6 +249,7 @@ const $ = window.jQuery;
       targetTagBox = 'box'
       boxSupportDescr = true
       otherTagBoxes = ['hide', 'spoiler', 'expand'].join('|')
+      unsupportedTags = ['align'].join('|')
       if (page === 'upload') {
         nameBox = $('#name')
       } else {
@@ -274,6 +277,7 @@ const $ = window.jQuery;
       targetTagBox = 'hide'
       boxSupportDescr = true
       otherTagBoxes = ['box', 'spoiler', 'expand'].join('|')
+      unsupportedTags = ['align'].join('|')
       if (page === 'upload') {
         nameBox = $('#name')
       } else {
@@ -301,6 +305,7 @@ const $ = window.jQuery;
       targetTagBox = ''
       boxSupportDescr = true
       otherTagBoxes = ['box', 'hide', 'spoiler', 'expand'].join('|')
+      unsupportedTags = ['align'].join('|')
       if (page === 'upload') {
         nameBox = $('#name')
       } else {
@@ -327,6 +332,7 @@ const $ = window.jQuery;
       targetTagBox = 'expand'
       boxSupportDescr = false
       otherTagBoxes = ['box', 'hide', 'spoiler'].join('|')
+      unsupportedTags = ['align'].join('|')
       if (page === 'upload') {
         nameBox = $('#name')
       } else {
@@ -353,8 +359,9 @@ const $ = window.jQuery;
     } else if (site === TTG) {
       inputFile = $('input[type="file"][name="file"]')
       targetTagBox = ''
-      boxSupportDescr = true
+      boxSupportDescr = false
       otherTagBoxes = ['box', 'hide', 'spoiler', 'expand'].join('|')
+      unsupportedTags = ['align', 'center'].join('i')
       nameBox = $("input[type='text'][name='name']")
       smallDescBox = $("input[type='text'][name='subtitle']")
       subtitleBox = $("input[type='text'][name='highlight']")
@@ -407,8 +414,9 @@ const $ = window.jQuery;
       newText = newText.replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, function (matches) {
         return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
       })
+      const regexUnsupportedTags = RegExp('\\[\\/?(' + unsupportedTags + ')(=[^\\]]+)?\\]', 'g')
       newText = newText
-        .replace(/\[(\/)?align(=\w*)?\]/g, '')
+        .replace(regexUnsupportedTags, '')
         .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
         .replace(/\[size=(\d+)\]/g, function (match, p1) {
           if (parseInt(p1) > 7) {
