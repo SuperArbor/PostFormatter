@@ -309,15 +309,20 @@ const $ = window.jQuery;
       })
       // 替换为当前box标签类型
       const regex1 = RegExp('\\[(\\/)?(?:' + otherTagBoxes + ')((?:=[^\\]]+)?)\\]', 'g')
-      // NHD mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
-      const regex2 = /\[mediainfo\]([^\0]*?)\[\/mediainfo\]/gi
       // 对于不支持box标签的站，统一替换为'quote'标签
       const replaceTag = targetTagBox || 'quote'
       // 对于不支持[box=...]形式的，去除box后面的内容
       const replaceContent1 = boxSupportDescr ? '[$1' + replaceTag + '$2]' : '[$1' + replaceTag + ']'
-      // 替换mediainfo格式
+      // 处理两种特殊情况下的mediainfo，一种是PuTao风格[quote=mediainfo]，另一种是NHD风格[mediainfo]，均没有被regex1覆盖
+      // PuTao mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
+      const regex2 = /\[quote=mediainfo\](.*?General\s*?Unique\s*?ID[^\0]*?)\[\/quote\]/gim
+      // NHD mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
+      const regex3 = /\[mediainfo\](.*?General\s*?Unique\s*?ID[^\0]*?)\[\/mediainfo\]/gim
       const replaceContent2 = boxSupportDescr ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']' : '[' + replaceTag + ']$1[/' + replaceTag + ']'
-      newText = newText.replace(regex1, replaceContent1).replace(regex2, replaceContent2)
+      newText = newText.replace(regex1, replaceContent1)
+        // 注意先替换regex2确保了后两次尝试不会相互干扰
+        .replace(regex2, replaceContent2)
+        .replace(regex3, replaceContent2)
       newText = newText.replace(/\[pre\]/g, '[font=courier new]').replace(/\[\/pre\]/g, '[/font]')
       if (targetTagBox) {
         newText = nestExplode(newText, targetTagBox)
