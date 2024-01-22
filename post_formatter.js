@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info and smilies
-// @version      1.2.5
+// @version      1.2.6
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        http://*.nexushd.org/*
 // @match        https://pterclub.com/*
@@ -195,6 +195,7 @@ const $ = window.jQuery;
     let cateNumTvSeriesAsia = 4; let cateNumTvSeriesCnMl = 5; let cateNumTvSeriesEuAme = 6
     let cateNumTvShowCnMl = 7; let cateNumTvShowEuAme = 8; let cateNumTvShowHkTw = 9; let cateNumTvShowJpKor = 10
     // (mteam) categories
+    let teamSel = null
     let cateNumMovieHd = 2; let cateNumMovieRemux = 5; let cateNumTvSeriesHd = 7
     // site definitions
     if (site === 'nhd') {
@@ -284,6 +285,7 @@ const $ = window.jQuery;
       imdbLinkBox = $("input[name='url'][type='text']")
       descrBox = $('#descr')
       categorySel = $('#browsecat')
+      teamSel = $("select[name='team_sel']")
 
       standardSel = $("select[name='standard_sel']")
       areaSel = $("select[name='processing_sel']")
@@ -429,6 +431,19 @@ const $ = window.jQuery;
       }
       if (codecSel) {
         codecSel.val(codecNum)
+      }
+      // team
+      let team = ''
+      if (site === 'mteam' && teamSel) {
+        const teamArray = torTitle.match(/.*-\s*([^- ]*)$/i)
+        if (teamArray) {
+          team = teamArray[1]
+          teamSel.find('option').each(function (_, element) {
+            if (element.text.toLowerCase() === team.toLowerCase()) {
+              teamSel.val(element.value)
+            }
+          })
+        }
       }
       //= ========================================================================================================
       // checking movie info
