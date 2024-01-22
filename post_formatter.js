@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info and smilies
-// @version      1.2.6
+// @version      1.2.7
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
-// @match        http://*.nexushd.org/*
-// @match        https://pterclub.com/*
-// @match        https://pt.sjtu.edu.cn/*
-// @match        https://kp.m-team.cc/*
+// @match        *.nexushd.org/*
+// @match        pterclub.com/*
+// @match        pt.sjtu.edu.cn/*
+// @match        kp.m-team.cc/*
+// @match        totheglory.im/*
 // @require      https://cdn.staticfile.org/jquery/2.1.4/jquery.js
 // @require      https://code.jquery.com/jquery-migrate-1.0.0.js
 // @grant        none
@@ -92,22 +93,53 @@ const $ = window.jQuery;
     } while (c)
     return outputText
   }
+  function formatTorrentName (torrentName) {
+    return (
+      torrentName
+        .replace(/(\.(mkv|mp4|avi|ts|wmv|mpg|torrent))+$/, '')
+        .replace(/\bh\.(26[45])\b/gi, 'H/$1')
+        .replace(/(\b[a-zA-Z]*\d{1,2})\.(\d{1,2}\b)/g, function (_, p1, p2) {
+          return p1 + '/' + p2
+        })
+        .replace(/\b\((\d{4})\)\b/g, '$1')
+        .replace(/\bWEB(?!-DL)\b/gi, 'WEB-DL')
+        .replace(/\bweb-?rip\b/gi, 'WEBRip')
+        .replace(/\bblu-?ray\b/gi, 'BluRay')
+        .replace(/\bdvd(rip)?\b/gi, function (_, p1) {
+          return 'DVD' + (p1 ? 'Rip' : '')
+        })
+        .replace(/\b(480|720|1080|2160)([PI])\b/g, function (_, p1, p2) {
+          return p1 + p2.toLowerCase()
+        })
+        .replace(/\bx\.?(26[45])\b/gi, 'x$1')
+        .replace(/\./g, ' ')
+        .replace(/\//g, '.')
+    )
+  }
   //= ========================================================================================================
   // Main
-  const domainMatchArray = window.location.href.match(/(.*)\/(upload|edit|subtitles)\.php/)
+  const NHD = 'nhd'; const PTER = 'pter'; const PUTAO = 'putao'; const MTEAM = 'mteam'; const TTG = 'ttg'
+  const domainMatchArray = window.location.href.match(/(.*)\/(upload|edit|subtitles|dox)\.php/)
   if (!domainMatchArray) {
     return
   }
   const site = domainMatchArray[1].match(/nexushd/i)
-    ? 'nhd'
+    ? NHD
     : domainMatchArray[1].match(/pterclub/i)
-      ? 'pter'
+      ? PTER
       : domainMatchArray[1].match(/pt\.sjtu/i)
-        ? 'putao'
+        ? PUTAO
         : domainMatchArray[1].match(/m-team/i)
-          ? 'mteam'
-          : ''
-  const page = domainMatchArray[2]
+          ? MTEAM
+          : domainMatchArray[1].match(/totheglory/i)
+            ? TTG
+            : ''
+  let page = domainMatchArray[2]
+  if (site === TTG) {
+    if (page === 'dox') {
+      page = 'subitles'
+    }
+  }
   if (!site || !page) {
     return
   }
@@ -144,7 +176,11 @@ const $ = window.jQuery;
     tr1.append(td1)
     tbody1.append(tr1)
     table1.append(tbody1)
-    $('#compose input[name="quote"]').closest('table').after(table1)
+    if (site === MTEAM || site === NHD || site === PTER || site === PUTAO) {
+      $('#compose input[name="quote"]').closest('table').after(table1)
+    } else if (site === TTG) {
+      $('#upload input[name="quote"]').closest('table').after(table1)
+    }
     let switcher = 0
     if (window.location.href.match(/moresmilies\.php/)) {
       switcher = 1
@@ -153,7 +189,9 @@ const $ = window.jQuery;
       insertTyt(this.getAttribute('href').match(/\[em\d+\]/)[0], switcher)
       return false
     })
-    const anonymousCheck = $("input[name='uplver'][type='checkbox']")[0]
+    // control for anonymously publishing
+    let anonymousControl = null
+    let inputFile = null
     //= ========================================================================================================
     // initialization
     // common controls
@@ -197,8 +235,15 @@ const $ = window.jQuery;
     // (mteam) categories
     let teamSel = null
     let cateNumMovieHd = 2; let cateNumMovieRemux = 5; let cateNumTvSeriesHd = 7
+    // (ttg) controls
+    let subtitleBox = null
+    // (ttg) values
+    let cateNumMovie720p = 2; let cateNumMovie1080ip = 3; let cateNumMovie2160p = 4
+    let cateNumDocumentary720p = 5; let cateNumDocumentary1080ip = 6
+    let cateNumTvSeriesJap = 7; let cateNumTvSeriesKor = 8; let cateNumTvShowJap = 9; let cateNumTvShowKor = 10
     // site definitions
-    if (site === 'nhd') {
+    if (site === NHD) {
+      inputFile = $('input[type="file"][name="file"]')
       targetTagBox = 'box'
       boxSupportDescr = true
       otherTagBoxes = ['hide', 'spoiler', 'expand'].join('|')
@@ -207,6 +252,7 @@ const $ = window.jQuery;
       } else {
         nameBox = $("input[type='text'][name='name']")
       }
+      anonymousControl = $("input[name='uplver'][type='checkbox']")[0]
       smallDescBox = $("input[name='small_descr']")
       imdbLinkBox = $("input[name='url'][type='text']")
       doubanLinkBox = $("input[name='douban_url']")
@@ -223,7 +269,8 @@ const $ = window.jQuery;
       standardNumDefault = 0; standardNum1080p = 1; standardNum1080i = 2; standardNum720p = 3; standardNum2160p = 6; standardNumSd = 4
       processNumDefault = 0; processNumRaw = 1; processNumEncode = 2
       codecNumDefault = 0; codecNumH264 = 1; codecNumH265 = 2; codecNumXvid = 4; codecNumMpeg2 = 5; codecNumFlac = 10
-    } else if (site === 'pter') {
+    } else if (site === PTER) {
+      inputFile = $('input[type="file"][name="file"]')
       targetTagBox = 'hide'
       boxSupportDescr = true
       otherTagBoxes = ['box', 'spoiler', 'expand'].join('|')
@@ -232,6 +279,7 @@ const $ = window.jQuery;
       } else {
         nameBox = $("input[type='text'][name='name']")
       }
+      anonymousControl = $("input[name='uplver'][type='checkbox']")[0]
       smallDescBox = $("input[name='small_descr']")
       imdbLinkBox = $("input[name='url'][type='text']")
       doubanLinkBox = $("input[name='douban']")
@@ -248,7 +296,8 @@ const $ = window.jQuery;
       cateNumDefault = 0; cateNumMovie = 401; cateNumTvSeries = 404; cateNumTvShow = 405; cateNumDocumentary = 402; cateNumAnimation = 403
       sourceNumDefault = 0; sourceNumBluray = 2; sourceNumRemux = 3; sourceNumEncode = 6; sourceNumHdtv = 4; sourceNumWebDl = 5; sourceNumDvd = 7
       areaNumDefault = 0; areaNumCnMl = 1; areaNumHk = 2; areaNumTw = 3; areaNumEuAme = 4; areaNumKor = 5; areaNumJap = 6; areaNumInd = 7; areaNumOther = 8
-    } else if (site === 'putao') {
+    } else if (site === PUTAO) {
+      inputFile = $('input[type="file"][name="file"]')
       targetTagBox = ''
       boxSupportDescr = true
       otherTagBoxes = ['box', 'hide', 'spoiler', 'expand'].join('|')
@@ -257,6 +306,7 @@ const $ = window.jQuery;
       } else {
         nameBox = $("input[type='text'][name='name']")
       }
+      anonymousControl = $("input[name='uplver'][type='checkbox']")[0]
       smallDescBox = $("input[name='small_descr']")
       imdbLinkBox = $("input[name='url'][type='text']")
       doubanLinkBox = $("input[name='douban_url']")
@@ -272,7 +322,8 @@ const $ = window.jQuery;
 
       standardNumDefault = 0; standardNum1080p = 1; standardNum1080i = 2; standardNum720p = 3; standardNum2160p = 6; standardNumSd = 4
       codecNumDefault = 0; codecNumH264 = 1; codecNumXvid = 3; codecNumMpeg2 = 4; codecNumFlac = 5; codecNumH265 = 10
-    } else if (site === 'mteam') {
+    } else if (site === MTEAM) {
+      inputFile = $('input[type="file"][name="file"]')
       targetTagBox = 'expand'
       boxSupportDescr = false
       otherTagBoxes = ['box', 'hide', 'spoiler'].join('|')
@@ -281,6 +332,7 @@ const $ = window.jQuery;
       } else {
         nameBox = $("input[type='text'][name='name']")
       }
+      anonymousControl = $("input[name='uplver'][type='checkbox']")[0]
       smallDescBox = $("input[name='small_descr']")
       imdbLinkBox = $("input[name='url'][type='text']")
       descrBox = $('#descr')
@@ -298,11 +350,33 @@ const $ = window.jQuery;
       areaNumCnMl = 1; areaNumEuAme = 2; areaNumHk = 3; areaNumTw = 3; areaNumJap = 4; areaNumKor = 5; areaNumOther = 6
       standardNumDefault = 0; standardNum1080p = 1; standardNum1080i = 2; standardNum720p = 3; standardNum2160p = 6; standardNumSd = 5
       codecNumDefault = 0; codecNumH264 = 1; codecNumH265 = 16; codecNumXvid = 3; codecNumMpeg2 = 4; codecNumFlac = 5
+    } else if (site === TTG) {
+      inputFile = $('input[type="file"][name="file"]')
+      targetTagBox = ''
+      boxSupportDescr = true
+      otherTagBoxes = ['box', 'hide', 'spoiler', 'expand'].join('|')
+      nameBox = $("input[type='text'][name='name']")
+      smallDescBox = $("input[type='text'][name='subtitle']")
+      subtitleBox = $("input[type='text'][name='highlight']")
+      imdbLinkBox = $("input[name='imdb_c'][type='text']")
+      doubanLinkBox = $("input[name='douban_id'][type='text']")
+      descrBox = $('textarea[name="descr"]')
+      categorySel = $('select[name="type"]')
+      anonymousControl = $('select[name="anonymity"]')
+
+      cateNumDefault = 0; cateNumMovie720p = 52; cateNumMovie1080ip = 53; cateNumMovie2160p = 108
+      cateNumDocumentary720p = 62; cateNumDocumentary1080ip = 63
+      cateNumTvSeriesEuAme = 87; cateNumTvSeriesJap = 88; cateNumTvSeriesKor = 99; cateNumTvSeriesCnMl = 90; cateNumTvSeriesHkTw = 90
+      cateNumTvShowJap = 101; cateNumTvShowKor = 103; cateNumTvShow = 60
     }
     // function definition
     btnBingo.click(function () {
-      if (anonymousCheck) {
-        anonymousCheck.checked = anonymous
+      if (anonymousControl) {
+        if (site === NHD || site === PTER || site === PUTAO || site === MTEAM) {
+          anonymousControl.checked = anonymous
+        } else if (site === TTG) {
+          anonymousControl.val(anonymous ? 'yes' : 'no')
+        }
       }
       const oldText = descrBox.val()
       let newText = oldText.replace(/(\[\/?)([A-Z]+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, function (match, p1, p2, p3) {
@@ -349,18 +423,17 @@ const $ = window.jQuery;
       //= ========================================================================================================
       // checking torrent name
       // name
-      let torTitle = nameBox.val()
-      torTitle = torTitle
-        // 去除.torrent后缀
-        .replace(/(.*)\.torrent/gi, '$1')
-        // 去除视频文件后缀
-        .replace(/\s+(?:mkv|mp4|iso|ts)\s*$/gi, '')
-        // 去除'[] '开头的内容
-        .replace(/^\[.*\]\s(\S)/gi, '$1')
-      nameBox.val(torTitle)
+      let torTitle = inputFile.val()
+      if (torTitle) {
+        torTitle = /([^\\]+)$/.exec(torTitle)[1]
+        torTitle = formatTorrentName(torTitle)
+          // 去除'[] '开头的内容
+          .replace(/^\[.*\]\s(\S)/gi, '$1')
+        nameBox.val(torTitle)
+      }
       // source
       let sourceNum = sourceNumDefault
-      if (site === 'pter' || site === 'mteam') {
+      if (site === PTER || site === MTEAM) {
         sourceNum = torTitle.match(/\W(?:remux)\W/i)
           ? sourceNumRemux// remux
           : torTitle.match(/\W(?:blu(?:e|-)?ray|bdrip|dvdrip|webrip)\W/i)
@@ -370,7 +443,7 @@ const $ = window.jQuery;
               : torTitle.match(/\Wweb-?dl\W/i)
                 ? sourceNumWebDl// web-dl
                 : sourceNumDefault// other
-      } else if (site === 'nhd') {
+      } else if (site === NHD) {
         sourceNum = torTitle.match(/\W(?:blu(?:e|-)?ray|bdrip)\W/i)
           ? sourceNumBluray
           : torTitle.match(/\Whdtv\W/i)
@@ -387,9 +460,9 @@ const $ = window.jQuery;
         sourceSel.val(sourceNum)
       }
       // resolution
-      let stantdardNum = standardNumDefault
-      if (site === 'nhd' || site === 'putao' || site === 'mteam') {
-        stantdardNum = torTitle.match(/\W1080p\W/i)
+      let standardNum = standardNumDefault
+      if (site === NHD || site === PUTAO || site === MTEAM || site === TTG) {
+        standardNum = torTitle.match(/\W1080p\W/i)
           ? standardNum1080p
           : torTitle.match(/\W1080i\W/i)
             ? standardNum1080i
@@ -402,11 +475,11 @@ const $ = window.jQuery;
                   : standardNumDefault
       }
       if (standardSel) {
-        standardSel.val(stantdardNum)
+        standardSel.val(standardNum)
       }
       // processing
       let processNum = processNumDefault
-      if (site === 'nhd') {
+      if (site === NHD) {
         processNum = torTitle.match(/\W(?:remux|web-?dl)\W/i)
           ? processNumRaw
           : processNumEncode
@@ -416,7 +489,7 @@ const $ = window.jQuery;
       }
       // codec
       let codecNum = codecNumDefault
-      if (site === 'nhd' || site === 'putao' || site === 'mteam') {
+      if (site === NHD || site === PUTAO || site === MTEAM) {
         codecNum = torTitle.match(/\W(?:h|x)\.?264\W/i)
           ? codecNumH264
           : torTitle.match(/\W(?:h|x)\.?265\W/i)
@@ -434,7 +507,7 @@ const $ = window.jQuery;
       }
       // team
       let team = ''
-      if (site === 'mteam' && teamSel) {
+      if (site === MTEAM && teamSel) {
         const teamArray = torTitle.match(/.*-\s*([^- ]*)$/i)
         if (teamArray) {
           team = teamArray[1]
@@ -477,13 +550,13 @@ const $ = window.jQuery;
         if (translatedTitleArray && originalTitleArray) {
           const transTitle = translatedTitleArray[1]
           const oriTitle = originalTitleArray[1]
-          if (site === 'nhd' || site === 'pter' || site === 'mteam') {
+          if (site === NHD || site === PTER || site === MTEAM || site === TTG) {
             if (areaCnMl) {
               smallDescrArray.push(torTitle.match(oriTitle) ? transTitle : oriTitle)
             } else {
               smallDescrArray.push(transTitle)
             }
-          } else if (site === 'putao') {
+          } else if (site === PUTAO) {
             if (areaCnMl) {
               torTitle = torTitle.match(oriTitle) ? torTitle : `[${oriTitle}] ${torTitle}`
               nameBox.val(torTitle)
@@ -515,7 +588,7 @@ const $ = window.jQuery;
                 ? cateNumTvShow
                 : cateNumMovie
         // douban and imdb score in small_desc
-        if (site === 'nhd' || site === 'putao') {
+        if (site === NHD || site === PUTAO) {
           const doubScoreArray = newText.match(/豆\s*瓣\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/)
           if (doubScoreArray) {
             smallDescrArray.push('豆瓣 ' + doubScoreArray[1] + '（' + doubScoreArray[2] + '）')
@@ -535,18 +608,27 @@ const $ = window.jQuery;
         smallDescBox.val(smallDescr)
         // douban link
         if (doubanLinkBox) {
-          const doubanLinkArray = newText.match(/豆瓣\s*链\s*接.+(https?:\/\/movie\.douban\.com\/subject\/\d+\/?)/)
-          doubanLinkBox.val(doubanLinkArray ? doubanLinkArray[1].replace(/\[url=(.*?)\].*?\[\/url\]/, '$1') : '')
+          const doubanLinkArray = newText.match(/豆瓣\s*链\s*接.+(https?:\/\/movie\.douban\.com\/subject\/(\d+)\/?)/)
+          if (site === NHD || site === PTER || site === PUTAO) {
+            doubanLinkBox.val(doubanLinkArray ? doubanLinkArray[1] : '')
+          } else if (site === TTG) {
+            console.log(`current content in douban link ${doubanLinkBox.val()}`)
+            doubanLinkBox.val(doubanLinkArray ? doubanLinkArray[2] : '')
+          }
         }
         // imdb link
         if (imdbLinkBox) {
-          const imdbLinkArray = newText.match(/IMDb\s*链\s*接.+(https?:\/\/www\.imdb\.com\/title\/tt\d+\/?)/i)
-          imdbLinkBox.val(imdbLinkArray ? imdbLinkArray[1].replace(/\[url=(.*?)\].*?\[\/url\]/, '$1') : '')
+          const imdbLinkArray = newText.match(/IMDb\s*链\s*接.+(https?:\/\/www\.imdb\.com\/title\/(tt\d+)\/?)/i)
+          if (site === NHD || site === PTER || site === PUTAO || site === MTEAM) {
+            imdbLinkBox.val(imdbLinkArray ? imdbLinkArray[1] : '')
+          } else if (site === TTG) {
+            imdbLinkBox.val(imdbLinkArray ? imdbLinkArray[2] : '')
+          }
         }
         // area selection
         if (areaSel) {
           let areaNum = areaNumDefault
-          if (site === 'pter') {
+          if (site === PTER) {
             areaNum = areaCnMl
               ? areaNumCnMl
               : areaHk
@@ -562,7 +644,7 @@ const $ = window.jQuery;
                         : areaInd
                           ? areaNumInd
                           : areaNumOther
-          } else if (site === 'mteam') {
+          } else if (site === MTEAM) {
             areaNum = areaCnMl
               ? areaNumCnMl
               : areaEuAme
@@ -579,7 +661,7 @@ const $ = window.jQuery;
         }
         // category selection
         if (categorySel) {
-          if (site === 'putao') {
+          if (site === PUTAO) {
             if (cateNum === cateNumMovie) {
               cateNum = areaCnMl
                 ? cateNumMovieCnMl
@@ -615,7 +697,7 @@ const $ = window.jQuery;
                       ? cateNumTvShowJpKor
                       : cateNumDefault
             }
-          } else if (site === 'mteam') {
+          } else if (site === MTEAM) {
             if (cateNum === cateNumMovie) {
               cateNum = sourceNum === sourceNumRemux
                 ? cateNumMovieRemux
@@ -633,6 +715,40 @@ const $ = window.jQuery;
             } else {
               cateNum = cateNumDefault
             }
+          } else if (site === TTG) {
+            if (cateNum === cateNumMovie) {
+              cateNum = standardNum === standardNum720p
+                ? cateNumMovie720p
+                : standardNum === standardNum1080i || standardNum === standardNum1080p
+                  ? cateNumMovie1080ip
+                  : standardNum === standardNum2160p
+                    ? cateNumMovie2160p
+                    : cateNumDefault
+            } else if (cateNum === cateNumDocumentary) {
+              cateNum = standardNum === standardNum720p
+                ? cateNumDocumentary720p
+                : standardNum === standardNum1080i || standardNum === standardNum1080p
+                  ? cateNumDocumentary1080ip
+                  : cateNumDefault
+            } else if (cateNum === cateNumAnimation) {
+              cateNum = cateNumAnimation
+            } else if (cateNum === cateNumTvSeries) {
+              cateNum = areaJap
+                ? cateNumTvSeriesJap
+                : areaKor
+                  ? cateNumTvSeriesKor
+                  : areaEuAme
+                    ? cateNumTvSeriesEuAme
+                    : areaCnMl || areaHk || areaTw
+                      ? cateNumTvSeriesCnMl
+                      : cateNumDefault
+            } else if (cateNum === cateNumTvShow) {
+              cateNum = areaKor
+                ? cateNumTvShowKor
+                : areaJap
+                  ? cateNumTvShowJap
+                  : cateNumTvShow
+            }
           }
           categorySel.val(cateNum)
         }
@@ -643,7 +759,7 @@ const $ = window.jQuery;
       let englishSub = false
       let chineseDub = false
       let cantoneseDub = false
-      if (site === 'pter' || site === 'mteam') {
+      if (site === PTER || site === MTEAM || site === TTG) {
         const tagForMediainfo = targetTagBox || 'quote'
         const regexStr = boxSupportDescr
           ? '\\[' + tagForMediainfo + '\\s*=\\s*mediainfo\\].*?(General\\s*?Unique\\s*?ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
@@ -695,17 +811,21 @@ const $ = window.jQuery;
           } else {
             console.log('No dubs')
           }
-          if (site === 'pter') {
+          if (site === PTER) {
             if (chsubCheck && ensubCheck && chdubCheck && cantodubCheck) {
               chsubCheck.checked = chineseSub
               ensubCheck.checked = englishSub
               chdubCheck.checked = chineseDub
               cantodubCheck.checked = cantoneseDub
             }
-          } else if (site === 'mteam') {
+          } else if (site === MTEAM) {
             if (chsubCheck && chdubCheck) {
               chsubCheck.checked = chineseSub
               chdubCheck.checked = chineseDub
+            }
+          } else if (site === TTG) {
+            if (chineseSub) {
+              subtitleBox.val('* 内封中文字幕')
             }
           }
         }
@@ -715,20 +835,25 @@ const $ = window.jQuery;
   } else if (page === 'subtitles') {
     //= ========================================================================================================
     // 字幕页面
-    let inputFile = null; let titleBox = null; let languageSel = null
-    if (site === 'nhd' || site === 'pter' || site === 'putao') {
+    // 不需要填充信息的站点
+    if (site === TTG) {
+      return
+    }
+    let inputFile = null; let titleBox = null; let languageSel = null; let anonymousCheck = null
+    if (site === NHD || site === PTER || site === PUTAO) {
       inputFile = $('input[type="file"][name="file"]')
       titleBox = $('input[type="text"][name="title"]')
       languageSel = $('select[name="sel_lang"]')
-    } else if (site === 'mteam') {
+      anonymousCheck = $("input[name='uplver'][type='checkbox']")[0]
+    } else if (site === MTEAM) {
       inputFile = $('input[type="file"][name="file[]"]')
       titleBox = $('input[type="text"][name="title[]"]')
       languageSel = $('select[name="sel_lang[]"]')
+      anonymousCheck = $("input[name='uplver'][type='checkbox']")[0]
     }
     if (!inputFile) {
       return
     }
-    const anonymousCheck = $("input[name='uplver'][type='checkbox']")[0]
     inputFile.change(function () {
       if (anonymousCheck) {
         anonymousCheck.checked = anonymous
@@ -743,7 +868,7 @@ const $ = window.jQuery;
         titleBox.val(fileName)
         const lang = pathSub.replace(/.*\.(.*)\..*/i, '$1')
         if (lang) {
-          if (site === 'nhd' || site === 'pter' || site === 'putao') {
+          if (site === NHD || site === PTER || site === PUTAO) {
             langNumEng = 6; langNumChs = 25; langNumCht = 28
             langNumJap = 15; langNumFre = 9; langNumGer = 10; langNumIta = 14
             langNumKor = 16; langNumSpa = 26; langNumOther = 18
@@ -768,7 +893,7 @@ const $ = window.jQuery;
                               : lang.match(/spa/)
                                 ? langNumSpa
                                 : langNumOther
-          } else if (site === 'mteam') {
+          } else if (site === MTEAM) {
             langNumEng = 6; langNumChs = 25; langNumCht = 28
             langNumJap = 15; langNumKor = 16; langNumOther = 18
             langNum = lang.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || lang.match(/.+( |&)?(chs|cht|cn|zh)/)
