@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info and smilies
-// @version      1.2.7
+// @version      1.2.8
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -442,25 +442,25 @@ const $ = window.jQuery;
       // source
       let sourceNum = sourceNumDefault
       if (site === PTER || site === MTEAM) {
-        sourceNum = torTitle.match(/\W(?:remux)\W/i)
+        sourceNum = torTitle.match(/\b(remux)\b/i)
           ? sourceNumRemux// remux
-          : torTitle.match(/\W(?:blu(?:e|-)?ray|bdrip|dvdrip|webrip)\W/i)
+          : torTitle.match(/\b(blu(e|-)?ray|bdrip|dvdrip|webrip)\b/i)
             ? sourceNumEncode// encode
-            : torTitle.match(/\Whdtv\W/i)
+            : torTitle.match(/\bhdtv\b/i)
               ? sourceNumHdtv// hdtv
-              : torTitle.match(/\Wweb-?dl\W/i)
+              : torTitle.match(/\bweb-?dl\b/i)
                 ? sourceNumWebDl// web-dl
                 : sourceNumDefault// other
       } else if (site === NHD) {
-        sourceNum = torTitle.match(/\W(?:blu(?:e|-)?ray|bdrip)\W/i)
+        sourceNum = torTitle.match(/\b(blu(e|-)?ray|bdrip)\b/i)
           ? sourceNumBluray
-          : torTitle.match(/\Whdtv\W/i)
+          : torTitle.match(/\bhdtv\b/i)
             ? sourceNumHddvd
-            : torTitle.match(/\Wdvd/i)
+            : torTitle.match(/\bdvd(rip)?/i)
               ? sourceNumDvd
-              : torTitle.match(/\Wweb-?dl\W/i)
+              : torTitle.match(/\bweb-?dl\b/i)
                 ? sourceNumWebDl
-                : torTitle.match(/\Wwebrip\W/i)
+                : torTitle.match(/\bwebrip\b/i)
                   ? sourceNumWebrip
                   : sourceNumDefault
       }
@@ -470,15 +470,15 @@ const $ = window.jQuery;
       // resolution
       let standardNum = standardNumDefault
       if (site === NHD || site === PUTAO || site === MTEAM || site === TTG) {
-        standardNum = torTitle.match(/\W1080p\W/i)
+        standardNum = torTitle.match(/\b1080p\b/i)
           ? standardNum1080p
-          : torTitle.match(/\W1080i\W/i)
+          : torTitle.match(/\b1080i\b/i)
             ? standardNum1080i
-            : torTitle.match(/\W720p\W/i)
+            : torTitle.match(/\b720p\b/i)
               ? standardNum720p
-              : torTitle.match(/\W(?:2160p|4k)\W/i)
+              : torTitle.match(/\b(2160p|4k)\b/i)
                 ? standardNum2160p
-                : torTitle.match(/\Wdvd/i)
+                : torTitle.match(/\bdvd(rip)?\b/i)
                   ? standardNumSd
                   : standardNumDefault
       }
@@ -488,7 +488,7 @@ const $ = window.jQuery;
       // processing
       let processNum = processNumDefault
       if (site === NHD) {
-        processNum = torTitle.match(/\W(?:remux|web-?dl)\W/i)
+        processNum = torTitle.match(/\b(remux|web-?dl|(bd|dvd)?iso)\b/i)
           ? processNumRaw
           : processNumEncode
       }
@@ -498,19 +498,19 @@ const $ = window.jQuery;
       // codec
       let codecNum = codecNumDefault
       if (site === NHD || site === PUTAO || site === MTEAM) {
-        codecNum = torTitle.match(/\W(?:h|x)\.?264\W/i)
+        codecNum = torTitle.match(/\b(h|x)\.?264\b/i)
           ? codecNumH264
-          : torTitle.match(/\W(?:h|x)\.?265\W/i)
+          : torTitle.match(/\b(h|x)\.?265\b/i)
             ? codecNumH265
-            : torTitle.match(/\Wvc-1/i)
+            : torTitle.match(/\bvc-1\b/i)
               ? codecNumVc1
-              : torTitle.match(/\Wmpeg-2/i)
+              : torTitle.match(/\bmpeg-2\b/i)
                 ? codecNumMpeg2
-                : torTitle.match(/\Wxvid/i)
+                : torTitle.match(/\bxvid\b/i)
                   ? codecNumXvid
-                  : torTitle.match(/\Wflac/i)
+                  : torTitle.match(/\bflac\b/i)
                     ? codecNumFlac
-                    : torTitle.match(/\Wape/i)
+                    : torTitle.match(/\bape\b/i)
                       ? codecNumApe
                       : codecNumDefault
       }
