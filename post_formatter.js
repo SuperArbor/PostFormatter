@@ -228,8 +228,8 @@ const $ = window.jQuery;
     // (nhd) processing
     let processNumDefault = 0; let processNumRaw = 1; let processNumEncode = 2
     // (nhd, mteam) codec
-    let codecNumDefault = 0; let codecNumH264 = 1; let codecNumH265 = 2; let codecNumXvid = 3
-    let codecNumMpeg2 = 4; let codecNumFlac = 5
+    let codecNumDefault = 0; let codecNumH264 = 1; let codecNumH265 = 2; let codecNumVc1 = 3
+    let codecNumXvid = 4; let codecNumMpeg2 = 5; let codecNumFlac = 6; let codecNumApe = 7
     // (putao) categories
     let cateNumMovieCnMl = 0; let cateNumMovieEuAme = 1; let cateNumMovieAsia = 2; let cateNumTvSeriesHkTw = 3
     let cateNumTvSeriesAsia = 4; let cateNumTvSeriesCnMl = 5; let cateNumTvSeriesEuAme = 6
@@ -271,7 +271,7 @@ const $ = window.jQuery;
       sourceNumDefault = 0; sourceNumBluray = 1; sourceNumHddvd = 2; sourceNumDvd = 3; sourceNumHdtv = 4; sourceNumWebDl = 7; sourceNumWebrip = 9
       standardNumDefault = 0; standardNum1080p = 1; standardNum1080i = 2; standardNum720p = 3; standardNum2160p = 6; standardNumSd = 4
       processNumDefault = 0; processNumRaw = 1; processNumEncode = 2
-      codecNumDefault = 0; codecNumH264 = 1; codecNumH265 = 2; codecNumXvid = 4; codecNumMpeg2 = 5; codecNumFlac = 10
+      codecNumDefault = 0; codecNumH264 = 1; codecNumH265 = 2; codecNumVc1 = 3; codecNumXvid = 4; codecNumMpeg2 = 5; codecNumFlac = 10; codecNumApe = 11
     } else if (site === PTER) {
       inputFile = $('input[type="file"][name="file"]')
       targetTagBox = 'hide'
@@ -326,7 +326,7 @@ const $ = window.jQuery;
       cateNumTvShowCnMl = 411; cateNumTvShowHkTw = 412; cateNumTvShowEuAme = 413; cateNumTvShowJpKor = 414
 
       standardNumDefault = 0; standardNum1080p = 1; standardNum1080i = 2; standardNum720p = 3; standardNum2160p = 6; standardNumSd = 4
-      codecNumDefault = 0; codecNumH264 = 1; codecNumXvid = 3; codecNumMpeg2 = 4; codecNumFlac = 5; codecNumH265 = 10
+      codecNumDefault = 0; codecNumH264 = 1; codecNumVc1 = 2; codecNumXvid = 3; codecNumMpeg2 = 4; codecNumFlac = 5; codecNumApe = 6; codecNumH265 = 10
     } else if (site === MTEAM) {
       inputFile = $('input[type="file"][name="file"]')
       targetTagBox = 'expand'
@@ -355,7 +355,7 @@ const $ = window.jQuery;
       cateNumDefault = 0; cateNumMovieHd = 419; cateNumMovieRemux = 439; cateNumTvSeriesHd = 402; cateNumDocumentary = 404; cateNumAnimation = 405
       areaNumCnMl = 1; areaNumEuAme = 2; areaNumHk = 3; areaNumTw = 3; areaNumJap = 4; areaNumKor = 5; areaNumOther = 6
       standardNumDefault = 0; standardNum1080p = 1; standardNum1080i = 2; standardNum720p = 3; standardNum2160p = 6; standardNumSd = 5
-      codecNumDefault = 0; codecNumH264 = 1; codecNumH265 = 16; codecNumXvid = 3; codecNumMpeg2 = 4; codecNumFlac = 5
+      codecNumDefault = 0; codecNumH264 = 1; codecNumVc1 = 2; codecNumH265 = 16; codecNumXvid = 3; codecNumMpeg2 = 4; codecNumFlac = 5; codecNumApe = 10
     } else if (site === TTG) {
       inputFile = $('input[type="file"][name="file"]')
       targetTagBox = ''
@@ -502,13 +502,17 @@ const $ = window.jQuery;
           ? codecNumH264
           : torTitle.match(/\W(?:h|x)\.?265\W/i)
             ? codecNumH265
-            : torTitle.match(/\Wmpeg-2/i)
-              ? codecNumMpeg2
-              : torTitle.match(/\Wxvid/i)
-                ? codecNumXvid
-                : torTitle.match(/\Wflac/i)
-                  ? codecNumFlac
-                  : codecNumDefault
+            : torTitle.match(/\Wvc-1/i)
+              ? codecNumVc1
+              : torTitle.match(/\Wmpeg-2/i)
+                ? codecNumMpeg2
+                : torTitle.match(/\Wxvid/i)
+                  ? codecNumXvid
+                  : torTitle.match(/\Wflac/i)
+                    ? codecNumFlac
+                    : torTitle.match(/\Wape/i)
+                      ? codecNumApe
+                      : codecNumDefault
       }
       if (codecSel) {
         codecSel.val(codecNum)
