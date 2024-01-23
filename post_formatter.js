@@ -444,7 +444,7 @@ const $ = window.jQuery;
       if (site === PTER || site === MTEAM) {
         sourceNum = torTitle.match(/\b(remux)\b/i)
           ? sourceNumRemux// remux
-          : torTitle.match(/\b(blu(e|-)?ray|bdrip|dvdrip|webrip)\b/i)
+          : torTitle.match(/\b(blu-?ray|bdrip|dvdrip|webrip)\b/i)
             ? sourceNumEncode// encode
             : torTitle.match(/\bhdtv\b/i)
               ? sourceNumHdtv// hdtv
@@ -452,7 +452,7 @@ const $ = window.jQuery;
                 ? sourceNumWebDl// web-dl
                 : sourceNumDefault// other
       } else if (site === NHD) {
-        sourceNum = torTitle.match(/\b(blu(e|-)?ray|bdrip)\b/i)
+        sourceNum = torTitle.match(/\b(blu-?ray|bdrip)\b/i)
           ? sourceNumBluray
           : torTitle.match(/\bhdtv\b/i)
             ? sourceNumHddvd
@@ -502,17 +502,21 @@ const $ = window.jQuery;
           ? codecNumH264
           : torTitle.match(/\b(h|x)\.?265\b/i)
             ? codecNumH265
-            : torTitle.match(/\bvc-1\b/i)
-              ? codecNumVc1
-              : torTitle.match(/\bmpeg-2\b/i)
-                ? codecNumMpeg2
-                : torTitle.match(/\bxvid\b/i)
-                  ? codecNumXvid
-                  : torTitle.match(/\bflac\b/i)
-                    ? codecNumFlac
-                    : torTitle.match(/\bape\b/i)
-                      ? codecNumApe
-                      : codecNumDefault
+            : torTitle.match(/\bavc\b/i)
+              ? codecNumH264
+              : torTitle.match(/\bhevc\b/i)
+                ? codecNumH265
+                : torTitle.match(/\bvc-1\b/i)
+                  ? codecNumVc1
+                  : torTitle.match(/\bmpeg-2\b/i)
+                    ? codecNumMpeg2
+                    : torTitle.match(/\bxvid\b/i)
+                      ? codecNumXvid
+                      : torTitle.match(/\bflac\b/i)
+                        ? codecNumFlac
+                        : torTitle.match(/\bape\b/i)
+                          ? codecNumApe
+                          : codecNumDefault
       }
       if (codecSel) {
         codecSel.val(codecNum)
