@@ -304,7 +304,7 @@ const $ = window.jQuery;
       targetTagBox = ''
       boxSupportDescr = true
       otherTagBoxes = ['box', 'hide', 'spoiler', 'expand'].join('|')
-      unsupportedTags = ['align'].join('|')
+      unsupportedTags = ['align', 'center'].join('|')
       if (page === 'upload') {
         nameBox = $('#name')
       } else {
@@ -360,7 +360,7 @@ const $ = window.jQuery;
       targetTagBox = ''
       boxSupportDescr = false
       otherTagBoxes = ['box', 'hide', 'spoiler', 'expand'].join('|')
-      unsupportedTags = ['align', 'center'].join('i')
+      unsupportedTags = ['align'].join('i')
       nameBox = $("input[type='text'][name='name']")
       smallDescBox = $("input[type='text'][name='subtitle']")
       subtitleBox = $("input[type='text'][name='highlight']")
