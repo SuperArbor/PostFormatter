@@ -385,7 +385,18 @@ const $ = window.jQuery;
         }
       }
       const oldText = descrBox.val()
-      let newText = oldText.replace(/(\[\/?)([A-Z]+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, function (match, p1, p2, p3) {
+      let readClipboard = false
+      if (site === NHD || site === PTER || site === PUTAO || site === MTEAM) {
+        readClipboard = !oldText
+      } else if (site === TTG) {
+        readClipboard = !oldText ? true : oldText.length < 125
+      }
+      // temporary setting
+      let newText = readClipboard ? oldText : oldText
+      if (!newText) {
+        return
+      }
+      newText = oldText.replace(/(\[\/?)([A-Z]+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, function (_, p1, p2, p3) {
         p2 = p2.toLowerCase()
         return p1 + p2 + p3
       })
