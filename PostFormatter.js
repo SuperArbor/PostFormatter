@@ -376,7 +376,7 @@ const $ = window.jQuery;
       cateNumTvShowJap = 101; cateNumTvShowKor = 103; cateNumTvShow = 60
     }
     // function definition
-    btnBingo.click(function () {
+    btnBingo.click(async function () {
       if (anonymousControl) {
         if (site === NHD || site === PTER || site === PUTAO || site === MTEAM) {
           anonymousControl.checked = anonymous
@@ -392,14 +392,11 @@ const $ = window.jQuery;
         readClipboard = !oldText ? true : oldText.length < 125
       }
       // temporary setting
-      let newText = readClipboard ? oldText : oldText
-      if (!newText) {
-        return
-      }
-      newText = oldText.replace(/(\[\/?)([A-Z]+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, function (_, p1, p2, p3) {
-        p2 = p2.toLowerCase()
-        return p1 + p2 + p3
-      })
+      let newText = readClipboard ? await navigator.clipboard.readText() : oldText
+      newText = newText.replace(/(\[\/?)([A-Z]+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g,
+        (_, p1, p2, p3) => {
+          return p1 + p2.toLowerCase() + p3
+        })
       // 替换为当前box标签类型
       const regex1 = RegExp('\\[(\\/)?(?:' + otherTagBoxes + ')((?:=[^\\]]+)?)\\]', 'g')
       // 对于不支持box标签的站，统一替换为'quote'标签
@@ -428,11 +425,8 @@ const $ = window.jQuery;
       newText = newText
         .replace(regexUnsupportedTags, '')
         .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
-        .replace(/\[size=(\d+)\]/g, function (match, p1) {
-          if (parseInt(p1) > 7) {
-            return ('[size=7]')
-          }
-          return (match)
+        .replace(/\[size=(\d+)\]/g, (match, p1) => {
+          return parseInt(p1) > 7 ? '[size=7]' : match
         })
       if (targetTagBox) {
         newText = compactContent(newText, targetTagBox)
