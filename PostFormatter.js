@@ -1117,58 +1117,100 @@ const $ = window.jQuery;
           textToConsume = textToConsume
             .replace(/\s*\[(size|color|font|center|b|i)(=[^\]]+)?\]\s*/g, '')
             .replace(/\s*\[\/(size|color|font|center|b|i)\]\s*/g, '')
-          const regexScreenshots = /(\s*(\[url=[^\]]+?\])?\[img\][^[\]]+?\[\/img\](\[\/url\])?\s*)+/gmi
-          const screenshotsArray = textToConsume.match(regexScreenshots)
-          const backtraceLength = 100
-          const regexComparison = /(\[(box|hide|expand|spoiler|quote)\s*=\s*)?(([\w()-]{0,20}?\s*(\||,|>?\s*vs\s*<?)\s*[\w()-]{0,20}?)+)(\])?((\s*(\[url=[^\]]+?\])?\[img\][^[\]]+?\[\/img\](\[\/url\])?\s*)+)(\[\/(box|hide|expand|spoiler|quote)\])?/mi
-          if (screenshotsArray) {
-            screenshotsArray.forEach(slice => {
+          // compair with comparison (GPW style)
+          const regexScreenshotsGPW = /\[comparison=([\w()-]+\s*(,\s*[\w()-]+?)+)\](([^\s,]+(\s+|\s*,\s*))+[^\s,]+)\[\/comparison\]/gmi
+          const regexScreenshotsGPWSingle = /\[comparison=([\w()-]+\s*(,\s*[\w()-]+?)+)\](([^\s,]+(\s+|\s*,\s*))+[^\s,]+)\[\/comparison\]/mi
+          // 移除其他截图，重新生成
+          textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*[^ \s,]+)+/gi, '')
+          const screenshotsArrayGPW = textToConsume.match(regexScreenshotsGPW)
+          if (screenshotsArrayGPW) {
+            screenshotsArrayGPW.forEach(slice => {
               const matchSlice = textToConsume.match(escapeRegExp(slice))
-              const sliceStart = matchSlice.index
-              const sliceLength = matchSlice[0].length
-              const newStart = Math.max(0, sliceStart - backtraceLength)
-              const longerSlice = textToConsume.substring(newStart, sliceStart + sliceLength + backtraceLength)
-              const matchSingle = longerSlice.match(regexComparison)
-              if (matchSingle) {
-                // 'Source, Encode, Other'
-                const teamsStr = matchSingle[3].replace(/\s*(\||,|>?\s*vs\s*<?)\s*/gi, ', ')
-                const teams = teamsStr.split(',')
-                teams.forEach((value, i) => { teams[i] = value.trim() })
-                // '[url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url]'
-                const imagesStr = matchSingle[7]
-                let images = []
-                // check if '[/url] exists'
-                if (matchSingle[10]) {
-                  images = decodeImageUrls(imagesStr)
-                } else {
-                  const matchSimple = imagesStr.match(/\[img\]([^\]]+)\[\/img\]/gi)
-                  images = imagesStr.replace(matchSimple, '$1 ').split(/\s+/)
-                }
-                if (images.length % teams.length === 0) {
-                  const groups = images.length / teams.length
-                  if (!screenshots) {
-                    screenshots = '[b]Screenshots[/b]\n'
-                    if (groups >= 3) {
-                      images.forEach((image, i) => {
-                        const teamCurrent = teams[i % teams.length]
-                        if (currentScreenshots < maxScreenshots) {
-                          if (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase()) {
-                            screenshots += `[img]${image}[/img]`
-                            currentScreenshots += 1
-                          }
+              const matchSingle = slice.match(regexScreenshotsGPWSingle)
+              const teamsStr = matchSingle[1].replace(/\s*,\s*/g, ', ')
+              const teams = teamsStr.split(',')
+              teams.forEach((value, i) => { teams[i] = value.trim() })
+              const imagesStr = matchSingle[3]
+              const images = imagesStr.split(/\s+|\s*,\s*/gi)
+              images.forEach((img, i) => { images[i] = img.trim() })
+              description += slice
+              // remove the matched comparison
+              textToConsume = textToConsume.substring(0, matchSlice.index) + textToConsume.substring(matchSlice.index + matchSlice[0].length)
+              // extract screenshots
+              if (images.length % teams.length === 0) {
+                const groups = images.length / teams.length
+                if (!screenshots) {
+                  screenshots = '[b]Screenshots[/b]\n'
+                  if (groups >= 3) {
+                    images.forEach((image, i) => {
+                      const teamCurrent = teams[i % teams.length]
+                      if (currentScreenshots < maxScreenshots) {
+                        if (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase()) {
+                          screenshots += `[img]${image}[/img]`
+                          currentScreenshots += 1
                         }
-                      })
-                    }
+                      }
+                    })
+                  }
+                }
+              }
+            })
+          } else {
+            // compair with thumbs
+            const regexScreenshots = /(\s*(\[url=[^\]]+?\])?\[img\][^[\]]+?\[\/img\](\[\/url\])?\s*)+/gmi
+            const screenshotsArray = textToConsume.match(regexScreenshots)
+            const backtraceLength = 100
+            const regexComparison = /(\[(box|hide|expand|spoiler|quote)\s*=\s*)?(([\w()-]{0,20}?\s*(\||,|>?\s*vs\s*<?)\s*[\w()-]{0,20}?)+)(\])?((\s*(\[url=[^\]]+?\])?\[img\][^[\]]+?\[\/img\](\[\/url\])?\s*)+)(\[\/(box|hide|expand|spoiler|quote)\])?/mi
+            if (screenshotsArray) {
+              screenshotsArray.forEach(slice => {
+                const matchSlice = textToConsume.match(escapeRegExp(slice))
+                const sliceStart = matchSlice.index
+                const sliceLength = matchSlice[0].length
+                const newStart = Math.max(0, sliceStart - backtraceLength)
+                const longerSlice = textToConsume.substring(newStart, sliceStart + sliceLength + backtraceLength)
+                const matchSingle = longerSlice.match(regexComparison)
+                if (matchSingle) {
+                  // 'Source, Encode, Other'
+                  const teamsStr = matchSingle[3].replace(/\s*(\||,|>?\s*vs\s*<?)\s*/gi, ', ')
+                  const teams = teamsStr.split(',')
+                  teams.forEach((value, i) => { teams[i] = value.trim() })
+                  // '[url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url]'
+                  const imagesStr = matchSingle[7]
+                  let images = []
+                  // check if '[/url] exists'
+                  if (matchSingle[10]) {
+                    images = decodeImageUrls(imagesStr)
+                  } else {
+                    const matchSimple = imagesStr.match(/\[img\]([^\]]+)\[\/img\]/gi)
+                    images = imagesStr.replace(matchSimple, '$1 ').split(/\s+/)
                   }
                   description += `[comparison=${teamsStr}]${images.join(', ')}[/comparison]`
                   // remove the matched comparison
                   const trueMatch = textToConsume.match(escapeRegExp(matchSingle[0]))
                   textToConsume = textToConsume.substring(0, trueMatch.index) + textToConsume.substring(trueMatch.index + trueMatch[0].length)
+                  // extract screenshots
+                  if (images.length % teams.length === 0) {
+                    const groups = images.length / teams.length
+                    if (!screenshots) {
+                      screenshots = '[b]Screenshots[/b]\n'
+                      if (groups >= 3) {
+                        images.forEach((image, i) => {
+                          const teamCurrent = teams[i % teams.length]
+                          if (currentScreenshots < maxScreenshots) {
+                            if (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase()) {
+                              screenshots += `[img]${image}[/img]`
+                              currentScreenshots += 1
+                            }
+                          }
+                        })
+                      }
+                    }
+                  }
                 }
-              }
-            })
-            description += screenshots
+              })
+            }
           }
+          description += screenshots
           const regexQuote = /\[quote(=.*?)?\]([^]+)\[\/quote\]/gim
           const matchQuote = textToConsume.match(regexQuote)
           let quotes = ''
