@@ -100,6 +100,9 @@ const $ = window.jQuery;
   function formatTorrentName (torrentName) {
     return (
       torrentName
+        .replace(/(\.torrent)+$/, '')
+        .replace(/^\s?(\[.*?\]\s?)+/gi, '')
+        .replace(/\s?(\(\d+\)\s?)+$/gi, '')
         .replace(/(\.(mkv|mp4|avi|ts|wmv|mpg|torrent))+$/, '')
         .replace(/\bh\.(26[45])\b/gi, 'H/$1')
         .replace(/(\b[a-zA-Z]*\d{1,2})\.(\d{1,2}\b)/g, function (_, p1, p2) {
@@ -122,6 +125,7 @@ const $ = window.jQuery;
   }
   // decode image urls
   function decodeImageUrls (imagesWithUrl) {
+    imagesWithUrl = imagesWithUrl.trim()
     const imageHost = imagesWithUrl.match(/pixhost/i)
       ? PIXHOST
       : imagesWithUrl.match(/imgbox/i)
@@ -325,6 +329,7 @@ const $ = window.jQuery;
     let cateNumTvSeriesJap = 7; let cateNumTvSeriesKor = 8; let cateNumTvShowJap = 9; let cateNumTvShowKor = 10
     // (gpw) controls
     let mediainfoBox = null
+    let maxScreenshots = 10
     // site definitions
     if (site === NHD) {
       inputFile = $('input[type="file"][name="file"]')
@@ -485,6 +490,7 @@ const $ = window.jQuery;
       chdubCheck = $('input[type="checkbox"][id="chinese_dubbed"]')
 
       decodingMediainfo = true
+      maxScreenshots = 10
 
       sourceNumDefault = '---'; sourceNumBluray = 'Blu-ray'; sourceNumWebDl = 'WEB'; sourceNumHdtv = 'HDTV'; sourceNumDvd = 'DVD'
       codecNumDefault = '---'; codecNumH264 = 'x264'; codecNumH265 = 'x265'; codecNumXvid = 'Xvid'
@@ -554,9 +560,9 @@ const $ = window.jQuery;
       if (torTitle) {
         torTitle = /([^\\]+)$/.exec(torTitle)[1]
         torTitle = formatTorrentName(torTitle)
-          // 去除'[] '开头的内容
-          .replace(/^\[.*\]\s(\S)/gi, '$1')
-        nameBox.val(torTitle)
+        if (nameBox) {
+          nameBox.val(torTitle)
+        }
       }
       // source
       let sourceNum = sourceNumDefault
@@ -642,11 +648,11 @@ const $ = window.jQuery;
       }
       // team
       let team = ''
-      if (site === MTEAM && teamSel) {
-        const teamArray = torTitle.match(/.*-\s*([^- ]*)$/i)
-        if (teamArray) {
-          team = teamArray[1]
-          teamSel.find('option').each(function (_, element) {
+      const teamArray = torTitle.match(/.*-\s*([^- ]*)$/i)
+      if (teamArray) {
+        team = teamArray[1]
+        if (teamSel && site === MTEAM) {
+          teamSel.find('option').each((_, element) => {
             if (element.text.toLowerCase() === team.toLowerCase()) {
               teamSel.val(element.value)
             }
@@ -893,6 +899,7 @@ const $ = window.jQuery;
           // setTimeout(() => {
           // }, 1000000)
           let screenshots = ''
+          let currentScreenshots = 0
           // simplify the text or the regex will be super time consuming
           textToConsume = textToConsume
             .replace(/\s*\[(size|color|font|center|b|i)(=[^\]]+)?\]\s*/g, '')
@@ -900,7 +907,7 @@ const $ = window.jQuery;
           const regexScreenshots = /(\s*(\[url=[^\]]+?\])?\[img\][^[\]]+?\[\/img\](\[\/url\])?\s*)+/gmi
           const screenshotsArray = textToConsume.match(regexScreenshots)
           const backtraceLength = 100
-          const regexComparison = /(\[(box|hide|expand|spoiler|quote)\s*=\s*)?((\w[^[\]]{0,20}?\s*(\||,|>?\s*vs\s*<?)\s*\w[^[\]]{0,20}?)+)(\])?((\s*(\[url=[^\]]+?\])?\[img\][^[\]]+?\[\/img\](\[\/url\])?\s*)+)/mi
+          const regexComparison = /(\[(box|hide|expand|spoiler)\s*=\s*)?((\w[^[\]]{0,20}?\s*(\||,|>?\s*vs\s*<?)\s*\w[^[\]]{0,20}?)+)(\])?((\s*(\[url=[^\]]+?\])?\[img\][^[\]]+?\[\/img\](\[\/url\])?\s*)+)(\[\/(box|hide|expand|spoiler)\])?/mi
           if (screenshotsArray) {
             screenshotsArray.forEach(slice => {
               const matchSlice = textToConsume.match(escapeRegExp(slice))
@@ -908,7 +915,6 @@ const $ = window.jQuery;
               const sliceLength = matchSlice[0].length
               const newStart = Math.max(0, sliceStart - backtraceLength)
               const longerSlice = textToConsume.substring(newStart, sliceStart + sliceLength)
-              textToConsume = textToConsume.substring(0, newStart) + textToConsume.substring(sliceStart + sliceLength)
               const matchSingle = longerSlice.match(regexComparison)
               if (matchSingle) {
                 // 'Source, Encode, Other'
@@ -932,17 +938,33 @@ const $ = window.jQuery;
                     if (groups >= 3) {
                       images.forEach((image, i) => {
                         const teamCurrent = teams[i % teams.length]
-                        if (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase()) {
-                          screenshots += `[img]${image}[/img]`
+                        if (currentScreenshots < maxScreenshots) {
+                          if (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase()) {
+                            screenshots += `[img]${image}[/img]`
+                            currentScreenshots += 1
+                          }
                         }
                       })
                     }
                   }
-                  description += `[comparison=${teamsStr}]${images.join(', ')}[/comparison]${screenshots}`
+                  description += `[comparison=${teamsStr}]${images.join(', ')}[/comparison]`
+                  // remove the matched comparison
+                  const trueMatch = textToConsume.match(escapeRegExp(matchSingle[0]))
+                  textToConsume = textToConsume.substring(0, trueMatch.index) + textToConsume.substring(trueMatch.index + trueMatch[0].length)
                 }
               }
             })
+            description += screenshots
           }
+          const regexQuote = /\[quote(=.*?)?\]([^]+)\[\/quote\]/gim
+          const matchQuote = textToConsume.match(regexQuote)
+          let quotes = ''
+          if (matchQuote) {
+            matchQuote.forEach(quote => {
+              quotes += quote
+            })
+          }
+          description = quotes + description
           descrBox.val(description)
         }
       }
