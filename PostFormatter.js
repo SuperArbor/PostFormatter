@@ -173,6 +173,33 @@ const $ = window.jQuery;
       return []
     }
   }
+  function decodeMediaInfo (mediainfoStr) {
+    function matchField (text) {
+      return text.match(/^\s*(.+?)\s+:\s*(.+)\s*$/)
+    }
+    function matchHead (text) {
+      return text.match(/^\s*([\w]+(\s#\d+)?)$/)
+    }
+    let mi = {}
+    mediainfoStr.split('\n\n').forEach(sector => {
+      const miSector = {}
+      let hasHead = false
+      sector.split('\n').forEach(line => {
+        const fieldArray = matchField(line)
+        const headArray = matchHead(line)
+        if (fieldArray) {
+          miSector[fieldArray[1]] = fieldArray[2]
+        } else if (headArray) {
+          mi[headArray[1]] = miSector
+          hasHead = true
+        }
+      })
+      if (!hasHead) {
+        mi = Object.assign({}, mi, miSector)
+      }
+    })
+    return mi
+  }
   //= ========================================================================================================
   // Main
   const NHD = 'nhd'; const PTER = 'pter'; const PUTAO = 'putao'; const MTEAM = 'mteam'; const TTG = 'ttg'
@@ -224,7 +251,7 @@ const $ = window.jQuery;
         type: 'button',
         name: 'bingo_converter',
         value: 'BINGO',
-        style: 'font-size: 11px; color: blue; margin-right: 3px'
+        style: 'font-size: 11px; font-weight: bold; color: blue; margin-right: 3px'
       })
       const td1 = $('<td>')
       td1.attr({
@@ -264,9 +291,9 @@ const $ = window.jQuery;
         type: 'button',
         name: 'bingo_converter',
         value: 'BINGO',
+        style: 'font-weight: bold; color: white;',
         class: 'BBCodeToolbar-button'
       })
-      btnBingo.css('color', 'white')
       const bbcodeToolbar = $('div.BBCodeToolbar').closest('#description-container').find('div.BBCodeToolbar')
       bbcodeToolbar.append(btnBingo)
     }
@@ -601,16 +628,8 @@ const $ = window.jQuery;
       let torTitle = inputFile.val()
       let containerNum = ''
       let cc = false; let dc = false; let uncut = false; let unrated = false; let theatric = false; let extended = false
-      let hdr10 = false; let dovi = false
       if (torTitle) {
         torTitle = /([^\\]+)$/.exec(torTitle)[1]
-        containerNum = torTitle.toLowerCase().includes('.mkv')
-          ? containerNumMkv
-          : torTitle.toLowerCase().includes('.mp4')
-            ? containerNumMp4
-            : torTitle.toLowerCase().includes('avi')
-              ? containerNumAvi
-              : containerNumDefault
         torTitle = formatTorrentName(torTitle)
         cc = torTitle.match(/\bcc|criterion\b/i)
         dc = torTitle.match(/\bdc\b/i)
@@ -618,23 +637,15 @@ const $ = window.jQuery;
         uncut = torTitle.match(/\buncut\b/i)
         theatric = torTitle.match(/\btheatrical\b/i)
         extended = torTitle.match(/\bextended\b/i)
-        hdr10 = torTitle.match(/\bhdr(10)?\b/i)
-        dovi = torTitle.match(/\bdovi\b/i)
-        if (nameBox) {
-          nameBox.val(torTitle)
-        }
       }
       if (site === GPW) {
-        containerSel.val(containerNum)
         movieEditionCheck.click()
-        ccClick.checked = cc
-        dcClick.checked = dc
-        unratedClick.checked = unrated
-        uncutClick.checked = uncut
-        theatricClick.checked = theatric
-        extendedClick.checked = extended
-        hdr10Check.checked = hdr10
-        doviCheck.checked = dovi
+        if (cc) { ccClick.click() }
+        if (dc) { dcClick.click() }
+        if (unrated) { unratedClick.click() }
+        if (uncut) { uncutClick.click() }
+        if (theatric) { theatricClick.click() }
+        if (extended) { extendedClick.click() }
       }
       // source
       let sourceNum = sourceNumDefault
@@ -761,11 +772,12 @@ const $ = window.jQuery;
       }
       //= ========================================================================================================
       // checking mediainfo
-      let chineseSub = false; let englishSub = false; let chineseDub = false; let cantoneseDub = false
+      let englishSub = false; let chineseDub = false; let cantoneseDub = false
       let nosub = true; let chsSub = false; let chtSub = false; let japSub = false; let korSub = false
       let freSub = false; let gerSub = false; let greSub = false; let hindSub = false; let itaSub = false
       let polSub = false; let romSub = false; let rusSub = false; let spaSub = false; let sweSub = false
       let thaiSub = false; let turSub = false; let vieSub = false
+      let hdr10 = false; let dovi = false
       let commentary = false
       if (decodingMediainfo) {
         const tagForMediainfo = targetTagBox || 'quote'
@@ -779,131 +791,144 @@ const $ = window.jQuery;
           const consumLength = mediainfoArray[0].length
           // remove text consumed (to ease regex matching later)
           textToConsume = textToConsume.substring(0, consumeStart) + textToConsume.substring(consumeStart + consumLength)
-          const mediainfo = mediainfoArray[1]
+          const mediainfoStr = mediainfoArray[1]
             .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
             .replace(/\s*\[\/\w+\]\s*$/g, '')
-          const subtitles = mediainfo.match(/Text.*?\nID[^\0]*?Forced.*/gm)
-          if (subtitles) {
-            console.log(`${subtitles.length} subtitles`)
-            nosub = false
-            subtitles.forEach(subtitle => {
-              let languageArray = subtitle.match(/language\s*:(.*)/i)
-              if (!languageArray) {
-                languageArray = subtitle.match(/title\s*:(.*)/i)
-              }
-              if (languageArray) {
-                const language = languageArray[1]
-                if (language.match(/chinese|chs|cht/i)) {
-                  console.log('Chinese sub')
-                  chineseSub = true
-                  if (language.match(/cht/i)) {
-                    chtSub = true
-                  } else {
-                    chsSub = true
-                  }
-                } else if (language.match(/english/i)) {
-                  englishSub = true
-                  console.log('Englis sub')
-                } else if (language.match(/japanese/i)) {
-                  japSub = true
-                  console.log('Japanese sub')
-                } else if (language.match(/korean/i)) {
-                  korSub = true
-                  console.log('Korean sub')
-                } else if (language.match(/french/i)) {
-                  freSub = true
-                  console.log('French sub')
-                } else if (language.match(/german/i)) {
-                  gerSub = true
-                  console.log('German sub')
-                } else if (language.match(/greek/i)) {
-                  greSub = true
-                  console.log('Greek sub')
-                } else if (language.match(/hindi/i)) {
-                  hindSub = true
-                  console.log('Hindi sub')
-                } else if (language.match(/italian/i)) {
-                  itaSub = true
-                  console.log('Italian sub')
-                } else if (language.match(/polish/i)) {
-                  polSub = true
-                  console.log('Polish sub')
-                } else if (language.match(/romanian/i)) {
-                  romSub = true
-                  console.log('Romanian sub')
-                } else if (language.match(/russian/i)) {
-                  rusSub = true
-                  console.log('Russian sub')
-                } else if (language.match(/spanish/i)) {
-                  spaSub = true
-                  console.log('Spanish sub')
-                } else if (language.match(/swedish/i)) {
-                  sweSub = true
-                  console.log('Swedish sub')
-                } else if (language.match(/thai/i)) {
-                  thaiSub = true
-                  console.log('Thai sub')
-                } else if (language.match(/turkish/i)) {
-                  turSub = true
-                  console.log('Turkish sub')
-                } else if (language.match(/vietnamese/i)) {
-                  vieSub = true
-                  console.log('Vietnamese sub')
+          const mediainfo = decodeMediaInfo(mediainfoStr)
+          Object.entries(mediainfo).forEach(([key, value]) => {
+            if (key.match(/text (#\d+)?/i)) {
+              // subtitle
+              nosub = false
+              const language = value.language || value.title
+              if (language.match(/chinese|chs|cht/i)) {
+                console.log('Chinese sub')
+                if (language.match(/cht/i)) {
+                  chtSub = true
                 } else {
-                  console.log(`Other sub ${language}`)
+                  chsSub = true
                 }
+              } else if (language.match(/english/i)) {
+                englishSub = true
+                console.log('Englis sub')
+              } else if (language.match(/japanese/i)) {
+                japSub = true
+                console.log('Japanese sub')
+              } else if (language.match(/korean/i)) {
+                korSub = true
+                console.log('Korean sub')
+              } else if (language.match(/french/i)) {
+                freSub = true
+                console.log('French sub')
+              } else if (language.match(/german/i)) {
+                gerSub = true
+                console.log('German sub')
+              } else if (language.match(/greek/i)) {
+                greSub = true
+                console.log('Greek sub')
+              } else if (language.match(/hindi/i)) {
+                hindSub = true
+                console.log('Hindi sub')
+              } else if (language.match(/italian/i)) {
+                itaSub = true
+                console.log('Italian sub')
+              } else if (language.match(/polish/i)) {
+                polSub = true
+                console.log('Polish sub')
+              } else if (language.match(/romanian/i)) {
+                romSub = true
+                console.log('Romanian sub')
+              } else if (language.match(/russian/i)) {
+                rusSub = true
+                console.log('Russian sub')
+              } else if (language.match(/spanish/i)) {
+                spaSub = true
+                console.log('Spanish sub')
+              } else if (language.match(/swedish/i)) {
+                sweSub = true
+                console.log('Swedish sub')
+              } else if (language.match(/thai/i)) {
+                thaiSub = true
+                console.log('Thai sub')
+              } else if (language.match(/turkish/i)) {
+                turSub = true
+                console.log('Turkish sub')
+              } else if (language.match(/vietnamese/i)) {
+                vieSub = true
+                console.log('Vietnamese sub')
               } else {
-                console.log('No language specified for the sub')
+                console.log(`Other sub ${language}`)
               }
-            })
-          } else {
-            nosub = true
-            console.log('No subs')
-          }
-          const dubs = mediainfo.match(/Audio.*\nID[^\0]*?Forced.*/gm)
-          if (dubs) {
-            console.log(`${dubs.length} dubs`)
-            dubs.forEach(dub => {
-              if (dub.match(/commentary/i)) {
+            } else if (key.match(/audio (#\d+)?/i)) {
+              // audio
+              if (value.match(/commentary/i)) {
                 commentary = true
               }
-              if (dub.match(/cantonese/i)) {
+              if (value.match(/cantonese/i)) {
                 cantoneseDub = true
                 console.log('Cantonese dub')
-              } else if (dub.match(/chinese/i)) {
+              } else if (value.match(/chinese/i)) {
                 chineseDub = true
                 console.log('Chinese Mandarin dub')
               } else {
                 console.log('Other dub')
               }
-            })
-          } else {
-            console.log('No dubs')
-          }
+            } else if (key.match(/video/i)) {
+              // video
+              const hdrFormat = value['HDR format']
+              if (hdrFormat) {
+                if (hdrFormat[1].match(/HDR 10/i)) {
+                  hdr10 = true
+                  console.log('HDR10')
+                }
+                if (hdrFormat.match(/Dolby Vision/i)) {
+                  dovi = true
+                  console.log('Dolby Vision')
+                }
+              }
+            } else if (key.match(/general/i)) {
+              // general
+              if (value.Format === 'Matroska') {
+                containerNum = containerNumMkv
+                console.log('MKV')
+              } else if (value.Format === 'MPEG-4') {
+                containerNum = containerNumMp4
+                console.log('MP4')
+              } else if (value.Format === 'AVI') {
+                containerNum = containerNumAvi
+                console.log('AVI')
+              } else {
+                containerNum = containerNumDefault
+              }
+            }
+          })
           if (site === PTER) {
             if (chsubCheck && ensubCheck && chdubCheck && cantodubCheck) {
-              chsubCheck.checked = chineseSub
+              chsubCheck.checked = chsSub || chtSub
               ensubCheck.checked = englishSub
               chdubCheck.checked = chineseDub
               cantodubCheck.checked = cantoneseDub
             }
           } else if (site === MTEAM) {
             if (chsubCheck && chdubCheck) {
-              chsubCheck.checked = chineseSub
+              chsubCheck.checked = chsSub || chtSub
               chdubCheck.checked = chineseDub
             }
           } else if (site === TTG) {
-            if (chineseSub) {
-              subtitleBox.val('* 内封中文字幕')
+            if (chsSub && chtSub) {
+              subtitleBox.val('* 内封简繁字幕')
+            } else if (chsSub) {
+              subtitleBox.val('* 内封简体字幕')
+            } else if (chtSub) {
+              subtitleBox.val('* 内封繁体字幕')
             }
           } else if (site === GPW) {
-            let mediainfoNew = mediainfo
-            const completeNameArray = mediainfo.match(/^Complete name\s*:\s*.+$/mi)
+            let mediainfoNew = mediainfoStr
+            const completeNameArray = mediainfo.General['Complete name']
             if (!completeNameArray) {
-              const movieNameArray = mediainfo.match(/^Movie name\s*:\s*(.+?)\s*$/mi)
+              const movieNameArray = mediainfoStr.match(/^Movie name\s*:\s*(.+?)\s*$/mi)
               if (movieNameArray) {
-                const completeName = movieNameArray[1] + `.${containerNum.toLowerCase()}`
-                mediainfoNew = mediainfo.replace(/(General\s+Unique ID.+$)\s+(Format\s+.+$)/mi,
+                const completeName = mediainfo.General['Movie name'] + `.${containerNum.toLowerCase()}`
+                mediainfoNew = mediainfoStr.replace(/(General\s+Unique ID.+$)\s+(Format\s+.+$)/mi,
                   '$1\n' + `Complete name                            : ${completeName}` + '\n$2')
               }
             }
@@ -931,6 +956,11 @@ const $ = window.jQuery;
 
             chdubCheck.checked = chineseDub
             comentAudioCheck.checked = commentary
+
+            hdr10Check.checked = hdr10
+            doviCheck.checked = dovi
+
+            containerSel.val(containerNum)
           }
         }
       }
