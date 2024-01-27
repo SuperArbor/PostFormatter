@@ -1180,7 +1180,7 @@ const $ = window.jQuery;
             const screenshotsArray = textToConsume.match(regexScreenshots)
             const backtraceLength = 100
             const regexComparison1 = /\[(box|hide|expand|spoiler|quote)\s*=\s*([\w()-\s]{0,20}?(\s*(\||,|>?\s*vs\.?\s*<?)\s*[\w()-\s]{0,20}?)+)\]((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)\[\/(box|hide|expand|spoiler|quote)\]/mi
-            const regexComparison2 = /\W*([\w()-\s]{0,20}?(\s*(\||,|>?\s*vs\.?\s*<?)\s*[\w()-\s]{0,20})+)[\W]*((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)/mi
+            const regexComparison2 = /\W*(([\w()-\s]{0,20}?(\s*(\||,|>?\s*vs\.?\s*<?)\s*[\w()-\s]{0,20})+)[\W]*((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+))/mi
             if (screenshotsArray) {
               screenshotsArray.forEach(slice => {
                 const matchSlice = textToConsume.match(escapeRegExp(slice))
@@ -1192,6 +1192,8 @@ const $ = window.jQuery;
                 let teamsStr = ''
                 let images = []
                 let teams = []
+                // global match in the whole text
+                let globalMatch = []
                 if (matchSingle) {
                   // 'Source, Encode, Other'
                   teamsStr = matchSingle[2].replace(/\s*(\||,|>?\s*vs\.?\s*<?)\s*/gi, ', ')
@@ -1206,29 +1208,31 @@ const $ = window.jQuery;
                     const matchSimple = imagesStr.match(/\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/img\]/gi)
                     images = imagesStr.replace(matchSimple, '$1 ').split(/\s+/)
                   }
+                  globalMatch = textToConsume.match(escapeRegExp(matchSingle[0]))
                 } else {
                   matchSingle = longerSlice.match(regexComparison2)
                   // 'Source, Encode, Other'
                   if (matchSingle) {
-                    teamsStr = matchSingle[1].replace(/\s*(\||,|>?\s*vs\.?\s*<?)\s*/gi, ', ')
+                    teamsStr = matchSingle[2].replace(/\s*(\||,|>?\s*vs\.?\s*<?)\s*/gi, ', ')
                     teams = teamsStr.split(',')
                     teams.forEach((value, i) => { teams[i] = value.trim() })
                     // '[url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url]'
-                    const imagesStr = matchSingle[4]
+                    const imagesStr = matchSingle[5]
                     // check if '[/url] exists'
-                    if (matchSingle[7]) {
+                    if (matchSingle[8]) {
                       images = decodeImageUrls(imagesStr)
                     } else {
                       const matchSimple = imagesStr.match(/\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/img\]/gi)
                       images = imagesStr.replace(matchSimple, '$1 ').split(/\s+/)
                     }
+                    // in this case, the \W* matched in the regex should be excluded
+                    globalMatch = textToConsume.match(escapeRegExp(matchSingle[1]))
                   }
                 }
                 if (images.length > 0) {
                   description += `[comparison=${teamsStr}]${images.join(', ')}[/comparison]`
                   // remove the matched comparison
-                  const trueMatch = textToConsume.match(escapeRegExp(matchSingle[0]))
-                  textToConsume = textToConsume.substring(0, trueMatch.index) + textToConsume.substring(trueMatch.index + trueMatch[0].length)
+                  textToConsume = textToConsume.substring(0, globalMatch.index) + textToConsume.substring(globalMatch.index + globalMatch[0].length)
                   // extract screenshots
                   if (images.length % teams.length === 0) {
                     const groups = images.length / teams.length
