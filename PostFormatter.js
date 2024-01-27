@@ -288,7 +288,8 @@ const $ = window.jQuery;
     let cateNumTvSeries = 4; let cateNumTvShow = 5
     // sources
     let sourceNumDefault = 0; let sourceNumBluray = 1; let sourceNumRemux = 2; let sourceNumHddvd = 3
-    let sourceNumDvd = 4; let sourceNumEncode = 5; let sourceNumWebDl = 6; let sourceNumWebrip = 7; let sourceNumHdtv = 8
+    let sourceNumDvd = 4; let sourceNumEncode = 5
+    let sourceNumWeb = 6; let sourceNumWebDl = 7; let sourceNumWebrip = 8; let sourceNumHdtv = 9
     // 站点支持的box标签类型
     let targetTagBox = ''
     // 其他站点的box标签类型（需要统一替换）
@@ -302,7 +303,6 @@ const $ = window.jQuery;
     // site-specific
     // (pter) areas
     let areaSel = null
-    let nosubCheck = null
     let chsubCheck = null; let ensubCheck = null; let chdubCheck = null; let cantodubCheck = null
     // (nhd, mteam) controls
     let standardSel = null; let processingSel = null; let codecSel = null
@@ -310,10 +310,11 @@ const $ = window.jQuery;
     let standardNumDefault = 0; let standardNum1080p = 1; let standardNum1080i = 2
     let standardNum720p = 3; let standardNum2160p = 4; let standardNumSd = 5
     // (nhd) processing
-    let processNumDefault = 0; let processNumRaw = 1; let processNumEncode = 2
+    let processNumDefault = 0; let processNumRaw = 1; let processNumEncode = 2; let processNumRemux = 3
     // (nhd, mteam) codec
     let codecNumDefault = 0; let codecNumH264 = 1; let codecNumH265 = 2; let codecNumVc1 = 3
     let codecNumXvid = 4; let codecNumMpeg2 = 5; let codecNumFlac = 6; let codecNumApe = 7
+    let codecNumX264 = 8; let codecNumX265 = 9; let codecNumDivX = 10
     // (putao) categories
     let cateNumMovieCnMl = 0; let cateNumMovieEuAme = 1; let cateNumMovieAsia = 2; let cateNumTvSeriesHkTw = 3
     let cateNumTvSeriesAsia = 4; let cateNumTvSeriesCnMl = 5; let cateNumTvSeriesEuAme = 6
@@ -328,7 +329,15 @@ const $ = window.jQuery;
     let cateNumDocumentary720p = 5; let cateNumDocumentary1080ip = 6
     let cateNumTvSeriesJap = 7; let cateNumTvSeriesKor = 8; let cateNumTvShowJap = 9; let cateNumTvShowKor = 10
     // (gpw) controls
-    let mediainfoBox = null
+    let mediainfoBox = null; let containerSel = null; let hdr10Check = null; let doviCheck = null
+    let nosubCheck = null; let mixedSubCheck = null; let chssubCheck = null; let chtsubCheck = null
+    let japsubCheck = null; let korsubCheck = null; let fresubCheck = null; let gersubCheck = null
+    let gresubCheck = null; let polsubCheck = null; let itasubCheck = null; let hindsubCheck = null
+    let russubChcke = null; let swesubCheck = null; let spasubCheck = null; let tursubCheck = null
+    let viesubCheck = null; let thaisubCheck = null; let romsubCheck = null
+    let movieEditionCheck = null; let dcClick = null; let comentAudioCheck = null; let ccClick = null
+    let theatricClick = null; let uncutClick = null; let unratedClick = null; let extendedClick = null
+    let containerNumDefault = 0; let containerNumMkv = 1; let containerNumMp4 = 2; let containerNumAvi = 3
     let maxScreenshots = 10
     // site definitions
     if (site === NHD) {
@@ -475,7 +484,7 @@ const $ = window.jQuery;
     } else if (site === GPW) {
       inputFile = $('#file')
       targetTagBox = ''
-      boxSupportDescr = false
+      boxSupportDescr = true
       otherTagBoxes = ['box', 'hide', 'spoiler', 'expand'].join('|')
       unsupportedTags = ['align'].join('|')
       mediainfoBox = $('textarea[name="mediainfo[]"]')
@@ -483,18 +492,51 @@ const $ = window.jQuery;
       sourceSel = $('select[id="source"]')
       codecSel = $('select[id="codec"]')
       standardSel = $('select[id="resolution"]')
+      processingSel = $('select[id="processing"]')
+      containerSel = $('select[id="container"]')
 
-      chsubCheck = $('input[type="checkbox"][id="chinese_simplified"]')
-      ensubCheck = $('input[type="checkbox"][id="english"]')
-      nosubCheck = $('input[type="radio"][id="no_subtitles"]')
-      chdubCheck = $('input[type="checkbox"][id="chinese_dubbed"]')
+      hdr10Check = $('input[type="checkbox"][id="hdr10"]')[0]
+      doviCheck = $('input[type="checkbox"][id="dolby_vision"]')[0]
+      movieEditionCheck = $('input[type="checkbox"][id="movie_edition_information"]')[0]
+      comentAudioCheck = $("a:contains('评论音轨')")[0]
+      dcClick = $("a:contains('导演剪辑版')")[0]
+      ccClick = $("a:contains('标准收藏')")[0]
+      theatricClick = $("a:contains('影院版')")[0]
+      uncutClick = $("a:contains('未删减版')")[0]
+      unratedClick = $("a:contains('未分级版')")[0]
+      extendedClick = $("a:contains('加长版')")[0]
+
+      mixedSubCheck = $('input[type="radio"][id="mixed_subtitles"]')[0]
+      nosubCheck = $('input[type="radio"][id="no_subtitles"]')[0]
+      chssubCheck = $('input[type="checkbox"][id="chinese_simplified"]')[0]
+      chtsubCheck = $('input[type="checkbox"][id="chinese_traditional"]')[0]
+      ensubCheck = $('input[type="checkbox"][id="english"]')[0]
+      japsubCheck = $('input[type="checkbox"][id="japanese"]')[0]
+      korsubCheck = $('input[type="checkbox"][id="korean"]')[0]
+      fresubCheck = $('input[type="checkbox"][id="french"]')[0]
+      gersubCheck = $('input[type="checkbox"][id="german"]')[0]
+      itasubCheck = $('input[type="checkbox"][id="italian"]')[0]
+      polsubCheck = $('input[type="checkbox"][id="polish"]')[0]
+      romsubCheck = $('input[type="checkbox"][id="romanian"]')[0]
+      russubChcke = $('input[type="checkbox"][id="russian"]')[0]
+      spasubCheck = $('input[type="checkbox"][id="spanish"]')[0]
+      thaisubCheck = $('input[type="checkbox"][id="thai"]')[0]
+      tursubCheck = $('input[type="checkbox"][id="turkish"]')[0]
+      viesubCheck = $('input[type="checkbox"][id="vietnamese"]')[0]
+      hindsubCheck = $('input[type="checkbox"][id="hindi"]')[0]
+      gresubCheck = $('input[type="checkbox"][id="greek"]')[0]
+      swesubCheck = $('input[type="checkbox"][id="swedish"]')[0]
+
+      chdubCheck = $('input[type="checkbox"][id="chinese_dubbed"]')[0]
 
       decodingMediainfo = true
       maxScreenshots = 10
 
-      sourceNumDefault = '---'; sourceNumBluray = 'Blu-ray'; sourceNumWebDl = 'WEB'; sourceNumHdtv = 'HDTV'; sourceNumDvd = 'DVD'
-      codecNumDefault = '---'; codecNumH264 = 'x264'; codecNumH265 = 'x265'; codecNumXvid = 'Xvid'
+      sourceNumDefault = '---'; sourceNumBluray = 'Blu-ray'; sourceNumWeb = 'WEB'; sourceNumHdtv = 'HDTV'; sourceNumDvd = 'DVD'
+      codecNumDefault = '---'; codecNumH264 = 'H.264'; codecNumH265 = 'H.265'; codecNumXvid = 'Xvid'; codecNumDivX = 'DivX'; codecNumX264 = 'x264'; codecNumX265 = 'x265'
       standardNumDefault = '---'; standardNum1080i = '1080i'; standardNum1080p = '1080p'; standardNum2160p = '2160p'; standardNum720p = '720p'; standardNumSd = '480p'
+      processNumDefault = '---'; processNumEncode = 'Encode'; processNumRemux = 'Remux'
+      containerNumDefault = '---'; containerNumMkv = 'MKV'; containerNumMp4 = 'MP4'; containerNumAvi = 'AVI'
     }
     // function definition
     btnBingo.click(async function () {
@@ -557,12 +599,42 @@ const $ = window.jQuery;
       // checking torrent name
       // name
       let torTitle = inputFile.val()
+      let containerNum = ''
+      let cc = false; let dc = false; let uncut = false; let unrated = false; let theatric = false; let extended = false
+      let hdr10 = false; let dovi = false
       if (torTitle) {
         torTitle = /([^\\]+)$/.exec(torTitle)[1]
+        containerNum = torTitle.toLowerCase().includes('.mkv')
+          ? containerNumMkv
+          : torTitle.toLowerCase().includes('.mp4')
+            ? containerNumMp4
+            : torTitle.toLowerCase().includes('avi')
+              ? containerNumAvi
+              : containerNumDefault
         torTitle = formatTorrentName(torTitle)
+        cc = torTitle.match(/\bcc|criterion\b/i)
+        dc = torTitle.match(/\bdc\b/i)
+        unrated = torTitle.match(/\bunrated\b/i)
+        uncut = torTitle.match(/\buncut\b/i)
+        theatric = torTitle.match(/\btheatrical\b/i)
+        extended = torTitle.match(/\bextended\b/i)
+        hdr10 = torTitle.match(/\bhdr(10)?\b/i)
+        dovi = torTitle.match(/\bdovi\b/i)
         if (nameBox) {
           nameBox.val(torTitle)
         }
+      }
+      if (site === GPW) {
+        containerSel.val(containerNum)
+        movieEditionCheck.click()
+        ccClick.checked = cc
+        dcClick.checked = dc
+        unratedClick.checked = unrated
+        uncutClick.checked = uncut
+        theatricClick.checked = theatric
+        extendedClick.checked = extended
+        hdr10Check.checked = hdr10
+        doviCheck.checked = dovi
       }
       // source
       let sourceNum = sourceNumDefault
@@ -588,13 +660,23 @@ const $ = window.jQuery;
                 : torTitle.match(/\bwebrip\b/i)
                   ? sourceNumWebrip
                   : sourceNumDefault
+      } else if (site === GPW) {
+        sourceNum = torTitle.match(/\b(blu-?ray|bdrip)\b/i)
+          ? sourceNumBluray
+          : torTitle.match(/\bhdtv\b/i)
+            ? sourceNumHddvd
+            : torTitle.match(/\bdvd(rip)?/i)
+              ? sourceNumDvd
+              : torTitle.match(/\bweb(-?dl|rip)?\b/i)
+                ? sourceNumWeb
+                : sourceNumDefault
       }
       if (sourceSel) {
         sourceSel.val(sourceNum)
       }
       // resolution
       let standardNum = standardNumDefault
-      if (site === NHD || site === PUTAO || site === MTEAM || site === TTG) {
+      if (site === NHD || site === PUTAO || site === MTEAM || site === TTG || site === GPW) {
         standardNum = torTitle.match(/\b1080p\b/i)
           ? standardNum1080p
           : torTitle.match(/\b1080i\b/i)
@@ -615,6 +697,10 @@ const $ = window.jQuery;
       if (site === NHD) {
         processNum = torTitle.match(/\b(remux|web-?dl|(bd|dvd)?iso)\b/i)
           ? processNumRaw
+          : processNumEncode
+      } else if (site === GPW) {
+        processNum = torTitle.match(/\bremux\b/i)
+          ? processNumRemux
           : processNumEncode
       }
       if (processingSel) {
@@ -642,6 +728,20 @@ const $ = window.jQuery;
                         : torTitle.match(/\bape\b/i)
                           ? codecNumApe
                           : codecNumDefault
+      } else if (site === GPW) {
+        codecNum = torTitle.match(/\bh\.?264\b/i)
+          ? codecNumH264
+          : torTitle.match(/\bh\.?265\b/i)
+            ? codecNumH265
+            : torTitle.match(/\bavc|x264\b/i)
+              ? codecNumX264
+              : torTitle.match(/\bhevc|x265\b/i)
+                ? codecNumX265
+                : torTitle.match(/\bxvid\b/i)
+                  ? codecNumXvid
+                  : torTitle.match(/\bdivx\b/i)
+                    ? codecNumDivX
+                    : codecNumDefault
       }
       if (codecSel) {
         codecSel.val(codecNum)
@@ -661,11 +761,12 @@ const $ = window.jQuery;
       }
       //= ========================================================================================================
       // checking mediainfo
-      let chineseSub = false
-      let englishSub = false
-      let chineseDub = false
-      let cantoneseDub = false
-      let nosub = true
+      let chineseSub = false; let englishSub = false; let chineseDub = false; let cantoneseDub = false
+      let nosub = true; let chsSub = false; let chtSub = false; let japSub = false; let korSub = false
+      let freSub = false; let gerSub = false; let greSub = false; let hindSub = false; let itaSub = false
+      let polSub = false; let romSub = false; let rusSub = false; let spaSub = false; let sweSub = false
+      let thaiSub = false; let turSub = false; let vieSub = false
+      let commentary = false
       if (decodingMediainfo) {
         const tagForMediainfo = targetTagBox || 'quote'
         const regexMIStr = boxSupportDescr
@@ -695,11 +796,61 @@ const $ = window.jQuery;
                 if (language.match(/chinese|chs|cht/i)) {
                   console.log('Chinese sub')
                   chineseSub = true
+                  if (language.match(/cht/i)) {
+                    chtSub = true
+                  } else {
+                    chsSub = true
+                  }
                 } else if (language.match(/english/i)) {
                   englishSub = true
                   console.log('Englis sub')
+                } else if (language.match(/japanese/i)) {
+                  japSub = true
+                  console.log('Japanese sub')
+                } else if (language.match(/korean/i)) {
+                  korSub = true
+                  console.log('Korean sub')
+                } else if (language.match(/french/i)) {
+                  freSub = true
+                  console.log('French sub')
+                } else if (language.match(/german/i)) {
+                  gerSub = true
+                  console.log('German sub')
+                } else if (language.match(/greek/i)) {
+                  greSub = true
+                  console.log('Greek sub')
+                } else if (language.match(/hindi/i)) {
+                  hindSub = true
+                  console.log('Hindi sub')
+                } else if (language.match(/italian/i)) {
+                  itaSub = true
+                  console.log('Italian sub')
+                } else if (language.match(/polish/i)) {
+                  polSub = true
+                  console.log('Polish sub')
+                } else if (language.match(/romanian/i)) {
+                  romSub = true
+                  console.log('Romanian sub')
+                } else if (language.match(/russian/i)) {
+                  rusSub = true
+                  console.log('Russian sub')
+                } else if (language.match(/spanish/i)) {
+                  spaSub = true
+                  console.log('Spanish sub')
+                } else if (language.match(/swedish/i)) {
+                  sweSub = true
+                  console.log('Swedish sub')
+                } else if (language.match(/thai/i)) {
+                  thaiSub = true
+                  console.log('Thai sub')
+                } else if (language.match(/turkish/i)) {
+                  turSub = true
+                  console.log('Turkish sub')
+                } else if (language.match(/vietnamese/i)) {
+                  vieSub = true
+                  console.log('Vietnamese sub')
                 } else {
-                  console.log('Other sub')
+                  console.log(`Other sub ${language}`)
                 }
               } else {
                 console.log('No language specified for the sub')
@@ -713,6 +864,9 @@ const $ = window.jQuery;
           if (dubs) {
             console.log(`${dubs.length} dubs`)
             dubs.forEach(dub => {
+              if (dub.match(/commentary/i)) {
+                commentary = true
+              }
               if (dub.match(/cantonese/i)) {
                 cantoneseDub = true
                 console.log('Cantonese dub')
@@ -743,11 +897,40 @@ const $ = window.jQuery;
               subtitleBox.val('* 内封中文字幕')
             }
           } else if (site === GPW) {
-            mediainfoBox.val(mediainfo)
-            chsubCheck.checked = chineseSub
-            ensubCheck.checked = englishSub
-            chdubCheck.checked = chineseDub
+            let mediainfoNew = mediainfo
+            const completeNameArray = mediainfo.match(/^Complete name\s*:\s*.+$/mi)
+            if (!completeNameArray) {
+              const movieNameArray = mediainfo.match(/^Movie name\s*:\s*(.+?)\s*$/mi)
+              if (movieNameArray) {
+                const completeName = movieNameArray[1] + `.${containerNum.toLowerCase()}`
+                mediainfoNew = mediainfo.replace(/(General\s+Unique ID.+$)\s+(Format\s+.+$)/mi,
+                  '$1\n' + `Complete name                            : ${completeName}` + '\n$2')
+              }
+            }
+            mediainfoBox.val(mediainfoNew)
             nosubCheck.checked = nosub
+            mixedSubCheck.checked = !nosub
+            chssubCheck.checked = chsSub
+            chtsubCheck.checked = chtSub
+            ensubCheck.checked = englishSub
+            japsubCheck.checked = japSub
+            korsubCheck.checked = korSub
+            fresubCheck.checked = freSub
+            gersubCheck.checked = gerSub
+            gresubCheck.checked = greSub
+            hindsubCheck.checked = hindSub
+            polsubCheck.checked = polSub
+            russubChcke.checked = rusSub
+            spasubCheck.checked = spaSub
+            swesubCheck.checked = sweSub
+            thaisubCheck.checked = thaiSub
+            tursubCheck.checked = turSub
+            viesubCheck.checked = vieSub
+            itasubCheck.checked = itaSub
+            romsubCheck.checked = romSub
+
+            chdubCheck.checked = chineseDub
+            comentAudioCheck.checked = commentary
           }
         }
       }
@@ -907,14 +1090,14 @@ const $ = window.jQuery;
           const regexScreenshots = /(\s*(\[url=[^\]]+?\])?\[img\][^[\]]+?\[\/img\](\[\/url\])?\s*)+/gmi
           const screenshotsArray = textToConsume.match(regexScreenshots)
           const backtraceLength = 100
-          const regexComparison = /(\[(box|hide|expand|spoiler)\s*=\s*)?((\w[^[\]]{0,20}?\s*(\||,|>?\s*vs\s*<?)\s*\w[^[\]]{0,20}?)+)(\])?((\s*(\[url=[^\]]+?\])?\[img\][^[\]]+?\[\/img\](\[\/url\])?\s*)+)(\[\/(box|hide|expand|spoiler)\])?/mi
+          const regexComparison = /(\[(box|hide|expand|spoiler|quote)\s*=\s*)?(([\w()-]{0,20}?\s*(\||,|>?\s*vs\s*<?)\s*[\w()-]{0,20}?)+)(\])?((\s*(\[url=[^\]]+?\])?\[img\][^[\]]+?\[\/img\](\[\/url\])?\s*)+)(\[\/(box|hide|expand|spoiler|quote)\])?/mi
           if (screenshotsArray) {
             screenshotsArray.forEach(slice => {
               const matchSlice = textToConsume.match(escapeRegExp(slice))
               const sliceStart = matchSlice.index
               const sliceLength = matchSlice[0].length
               const newStart = Math.max(0, sliceStart - backtraceLength)
-              const longerSlice = textToConsume.substring(newStart, sliceStart + sliceLength)
+              const longerSlice = textToConsume.substring(newStart, sliceStart + sliceLength + backtraceLength)
               const matchSingle = longerSlice.match(regexComparison)
               if (matchSingle) {
                 // 'Source, Encode, Other'
