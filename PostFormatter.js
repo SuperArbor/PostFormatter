@@ -357,7 +357,8 @@ const $ = window.jQuery;
     let cateNumTvSeriesJap = 7; let cateNumTvSeriesKor = 8; let cateNumTvShowJap = 9; let cateNumTvShowKor = 10
     // (gpw) controls
     let mediainfoBox = null; let containerSel = null; let hdr10Check = null; let doviCheck = null
-    let noSubCheck = null; let mixedSubCheck = null; let chineseSimplifiedSubCheck = null; let chineseTraditionalSubCheck = null
+    let noSubCheck = null; let mixedSubCheck = null; let otherSubtitlesDiv = null
+    let chineseSimplifiedSubCheck = null; let chineseTraditionalSubCheck = null
     let japaneseSubCheck = null; let koreanSubCheck = null; let frenchSubCheck = null; let germanSubCheck = null
     let greekSubCheck = null; let polishSubCheck = null; let italianSubCheck = null; let hindiSubCheck = null
     let russianSubCheck = null; let swedishSubCheck = null; let spanishSubCheck = null; let turkishSubCheck = null
@@ -541,6 +542,7 @@ const $ = window.jQuery;
 
       mixedSubCheck = $('input[type="radio"][id="mixed_subtitles"]')[0]
       noSubCheck = $('input[type="radio"][id="no_subtitles"]')[0]
+      otherSubtitlesDiv = $('div[id="other_subtitles"]')
       chineseSimplifiedSubCheck = $('input[type="checkbox"][id="chinese_simplified"]')[0]
       chineseTraditionalSubCheck = $('input[type="checkbox"][id="chinese_traditional"]')[0]
       englishSubCheck = $('input[type="checkbox"][id="english"]')[0]
@@ -740,6 +742,7 @@ const $ = window.jQuery;
           ? processNumRaw
           : processNumEncode
       } else if (site === GPW) {
+        processingSel.closest('tr.hidden').removeClass('hidden')
         processNum = torTitle.match(/\bremux\b/i)
           ? processNumRemux
           : processNumEncode
@@ -879,7 +882,7 @@ const $ = window.jQuery;
                 matchLang = true
               } else {
                 Object.keys(subInfoDict).forEach(lang => {
-                  if (language.match(lang) || language.match(lang.replace(/_/g, ' '))) {
+                  if (language.match(RegExp(escapeRegExp(lang), 'i')) || language.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
                     subInfoDict[lang].present = true
                     matchLang = true
                   }
@@ -966,9 +969,14 @@ const $ = window.jQuery;
             }
             mediainfoBox.val(mediainfoNew)
             noSubCheck.checked = nosub; mixedSubCheck.checked = !nosub
-            Object.values(subInfoDict).forEach(infoLang => {
-              infoLang.check.checked = infoLang.present
-            })
+            if (!nosub) {
+              otherSubtitlesDiv.removeClass('hidden')
+              Object.values(subInfoDict).forEach(infoLang => {
+                if (infoLang.check) {
+                  infoLang.check.checked = infoLang.present
+                }
+              })
+            }
             chdubCheck.checked = chineseDub; comentAudioCheck.checked = commentary
             hdr10Check.checked = hdr10; doviCheck.checked = dovi
 
