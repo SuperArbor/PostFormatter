@@ -799,7 +799,7 @@ const $ = window.jQuery;
             if (key.match(/text (#\d+)?/i)) {
               // subtitle
               nosub = false
-              const language = value.language || value.title
+              const language = value.Language || value.Title
               if (language.match(/chinese|chs|cht/i)) {
                 console.log('Chinese sub')
                 if (language.match(/cht/i)) {
@@ -876,7 +876,7 @@ const $ = window.jQuery;
               // video
               const hdrFormat = value['HDR format']
               if (hdrFormat) {
-                if (hdrFormat[1].match(/HDR 10/i)) {
+                if (hdrFormat[1].match(/HDR10/i)) {
                   hdr10 = true
                   console.log('HDR10')
                 }
