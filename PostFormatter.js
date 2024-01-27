@@ -330,7 +330,7 @@ const $ = window.jQuery;
     // site-specific
     // (pter) areas
     let areaSel = null
-    let chsubCheck = null; let ensubCheck = null; let chdubCheck = null; let cantodubCheck = null
+    let chsubCheck = null; let englishSubCheck = null; let chdubCheck = null; let cantodubCheck = null
     // (nhd, mteam) controls
     let standardSel = null; let processingSel = null; let codecSel = null
     // (nhd, mteam) standards
@@ -357,11 +357,17 @@ const $ = window.jQuery;
     let cateNumTvSeriesJap = 7; let cateNumTvSeriesKor = 8; let cateNumTvShowJap = 9; let cateNumTvShowKor = 10
     // (gpw) controls
     let mediainfoBox = null; let containerSel = null; let hdr10Check = null; let doviCheck = null
-    let nosubCheck = null; let mixedSubCheck = null; let chssubCheck = null; let chtsubCheck = null
-    let japsubCheck = null; let korsubCheck = null; let fresubCheck = null; let gersubCheck = null
-    let gresubCheck = null; let polsubCheck = null; let itasubCheck = null; let hindsubCheck = null
-    let russubChcke = null; let swesubCheck = null; let spasubCheck = null; let tursubCheck = null
-    let viesubCheck = null; let thaisubCheck = null; let romsubCheck = null
+    let noSubCheck = null; let mixedSubCheck = null; let chineseSimplifiedSubCheck = null; let chineseTraditionalSubCheck = null
+    let japaneseSubCheck = null; let koreanSubCheck = null; let frenchSubCheck = null; let germanSubCheck = null
+    let greekSubCheck = null; let polishSubCheck = null; let italianSubCheck = null; let hindiSubCheck = null
+    let russianSubCheck = null; let swedishSubCheck = null; let spanishSubCheck = null; let turkishSubCheck = null
+    let vietnameseSubCheck = null; let thaiSubCheck = null; let romanianSubCheck = null; let azerbaijaniSubCheck = null
+    let bulgarianSubCheck = null; let danishSubCheck = null; let estonianSubCheck = null; let finnishSubCheck = null
+    let hebrewSubCheck = null; let croatianSubCheck = null; let icelandicSubCheck = null; let latvianSubCheck = null
+    let lithuanianSubCheck = null; let dutchSubCheck = null; let norwegianSubCheck = null; let portugueseSubCheck = null
+    let slovenianSubCheck = null; let latinSubCheck = null; let ukrainianSubCheck = null; let hungarianSubCheck = null
+    let persianSubCheck = null; let arabicSubCheck = null; let slovakSubCheck = null; let brazilianPortSubCheck = null
+    let czechSubCheck = null; let idonesianSubCheck = null; let serbianSubCheck = null
     let movieEditionCheck = null; let dcClick = null; let comentAudioCheck = null; let ccClick = null
     let theatricClick = null; let uncutClick = null; let unratedClick = null; let extendedClick = null
     let containerNumDefault = 0; let containerNumMkv = 1; let containerNumMp4 = 2; let containerNumAvi = 3
@@ -418,7 +424,7 @@ const $ = window.jQuery;
 
       areaSel = $("select[name='team_sel']")
       chsubCheck = $('#zhongzi')[0]
-      ensubCheck = $('#ensub')[0]
+      englishSubCheck = $('#ensub')[0]
       chdubCheck = $('#guoyu')[0]
       cantodubCheck = $('#yueyu')[0]
 
@@ -534,25 +540,49 @@ const $ = window.jQuery;
       extendedClick = $("a:contains('加长版')")[0]
 
       mixedSubCheck = $('input[type="radio"][id="mixed_subtitles"]')[0]
-      nosubCheck = $('input[type="radio"][id="no_subtitles"]')[0]
-      chssubCheck = $('input[type="checkbox"][id="chinese_simplified"]')[0]
-      chtsubCheck = $('input[type="checkbox"][id="chinese_traditional"]')[0]
-      ensubCheck = $('input[type="checkbox"][id="english"]')[0]
-      japsubCheck = $('input[type="checkbox"][id="japanese"]')[0]
-      korsubCheck = $('input[type="checkbox"][id="korean"]')[0]
-      fresubCheck = $('input[type="checkbox"][id="french"]')[0]
-      gersubCheck = $('input[type="checkbox"][id="german"]')[0]
-      itasubCheck = $('input[type="checkbox"][id="italian"]')[0]
-      polsubCheck = $('input[type="checkbox"][id="polish"]')[0]
-      romsubCheck = $('input[type="checkbox"][id="romanian"]')[0]
-      russubChcke = $('input[type="checkbox"][id="russian"]')[0]
-      spasubCheck = $('input[type="checkbox"][id="spanish"]')[0]
-      thaisubCheck = $('input[type="checkbox"][id="thai"]')[0]
-      tursubCheck = $('input[type="checkbox"][id="turkish"]')[0]
-      viesubCheck = $('input[type="checkbox"][id="vietnamese"]')[0]
-      hindsubCheck = $('input[type="checkbox"][id="hindi"]')[0]
-      gresubCheck = $('input[type="checkbox"][id="greek"]')[0]
-      swesubCheck = $('input[type="checkbox"][id="swedish"]')[0]
+      noSubCheck = $('input[type="radio"][id="no_subtitles"]')[0]
+      chineseSimplifiedSubCheck = $('input[type="checkbox"][id="chinese_simplified"]')[0]
+      chineseTraditionalSubCheck = $('input[type="checkbox"][id="chinese_traditional"]')[0]
+      englishSubCheck = $('input[type="checkbox"][id="english"]')[0]
+      japaneseSubCheck = $('input[type="checkbox"][id="japanese"]')[0]
+      koreanSubCheck = $('input[type="checkbox"][id="korean"]')[0]
+      frenchSubCheck = $('input[type="checkbox"][id="french"]')[0]
+      germanSubCheck = $('input[type="checkbox"][id="german"]')[0]
+      italianSubCheck = $('input[type="checkbox"][id="italian"]')[0]
+      polishSubCheck = $('input[type="checkbox"][id="polish"]')[0]
+      romanianSubCheck = $('input[type="checkbox"][id="romanian"]')[0]
+      russianSubCheck = $('input[type="checkbox"][id="russian"]')[0]
+      spanishSubCheck = $('input[type="checkbox"][id="spanish"]')[0]
+      thaiSubCheck = $('input[type="checkbox"][id="thai"]')[0]
+      turkishSubCheck = $('input[type="checkbox"][id="turkish"]')[0]
+      vietnameseSubCheck = $('input[type="checkbox"][id="vietnamese"]')[0]
+      hindiSubCheck = $('input[type="checkbox"][id="hindi"]')[0]
+      greekSubCheck = $('input[type="checkbox"][id="greek"]')[0]
+      swedishSubCheck = $('input[type="checkbox"][id="swedish"]')[0]
+      azerbaijaniSubCheck = $('input[type="checkbox"][id="azerbaijani"]')[0]
+      bulgarianSubCheck = $('input[type="checkbox"][id="bulgarian"]')[0]
+      danishSubCheck = $('input[type="checkbox"][id="danish"]')[0]
+      estonianSubCheck = $('input[type="checkbox"][id="estonian"]')[0]
+      finnishSubCheck = $('input[type="checkbox"][id="finnish"]')[0]
+      hebrewSubCheck = $('input[type="checkbox"][id="hebrew"]')[0]
+      croatianSubCheck = $('input[type="checkbox"][id="croatian"]')[0]
+      hungarianSubCheck = $('input[type="checkbox"][id="hungarian"]')[0]
+      icelandicSubCheck = $('input[type="checkbox"][id="icelandic"]')[0]
+      latvianSubCheck = $('input[type="checkbox"][id="latvian"]')[0]
+      lithuanianSubCheck = $('input[type="checkbox"][id="lithuanian"]')[0]
+      dutchSubCheck = $('input[type="checkbox"][id="dutch"]')[0]
+      norwegianSubCheck = $('input[type="checkbox"][id="norwegian"]')[0]
+      portugueseSubCheck = $('input[type="checkbox"][id="portuguese"]')[0]
+      slovenianSubCheck = $('input[type="checkbox"][id="slovenian"]')[0]
+      slovakSubCheck = $('input[type="checkbox"][id="slovak"]')[0]
+      latinSubCheck = $('input[type="checkbox"][id="latin"]')[0]
+      ukrainianSubCheck = $('input[type="checkbox"][id="ukrainian"]')[0]
+      persianSubCheck = $('input[type="checkbox"][id="persian"]')[0]
+      arabicSubCheck = $('input[type="checkbox"][id="arabic"]')[0]
+      brazilianPortSubCheck = $('input[type="checkbox"][id="brazilian_port"]')[0]
+      czechSubCheck = $('input[type="checkbox"][id="czech"]')[0]
+      idonesianSubCheck = $('input[type="checkbox"][id="idonesian"]')[0]
+      serbianSubCheck = $('input[type="checkbox"][id="serbian"]')[0]
 
       chdubCheck = $('input[type="checkbox"][id="chinese_dubbed"]')[0]
 
@@ -772,13 +802,52 @@ const $ = window.jQuery;
       }
       //= ========================================================================================================
       // checking mediainfo
-      let englishSub = false; let chineseDub = false; let cantoneseDub = false
-      let nosub = true; let chsSub = false; let chtSub = false; let japSub = false; let korSub = false
-      let freSub = false; let gerSub = false; let greSub = false; let hindSub = false; let itaSub = false
-      let polSub = false; let romSub = false; let rusSub = false; let spaSub = false; let sweSub = false
-      let thaiSub = false; let turSub = false; let vieSub = false
+      let chineseDub = false; let cantoneseDub = false; let commentary = false; let nosub = true
+      const subInfoDict = {
+        chinese_simplified: { check: chineseSimplifiedSubCheck, present: false },
+        chinese_traditional: { check: chineseTraditionalSubCheck, present: false },
+        japanese: { check: japaneseSubCheck, present: false },
+        korean: { check: koreanSubCheck, present: false },
+        english: { check: englishSubCheck, present: false },
+        french: { check: frenchSubCheck, present: false },
+        german: { check: germanSubCheck, present: false },
+        italian: { check: italianSubCheck, present: false },
+        polish: { check: polishSubCheck, present: false },
+        romanian: { check: romanianSubCheck, present: false },
+        russian: { check: russianSubCheck, present: false },
+        spanish: { check: spanishSubCheck, present: false },
+        thai: { check: thaiSubCheck, present: false },
+        turkish: { check: turkishSubCheck, present: false },
+        vietnamese: { check: vietnameseSubCheck, present: false },
+        hindi: { check: hindiSubCheck, present: false },
+        greek: { check: greekSubCheck, present: false },
+        swedish: { check: swedishSubCheck, present: false },
+        azerbaijani: { check: azerbaijaniSubCheck, present: false },
+        bulgarian: { check: bulgarianSubCheck, present: false },
+        danish: { check: danishSubCheck, present: false },
+        estonian: { check: estonianSubCheck, present: false },
+        finnish: { check: finnishSubCheck, present: false },
+        hebrew: { check: hebrewSubCheck, present: false },
+        croatian: { check: croatianSubCheck, present: false },
+        hungarian: { check: hungarianSubCheck, present: false },
+        icelandic: { check: icelandicSubCheck, present: false },
+        latvian: { check: latvianSubCheck, present: false },
+        lithuanian: { check: lithuanianSubCheck, present: false },
+        dutch: { check: dutchSubCheck, present: false },
+        norwegian: { check: norwegianSubCheck, present: false },
+        portuguese: { check: portugueseSubCheck, present: false },
+        slovenian: { check: slovenianSubCheck, present: false },
+        slovak: { check: slovakSubCheck, present: false },
+        latin: { check: latinSubCheck, present: false },
+        ukrainian: { check: ukrainianSubCheck, present: false },
+        persian: { check: persianSubCheck, present: false },
+        arabic: { check: arabicSubCheck, present: false },
+        brazilian_port: { check: brazilianPortSubCheck, present: false },
+        czech: { check: czechSubCheck, present: false },
+        idonesian: { check: idonesianSubCheck, present: false },
+        serbian: { check: serbianSubCheck, present: false }
+      }
       let hdr10 = false; let dovi = false
-      let commentary = false
       if (decodingMediainfo) {
         const tagForMediainfo = targetTagBox || 'quote'
         const regexMIStr = boxSupportDescr
@@ -795,86 +864,49 @@ const $ = window.jQuery;
             .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
             .replace(/\s*\[\/\w+\]\s*$/g, '')
           const mediainfo = decodeMediaInfo(mediainfoStr)
-          Object.entries(mediainfo).forEach(([key, value]) => {
-            if (key.match(/text (#\d+)?/i)) {
+          Object.entries(mediainfo).forEach(([infoKey, infoValue]) => {
+            if (infoKey.match(/text (#\d+)?/i)) {
               // subtitle
               nosub = false
-              const language = value.Language || value.Title
+              let matchLang = false
+              const language = infoValue.Language || infoValue.Title
               if (language.match(/chinese|chs|cht/i)) {
-                console.log('Chinese sub')
-                if (language.match(/cht/i)) {
-                  chtSub = true
+                if (language.match(/cht|(chinese(\s|_)traditional)/i)) {
+                  subInfoDict.chinese_traditional.present = true
                 } else {
-                  chsSub = true
+                  subInfoDict.chinese_simplified.present = true
                 }
-              } else if (language.match(/english/i)) {
-                englishSub = true
-                console.log('Englis sub')
-              } else if (language.match(/japanese/i)) {
-                japSub = true
-                console.log('Japanese sub')
-              } else if (language.match(/korean/i)) {
-                korSub = true
-                console.log('Korean sub')
-              } else if (language.match(/french/i)) {
-                freSub = true
-                console.log('French sub')
-              } else if (language.match(/german/i)) {
-                gerSub = true
-                console.log('German sub')
-              } else if (language.match(/greek/i)) {
-                greSub = true
-                console.log('Greek sub')
-              } else if (language.match(/hindi/i)) {
-                hindSub = true
-                console.log('Hindi sub')
-              } else if (language.match(/italian/i)) {
-                itaSub = true
-                console.log('Italian sub')
-              } else if (language.match(/polish/i)) {
-                polSub = true
-                console.log('Polish sub')
-              } else if (language.match(/romanian/i)) {
-                romSub = true
-                console.log('Romanian sub')
-              } else if (language.match(/russian/i)) {
-                rusSub = true
-                console.log('Russian sub')
-              } else if (language.match(/spanish/i)) {
-                spaSub = true
-                console.log('Spanish sub')
-              } else if (language.match(/swedish/i)) {
-                sweSub = true
-                console.log('Swedish sub')
-              } else if (language.match(/thai/i)) {
-                thaiSub = true
-                console.log('Thai sub')
-              } else if (language.match(/turkish/i)) {
-                turSub = true
-                console.log('Turkish sub')
-              } else if (language.match(/vietnamese/i)) {
-                vieSub = true
-                console.log('Vietnamese sub')
+                matchLang = true
+              } else {
+                Object.keys(subInfoDict).forEach(lang => {
+                  if (language.match(lang) || language.match(lang.replace(/_/g, ' '))) {
+                    subInfoDict[lang].present = true
+                    matchLang = true
+                  }
+                })
+              }
+              if (matchLang) {
+                console.log(`Match sub ${language}`)
               } else {
                 console.log(`Other sub ${language}`)
               }
-            } else if (key.match(/audio (#\d+)?/i)) {
+            } else if (infoKey.match(/audio (#\d+)?/i)) {
               // audio
-              if (value.Title.match(/commentary/i)) {
+              if (infoValue.Title.match(/commentary/i)) {
                 commentary = true
               }
-              if (value.Title.match(/cantonese/i)) {
+              if (infoValue.Title.match(/cantonese/i)) {
                 cantoneseDub = true
                 console.log('Cantonese dub')
-              } else if (value.Title.match(/chinese/i) || value.Language.match(/chinese/i)) {
+              } else if (infoValue.Title.match(/chinese/i) || infoValue.Language.match(/chinese/i)) {
                 chineseDub = true
                 console.log('Chinese Mandarin dub')
               } else {
                 console.log('Other dub')
               }
-            } else if (key.match(/video/i)) {
+            } else if (infoKey.match(/video/i)) {
               // video
-              const hdrFormat = value['HDR format']
+              const hdrFormat = infoValue['HDR format']
               if (hdrFormat) {
                 if (hdrFormat.match(/HDR10/i)) {
                   hdr10 = true
@@ -885,15 +917,15 @@ const $ = window.jQuery;
                   console.log('Dolby Vision')
                 }
               }
-            } else if (key.match(/general/i)) {
+            } else if (infoKey.match(/general/i)) {
               // general
-              if (value.Format === 'Matroska') {
+              if (infoValue.Format === 'Matroska') {
                 containerNum = containerNumMkv
                 console.log('MKV')
-              } else if (value.Format === 'MPEG-4') {
+              } else if (infoValue.Format === 'MPEG-4') {
                 containerNum = containerNumMp4
                 console.log('MP4')
-              } else if (value.Format === 'AVI') {
+              } else if (infoValue.Format === 'AVI') {
                 containerNum = containerNumAvi
                 console.log('AVI')
               } else {
@@ -902,23 +934,23 @@ const $ = window.jQuery;
             }
           })
           if (site === PTER) {
-            if (chsubCheck && ensubCheck && chdubCheck && cantodubCheck) {
-              chsubCheck.checked = chsSub || chtSub
-              ensubCheck.checked = englishSub
+            if (chsubCheck && englishSubCheck && chdubCheck && cantodubCheck) {
+              chsubCheck.checked = subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present
+              englishSubCheck.checked = subInfoDict.english.present
               chdubCheck.checked = chineseDub
               cantodubCheck.checked = cantoneseDub
             }
           } else if (site === MTEAM) {
             if (chsubCheck && chdubCheck) {
-              chsubCheck.checked = chsSub || chtSub
+              chsubCheck.checked = subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present
               chdubCheck.checked = chineseDub
             }
           } else if (site === TTG) {
-            if (chsSub && chtSub) {
+            if (subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present) {
               subtitleBox.val('* 内封简繁字幕')
-            } else if (chsSub) {
+            } else if (subInfoDict.chinese_simplified.present) {
               subtitleBox.val('* 内封简体字幕')
-            } else if (chtSub) {
+            } else if (subInfoDict.chinese_traditional.present) {
               subtitleBox.val('* 内封繁体字幕')
             }
           } else if (site === GPW) {
@@ -933,32 +965,12 @@ const $ = window.jQuery;
               }
             }
             mediainfoBox.val(mediainfoNew)
-            nosubCheck.checked = nosub
-            mixedSubCheck.checked = !nosub
-            chssubCheck.checked = chsSub
-            chtsubCheck.checked = chtSub
-            ensubCheck.checked = englishSub
-            japsubCheck.checked = japSub
-            korsubCheck.checked = korSub
-            fresubCheck.checked = freSub
-            gersubCheck.checked = gerSub
-            gresubCheck.checked = greSub
-            hindsubCheck.checked = hindSub
-            polsubCheck.checked = polSub
-            russubChcke.checked = rusSub
-            spasubCheck.checked = spaSub
-            swesubCheck.checked = sweSub
-            thaisubCheck.checked = thaiSub
-            tursubCheck.checked = turSub
-            viesubCheck.checked = vieSub
-            itasubCheck.checked = itaSub
-            romsubCheck.checked = romSub
-
-            chdubCheck.checked = chineseDub
-            comentAudioCheck.checked = commentary
-
-            hdr10Check.checked = hdr10
-            doviCheck.checked = dovi
+            noSubCheck.checked = nosub; mixedSubCheck.checked = !nosub
+            Object.values(subInfoDict).forEach(infoLang => {
+              infoLang.check.checked = infoLang.present
+            })
+            chdubCheck.checked = chineseDub; comentAudioCheck.checked = commentary
+            hdr10Check.checked = hdr10; doviCheck.checked = dovi
 
             containerSel.val(containerNum)
           }
