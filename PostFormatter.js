@@ -860,13 +860,13 @@ const $ = window.jQuery;
               }
             } else if (key.match(/audio (#\d+)?/i)) {
               // audio
-              if (value.match(/commentary/i)) {
+              if (value.Title.match(/commentary/i)) {
                 commentary = true
               }
-              if (value.match(/cantonese/i)) {
+              if (value.Title.match(/cantonese/i)) {
                 cantoneseDub = true
                 console.log('Cantonese dub')
-              } else if (value.match(/chinese/i)) {
+              } else if (value.Title.match(/chinese/i) || value.Language.match(/chinese/i)) {
                 chineseDub = true
                 console.log('Chinese Mandarin dub')
               } else {
@@ -876,7 +876,7 @@ const $ = window.jQuery;
               // video
               const hdrFormat = value['HDR format']
               if (hdrFormat) {
-                if (hdrFormat[1].match(/HDR10/i)) {
+                if (hdrFormat.match(/HDR10/i)) {
                   hdr10 = true
                   console.log('HDR10')
                 }
@@ -1115,9 +1115,11 @@ const $ = window.jQuery;
           let currentScreenshots = 0
           // simplify the text or the regex will be super time consuming
           textToConsume = textToConsume
-            .replace(/\s*\[(size|color|font|center|b|i)(=[^\]]+)?\]\s*/g, '')
-            .replace(/\s*\[\/(size|color|font|center|b|i)\]\s*/g, '')
-          // compair with comparison (GPW style)
+            .replace(/\s*\[(size|color|font|b|i)(=[^\]]+)?\]\s*/g, '')
+            .replace(/\s*\[\/(size|color|font|b|i)\]\s*/g, '')
+            .replace(/\s*\[center\]\s*/g, '\n')
+            .replace(/\s*\[\/center\]\s*/g, '\n')
+            // compair with comparison (GPW style)
           const regexScreenshotsGPW = /\[comparison=([\w()-]+\s*(,\s*[\w()-]+?)+)\](([^\s,[\]]+(\s+|\s*,\s*))+[^\s,[\]]+)\[\/comparison\]/gmi
           const regexScreenshotsGPWSingle = /\[comparison=([\w()-]+\s*(,\s*[\w()-]+?)+)\](([^\s,[\]]+(\s+|\s*,\s*))+[^\s,[\]]+)\[\/comparison\]/mi
           // 移除其他截图，重新生成
@@ -1161,7 +1163,7 @@ const $ = window.jQuery;
             const screenshotsArray = textToConsume.match(regexScreenshots)
             const backtraceLength = 100
             const regexComparison1 = /\[(box|hide|expand|spoiler|quote)\s*=\s*([\w()-]{0,20}?(\s*(\||,|>?\s*vs\.?\s*<?)\s*[\w()-]{0,20}?)+)\]((\s*(\[url=[^\s,[\]]+?\])?\[img\][^\s,[\]]+?\[\/img\](\[\/url\])?\s*)+)\[\/(box|hide|expand|spoiler|quote)\]/mi
-            const regexComparison2 = /\s*([\w()-]{0,20}?(\s*(\||,|>?\s*vs\.?\s*<?)\s*[\w()-]{0,20})+).*$((\s*(\[url=[^\s,[\]]+?\])?\[img\][^\s,[\]]+?\[\/img\](\[\/url\])?\s*)+)/mi
+            const regexComparison2 = /\W*([\w()-]{0,20}?(\s*(\||,|>?\s*vs\.?\s*<?)\s*[\w()-]{0,20})+)[\W]*((\s*(\[url=[^\s,[\]]+?\])?\[img\][^\s,[\]]+?\[\/img\](\[\/url\])?\s*)+)/mi
             if (screenshotsArray) {
               screenshotsArray.forEach(slice => {
                 const matchSlice = textToConsume.match(escapeRegExp(slice))
