@@ -65,23 +65,6 @@ const $ = window.jQuery;
     } while (c)
     return outputText
   }
-  function switchBoxQuote (inputText, targetBoxTag) {
-    let outputText, c
-    const pat = '(\\[)(?:' +
-            targetBoxTag + '|_x~bTYt_)((?:=[^\\]]+)?\\](?:(?!\\[\\/(?:' +
-            targetBoxTag + '|_x~bTYt_)\\])[\\s\\S])*\\[)quote((?:=[^\\]]+)?\\](?:(?!\\[\\/quote\\])[\\s\\S])*\\[\\/)quote((?:=[^\\]]+)?\\](?:(?!\\[(?:' +
-            targetBoxTag + '|_x~bTYt_)(?:=[^\\]]+)?\\])[\\s\\S])*\\[\\/)(?:' +
-            targetBoxTag + '|_x~bTYt_)(\\])'
-    const regex = RegExp(pat, 'g')
-    do {
-      outputText = inputText.replace(regex, '$1_x~bTYt_$2_e~qTYt_$3_e~qTYt_$4_x~bTYt_$5')
-      c = (inputText !== outputText)
-      inputText = outputText
-    } while (c)
-    outputText = outputText.replace(/_x~bTYt_/g, 'quote')
-    outputText = outputText.replace(/_e~qTYt_/g, targetBoxTag)
-    return outputText
-  }
   function compactContent (inputText, targetBoxTag) {
     let outputText, c
     const pat1 = '(\\[\\/?(?:' + targetBoxTag + ')(?:=[^\\]]+)?\\])\\s+(\\S)'
@@ -141,15 +124,15 @@ const $ = window.jQuery;
       return []
     }
     const regex = imageHost === PIXHOST
-      ? /\[url=https:\/\/pixhost\.to\/show\/(.*?.png)\]\s*\[img\]https:\/\/t(.*?)\.pixhost.*?\[\/img\]\s*\[\/url\]/gi
+      ? /\[url=https:\/\/pixhost\.to\/show\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+.png)\]\s*\[img\]https:\/\/t([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.pixhost[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\]\s*\[\/url\]/gi
       : imageHost === IMGBOX
-        ? /\[url=.*?\]\s*\[img\]https:\/\/thumbs(.*?)_t\.png\[\/img\]\s*\[\/url\]/gi
+        ? /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]https:\/\/thumbs([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)_t\.png\[\/img\]\s*\[\/url\]/gi
         : imageHost === IMG4K
-          ? /\[url=.*?\]\s*\[img\](.*?)\.md\.png\[\/img\]\s*\[\/url\]/gi
+          ? /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.md\.png\[\/img\]\s*\[\/url\]/gi
           : imageHost === PTERCLUB
-            ? /\[url=.*?\]\s*\[img\](.*?)\.th\.png\[\/img\]\s*\[\/url\]/gi
+            ? /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.th\.png\[\/img\]\s*\[\/url\]/gi
             : imageHost === IMGPILE
-              ? /\[url=https:\/\/imgpile\.com\/i\/(.*?)\]\s*\[img\].*?\.png\[\/img\]\s*\[\/url\]/gi
+              ? /\[url=https:\/\/imgpile\.com\/i\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\]\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\.png\[\/img\]\s*\[\/url\]/gi
               : ''
     const replacement = imageHost === PIXHOST
       ? 'https://img$2.pixhost.to/images/$1 '
@@ -602,62 +585,102 @@ const $ = window.jQuery;
     }
     // function definition
     btnBingo.click(async function () {
-      if (anonymousControl) {
+      //= ========================================================================================================
+      // prehandling description
+      let textToConsume = ''
+      if (construct === NEXUSPHP) {
+        if (anonymousControl) {
+          if (site === NHD || site === PTER || site === PUTAO || site === MTEAM) {
+            anonymousControl.checked = anonymous
+          } else if (site === TTG) {
+            anonymousControl.val(anonymous ? 'yes' : 'no')
+          }
+        }
+        const oldText = descrBox.val()
+        let readClipboard = false
         if (site === NHD || site === PTER || site === PUTAO || site === MTEAM) {
-          anonymousControl.checked = anonymous
+          readClipboard = !oldText
         } else if (site === TTG) {
-          anonymousControl.val(anonymous ? 'yes' : 'no')
+          readClipboard = !oldText ? true : oldText.length < 125
+        }
+        let descriptionAll = readClipboard ? await navigator.clipboard.readText() : oldText
+        // 对于不支持box标签的站，统一替换为'quote'标签
+        const replaceTag = targetTagBox || 'quote'
+        if (targetTagBox) {
+          descriptionAll = nestExplode(descriptionAll, targetTagBox)
+          descriptionAll = compactContent(descriptionAll, targetTagBox)
+        }
+        descriptionAll = descriptionAll
+          .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
+            return p1 + p2.toLowerCase() + p3
+          })
+          // 注意otherTagBoxes不需要escape
+          .replace(RegExp('\\[(?:' + otherTagBoxes + ')((=([^\\]]+))?)\\]', 'g'),
+            boxSupportDescr
+              ? `[${replaceTag}` + '$1]'
+              : '[b]$1[/b]\n[' + `${replaceTag}]`)
+          .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'), `[/${replaceTag}]`)
+          // PuTao mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
+          .replace(/\[quote=mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/quote\]/gim,
+            boxSupportDescr
+              ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']'
+              : '[b]MediaInfo[/b]\n[' + replaceTag + ']$1[/' + replaceTag + ']')
+          // NHD mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
+          .replace(/\[mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/mediainfo\]/gim,
+            boxSupportDescr
+              ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']'
+              : '[b]MediaInfo[/b]\n[' + replaceTag + ']$1[/' + replaceTag + ']')
+          .replace(/\[pre\]/g, '[font=courier new]').replace(/\[\/pre\]/g, '[/font]')
+          .replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, matches => {
+            return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
+          })
+          .replace(RegExp('\\[\\/?(' + unsupportedTags + ')(=[^\\]]+)?\\]', 'g'), '')
+          .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
+          .replace(/\[size=(\d+)\]/g, (match, p1) => {
+            return parseInt(p1) > 7 ? '[size=7]' : match
+          })
+          .replace(/\[(\/?img)\d+\]/g, '[$1]') // for pterclub
+        descrBox.val(descriptionAll)
+        textToConsume = descriptionAll
+      } else if (construct === GAZELLE) {
+        if (site === GPW) {
+          const oldText = descrBox.val()
+          let readClipboard = false
+          readClipboard = !oldText
+          let descriptionAll = readClipboard ? await navigator.clipboard.readText() : oldText
+          // 对于不支持box标签的站，统一替换为'quote'标签
+          const replaceTag = targetTagBox || 'quote'
+          if (targetTagBox) {
+            descriptionAll = nestExplode(descriptionAll, targetTagBox)
+            descriptionAll = compactContent(descriptionAll, targetTagBox)
+          }
+          descriptionAll = descriptionAll
+            // 将box, mediainfo等tag都转换为quote的形式，后续（处理完对比图之后）会统一处理
+            .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
+              return p1 + p2.toLowerCase() + p3
+            })
+            .replace(RegExp('\\[(?:' + otherTagBoxes + ')((=([^\\]]+))?)\\]', 'g'),
+              `[${replaceTag}` + '$1]')
+            .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'),
+              `[/${replaceTag}]`)
+            .replace(/\[quote=mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/quote\]/gim,
+              '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']')
+            .replace(/\[mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/mediainfo\]/gim,
+              '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']')
+            .replace(/\[(size|color|font|b|i|pre)(=[^\]]+)?\]/g, '')
+            .replace(/\[\/(size|color|font|b|i|pre)\]/g, '')
+            .replace(/\[center\]/g, '\n')
+            .replace(/\[\/center\]/g, '\n')
+            .replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, matches => {
+              return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
+            })
+            .replace(RegExp('\\[\\/?(' + unsupportedTags + ')(=[^\\]]+)?\\]', 'g'), '')
+            .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
+            .replace(/\[(\/?img)\d+\]/g, '[$1]') // for pterclub
+          descrBox.val(descriptionAll)
+          textToConsume = descriptionAll
         }
       }
-      const oldText = descrBox.val()
-      let readClipboard = false
-      if (site === NHD || site === PTER || site === PUTAO || site === MTEAM) {
-        readClipboard = !oldText
-      } else if (site === TTG) {
-        readClipboard = !oldText ? true : oldText.length < 125
-      }
-      let descriptionAll = readClipboard ? await navigator.clipboard.readText() : oldText
-      descriptionAll = descriptionAll.replace(/(\[\/?)([A-Z]+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g,
-        (_, p1, p2, p3) => {
-          return p1 + p2.toLowerCase() + p3
-        })
-      // 替换为当前box标签类型
-      const regex1 = RegExp('\\[(\\/)?(?:' + otherTagBoxes + ')((?:=[^\\]]+)?)\\]', 'g')
-      // 对于不支持box标签的站，统一替换为'quote'标签
-      const replaceTag = targetTagBox || 'quote'
-      // 对于不支持[box=...]形式的，去除box后面的内容
-      const replaceContent1 = boxSupportDescr ? '[$1' + replaceTag + '$2]' : '[$1' + replaceTag + ']'
-      // 处理两种特殊情况下的mediainfo，一种是PuTao风格[quote=mediainfo]，另一种是NHD风格[mediainfo]，均没有被regex1覆盖
-      // PuTao mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
-      const regex2 = /\[quote=mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/quote\]/gim
-      // NHD mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
-      const regex3 = /\[mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/mediainfo\]/gim
-      const replaceContent2 = boxSupportDescr ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']' : '[' + replaceTag + ']$1[/' + replaceTag + ']'
-      descriptionAll = descriptionAll.replace(regex1, replaceContent1)
-        // 注意先替换regex2确保了后两次尝试不会相互干扰
-        .replace(regex2, replaceContent2)
-        .replace(regex3, replaceContent2)
-      descriptionAll = descriptionAll.replace(/\[pre\]/g, '[font=courier new]').replace(/\[\/pre\]/g, '[/font]')
-      if (targetTagBox) {
-        descriptionAll = nestExplode(descriptionAll, targetTagBox)
-        descriptionAll = switchBoxQuote(descriptionAll, targetTagBox)
-      }
-      descriptionAll = descriptionAll.replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, function (matches) {
-        return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
-      })
-      const regexUnsupportedTags = RegExp('\\[\\/?(' + unsupportedTags + ')(=[^\\]]+)?\\]', 'g')
-      descriptionAll = descriptionAll
-        .replace(regexUnsupportedTags, '')
-        .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
-        .replace(/\[size=(\d+)\]/g, (match, p1) => {
-          return parseInt(p1) > 7 ? '[size=7]' : match
-        })
-        .replace(/\[(\/?img)\d+\]/g, '[$1]') // for pterclub
-      if (targetTagBox) {
-        descriptionAll = compactContent(descriptionAll, targetTagBox)
-      }
-      descrBox.val(descriptionAll)
-      let textToConsume = descriptionAll
       //= ========================================================================================================
       // checking torrent name
       // name
@@ -1160,13 +1183,7 @@ const $ = window.jQuery;
           }
           let screenshots = ''
           let currentScreenshots = 0
-          // simplify the text or the regex will be super time consuming
-          textToConsume = textToConsume
-            .replace(/\[(size|color|font|b|i)(=[^\]]+)?\]/g, '')
-            .replace(/\[\/(size|color|font|b|i)\]/g, '')
-            .replace(/\[center\]/g, '\n')
-            .replace(/\[\/center\]/g, '\n')
-            // compair with comparison (GPW style)
+          // compair with comparison (GPW style)
           const regexScreenshotsGPW = /\[comparison=(\w[\w()-. ]+\s*(,\s*\w[\w()-. ]+?)+)\](([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+(\s+|\s*,\s*))+[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/comparison\]/gmi
           // 移除其他截图，重新生成
           textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\])+/gi, '')
