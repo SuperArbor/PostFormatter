@@ -626,9 +626,9 @@ const $ = window.jQuery;
       const replaceContent1 = boxSupportDescr ? '[$1' + replaceTag + '$2]' : '[$1' + replaceTag + ']'
       // 处理两种特殊情况下的mediainfo，一种是PuTao风格[quote=mediainfo]，另一种是NHD风格[mediainfo]，均没有被regex1覆盖
       // PuTao mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
-      const regex2 = /\[quote=mediainfo\](.*?General\s*?Unique\s*?ID[^\0]*?)\[\/quote\]/gim
+      const regex2 = /\[quote=mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/quote\]/gim
       // NHD mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
-      const regex3 = /\[mediainfo\](.*?General\s*?Unique\s*?ID[^\0]*?)\[\/mediainfo\]/gim
+      const regex3 = /\[mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/mediainfo\]/gim
       const replaceContent2 = boxSupportDescr ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']' : '[' + replaceTag + ']$1[/' + replaceTag + ']'
       descriptionAll = descriptionAll.replace(regex1, replaceContent1)
         // 注意先替换regex2确保了后两次尝试不会相互干扰
@@ -854,8 +854,8 @@ const $ = window.jQuery;
       if (decodingMediainfo) {
         const tagForMediainfo = targetTagBox || 'quote'
         const regexMIStr = boxSupportDescr
-          ? '\\[' + tagForMediainfo + '\\s*=\\s*mediainfo\\].*?(General\\s*?Unique\\s*?ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
-          : '\\[' + tagForMediainfo + '\\].*?(General\\s*?Unique\\s*?ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
+          ? '\\[' + tagForMediainfo + '\\s*=\\s*mediainfo\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
+          : '\\[' + tagForMediainfo + '\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
         const regexMI = RegExp(regexMIStr, 'im')
         const mediainfoArray = textToConsume.match(regexMI)
         if (mediainfoArray) {
