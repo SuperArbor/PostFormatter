@@ -174,6 +174,9 @@ const $ = window.jQuery;
     }
   }
   function decodeMediaInfo (mediainfoStr) {
+    if (!mediainfoStr) {
+      return {}
+    }
     function matchField (text) {
       return text.match(/^\s*(.+?)\s+:\s*(.+)\s*$/)
     }
@@ -854,6 +857,8 @@ const $ = window.jQuery;
       let hdr10 = false; let dovi = false
       let mediainfo = {}
       if (decodingMediainfo) {
+        let mediainfoStr = ''
+        // 优先从简介中获取mediainfo
         const tagForMediainfo = targetTagBox || 'quote'
         const regexMIStr = boxSupportDescr
           ? '\\[' + tagForMediainfo + '\\s*=\\s*mediainfo\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
@@ -865,102 +870,109 @@ const $ = window.jQuery;
           const consumLength = mediainfoArray[0].length
           // remove text consumed (to ease regex matching later)
           textToConsume = textToConsume.substring(0, consumeStart) + textToConsume.substring(consumeStart + consumLength)
-          const mediainfoStr = mediainfoArray[1]
+          mediainfoStr = mediainfoArray[1]
             .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
             .replace(/\s*\[\/\w+\]\s*$/g, '')
           mediainfo = decodeMediaInfo(mediainfoStr)
-          Object.entries(mediainfo).forEach(([infoKey, infoValue]) => {
-            if (infoKey.match(/text( #\d+)?/i)) {
-              // subtitle
-              nosub = false
-              let matchLang = false
-              const language = infoValue.Language || infoValue.Title
-              if (language.match(/chinese|chs|cht/i)) {
-                if (language.match(/cht|(chinese(\s|_)traditional)/i)) {
-                  subInfoDict.chinese_traditional.present = true
-                } else {
-                  subInfoDict.chinese_simplified.present = true
+        }
+        if (Object.keys(mediainfo).length === 0) {
+          // 如果简介中没有有效的mediainfo，读取mediainfobox
+          mediainfoStr = mediainfoBox.val()
+          mediainfo = decodeMediaInfo(mediainfoStr)
+        }
+        Object.entries(mediainfo).forEach(([infoKey, infoValue]) => {
+          if (infoKey.match(/text( #\d+)?/i)) {
+            // subtitle
+            nosub = false
+            let matchLang = false
+            const language = infoValue.Language || infoValue.Title
+            if (language.match(/chinese|chs|cht/i)) {
+              if (language.match(/cht|(chinese(\s|_)traditional)/i)) {
+                subInfoDict.chinese_traditional.present = true
+              } else {
+                subInfoDict.chinese_simplified.present = true
+              }
+              matchLang = true
+            } else {
+              Object.keys(subInfoDict).forEach(lang => {
+                if (language.match(RegExp(escapeRegExp(lang), 'i')) || language.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
+                  subInfoDict[lang].present = true
+                  matchLang = true
                 }
-                matchLang = true
-              } else {
-                Object.keys(subInfoDict).forEach(lang => {
-                  if (language.match(RegExp(escapeRegExp(lang), 'i')) || language.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
-                    subInfoDict[lang].present = true
-                    matchLang = true
-                  }
-                })
+              })
+            }
+            if (matchLang) {
+              console.log(`Match sub ${language}`)
+            } else {
+              console.log(`Other sub ${language}`)
+            }
+          } else if (infoKey.match(/audio( #\d+)?/i)) {
+            // audio
+            const title = infoValue.Title || ''
+            const language = infoValue.Language || ''
+            if (title.match(/commentary/i)) {
+              commentary = true
+            }
+            if (title.match(/cantonese/i) || language.match(/cantonese/i)) {
+              cantoneseDub = true
+              console.log('Cantonese dub')
+            } else if (title.match(/chinese|mandarin/i) || language.match(/chinese|mandarin/i)) {
+              chineseDub = true
+              console.log('Chinese Mandarin dub')
+            } else {
+              console.log('Other dub')
+            }
+          } else if (infoKey.match(/video/i)) {
+            // video
+            const hdrFormat = infoValue['HDR format']
+            if (hdrFormat) {
+              if (hdrFormat.match(/HDR10/i)) {
+                hdr10 = true
+                console.log('HDR10')
               }
-              if (matchLang) {
-                console.log(`Match sub ${language}`)
-              } else {
-                console.log(`Other sub ${language}`)
-              }
-            } else if (infoKey.match(/audio( #\d+)?/i)) {
-              // audio
-              const title = infoValue.Title || ''
-              const language = infoValue.Language || ''
-              if (title.match(/commentary/i)) {
-                commentary = true
-              }
-              if (title.match(/cantonese/i) || language.match(/cantonese/i)) {
-                cantoneseDub = true
-                console.log('Cantonese dub')
-              } else if (title.match(/chinese|mandarin/i) || language.match(/chinese|mandarin/i)) {
-                chineseDub = true
-                console.log('Chinese Mandarin dub')
-              } else {
-                console.log('Other dub')
-              }
-            } else if (infoKey.match(/video/i)) {
-              // video
-              const hdrFormat = infoValue['HDR format']
-              if (hdrFormat) {
-                if (hdrFormat.match(/HDR10/i)) {
-                  hdr10 = true
-                  console.log('HDR10')
-                }
-                if (hdrFormat.match(/Dolby Vision/i)) {
-                  dovi = true
-                  console.log('Dolby Vision')
-                }
-              }
-            } else if (infoKey.match(/general/i)) {
-              // general
-              if (infoValue.Format === 'Matroska') {
-                containerNum = containerNumMkv
-                console.log('MKV')
-              } else if (infoValue.Format === 'MPEG-4') {
-                containerNum = containerNumMp4
-                console.log('MP4')
-              } else if (infoValue.Format === 'AVI') {
-                containerNum = containerNumAvi
-                console.log('AVI')
-              } else {
-                containerNum = containerNumDefault
+              if (hdrFormat.match(/Dolby Vision/i)) {
+                dovi = true
+                console.log('Dolby Vision')
               }
             }
-          })
-          if (site === PTER) {
-            if (chsubCheck && englishSubCheck && chdubCheck && cantodubCheck) {
-              chsubCheck.checked = subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present
-              englishSubCheck.checked = subInfoDict.english.present
-              chdubCheck.checked = chineseDub
-              cantodubCheck.checked = cantoneseDub
+          } else if (infoKey.match(/general/i)) {
+            // general
+            if (infoValue.Format === 'Matroska') {
+              containerNum = containerNumMkv
+              console.log('MKV')
+            } else if (infoValue.Format === 'MPEG-4') {
+              containerNum = containerNumMp4
+              console.log('MP4')
+            } else if (infoValue.Format === 'AVI') {
+              containerNum = containerNumAvi
+              console.log('AVI')
+            } else {
+              containerNum = containerNumDefault
             }
-          } else if (site === MTEAM) {
-            if (chsubCheck && chdubCheck) {
-              chsubCheck.checked = subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present
-              chdubCheck.checked = chineseDub
-            }
-          } else if (site === TTG) {
-            if (subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present) {
-              subtitleBox.val('* 内封简繁字幕')
-            } else if (subInfoDict.chinese_simplified.present) {
-              subtitleBox.val('* 内封简体字幕')
-            } else if (subInfoDict.chinese_traditional.present) {
-              subtitleBox.val('* 内封繁体字幕')
-            }
-          } else if (site === GPW) {
+          }
+        })
+        if (site === PTER) {
+          if (chsubCheck && englishSubCheck && chdubCheck && cantodubCheck) {
+            chsubCheck.checked = subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present
+            englishSubCheck.checked = subInfoDict.english.present
+            chdubCheck.checked = chineseDub
+            cantodubCheck.checked = cantoneseDub
+          }
+        } else if (site === MTEAM) {
+          if (chsubCheck && chdubCheck) {
+            chsubCheck.checked = subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present
+            chdubCheck.checked = chineseDub
+          }
+        } else if (site === TTG) {
+          if (subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present) {
+            subtitleBox.val('* 内封简繁字幕')
+          } else if (subInfoDict.chinese_simplified.present) {
+            subtitleBox.val('* 内封简体字幕')
+          } else if (subInfoDict.chinese_traditional.present) {
+            subtitleBox.val('* 内封繁体字幕')
+          }
+        } else if (site === GPW) {
+          if (Object.keys(mediainfo).length > 0) {
             let mediainfoNew = mediainfoStr
             const completeNameArray = mediainfo.General['Complete name']
             if (!completeNameArray) {
