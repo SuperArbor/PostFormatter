@@ -793,9 +793,9 @@ const $ = window.jQuery;
       }
       // team
       let team = ''
-      const teamArray = torTitle.match(/.*-\s*([^- ]*)$/i)
+      const teamArray = torTitle.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
       if (teamArray) {
-        team = teamArray[1]
+        team = teamArray[0]
         if (teamSel && site === MTEAM) {
           teamSel.find('option').each((_, element) => {
             if (element.text.toLowerCase() === team.toLowerCase()) {
@@ -852,6 +852,7 @@ const $ = window.jQuery;
         serbian: { check: serbianSubCheck, present: false }
       }
       let hdr10 = false; let dovi = false
+      let mediainfo = {}
       if (decodingMediainfo) {
         const tagForMediainfo = targetTagBox || 'quote'
         const regexMIStr = boxSupportDescr
@@ -867,7 +868,7 @@ const $ = window.jQuery;
           const mediainfoStr = mediainfoArray[1]
             .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
             .replace(/\s*\[\/\w+\]\s*$/g, '')
-          const mediainfo = decodeMediaInfo(mediainfoStr)
+          mediainfo = decodeMediaInfo(mediainfoStr)
           Object.entries(mediainfo).forEach(([infoKey, infoValue]) => {
             if (infoKey.match(/text( #\d+)?/i)) {
               // subtitle
@@ -1132,8 +1133,17 @@ const $ = window.jQuery;
       } else if (construct === GAZELLE) {
         let description = ''
         if (site === GPW) {
-          // setTimeout(() => {
-          // }, 1000000)
+          // 如果没有选中种子文件，使用mediainfo来判断team名
+          if (!torTitle && mediainfo && mediainfo.General) {
+            let movieName = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
+            if (movieName) {
+              movieName = formatTorrentName(movieName)
+              const teamArray = movieName.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
+              if (teamArray) {
+                team = teamArray[0]
+              }
+            }
+          }
           let screenshots = ''
           let currentScreenshots = 0
           // simplify the text or the regex will be super time consuming
