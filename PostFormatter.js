@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info and smilies
-// @version      1.3.1.1
+// @version      1.3.1.2
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -504,6 +504,7 @@ const $ = window.jQuery;
     } else if (site === GPW) {
       inputFile = $('#file')
       targetTagBox = ''
+      // GPW 并不支持带description的box类标签，为了方便处理特殊设置，最后会统一去掉quote里的说明
       boxSupportDescr = true
       otherTagBoxes = ['box', 'hide', 'spoiler', 'expand'].join('|')
       unsupportedTags = ['align'].join('|')
@@ -611,15 +612,6 @@ const $ = window.jQuery;
           descriptionAll = compactContent(descriptionAll, targetTagBox)
         }
         descriptionAll = descriptionAll
-          .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
-            return p1 + p2.toLowerCase() + p3
-          })
-          // 注意otherTagBoxes不需要escape
-          .replace(RegExp('\\[(?:' + otherTagBoxes + ')((=([^\\]]+))?)\\]', 'g'),
-            boxSupportDescr
-              ? `[${replaceTag}` + '$1]'
-              : '[b]$1[/b]\n[' + `${replaceTag}]`)
-          .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'), `[/${replaceTag}]`)
           // PuTao mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
           .replace(/\[quote=mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/quote\]/gim,
             boxSupportDescr
@@ -630,11 +622,25 @@ const $ = window.jQuery;
             boxSupportDescr
               ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']'
               : '[b]MediaInfo[/b]\n[' + replaceTag + ']$1[/' + replaceTag + ']')
-          .replace(/\[pre\]/g, '[font=courier new]').replace(/\[\/pre\]/g, '[/font]')
+          // mediainfo style for sites that do not support box tags，该条必须置于下一条上方，否则会被影响导致该类别mediainfo识别不到
+          .replace(RegExp('(?:(?:\\[b\\])?mediainfo(?:\\[\\/b\\])?\\s*)?\\[(' + otherTagBoxes + ')\\]\\s*(General\\s+Unique\\s+ID[^]+?)\\[\\/\\1\\]', 'gi'),
+            boxSupportDescr
+              ? '[' + replaceTag + '=mediainfo]$2[/' + replaceTag + ']'
+              : '[b]MediaInfo[/b]\n[' + replaceTag + ']$2[/' + replaceTag + ']')
+          .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
+            return p1 + p2.toLowerCase() + p3
+          })
+          // 注意otherTagBoxes不需要escape
+          .replace(RegExp('\\[(?:' + otherTagBoxes + ')((=([^\\]]+))?)\\]', 'g'),
+            boxSupportDescr
+              ? `[${replaceTag}` + '$1]'
+              : '[b]$1[/b]\n[' + `${replaceTag}]`)
+          .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'), `[/${replaceTag}]`)
           .replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, matches => {
             return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
           })
           .replace(RegExp('\\[\\/?(' + unsupportedTags + ')(=[^\\]]+)?\\]', 'g'), '')
+          .replace(/\[pre\]/g, '[font=courier new]').replace(/\[\/pre\]/g, '[/font]')
           .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
           .replace(/\[size=(\d+)\]/g, (match, p1) => {
             return parseInt(p1) > 7 ? '[size=7]' : match
@@ -655,6 +661,12 @@ const $ = window.jQuery;
             descriptionAll = compactContent(descriptionAll, targetTagBox)
           }
           descriptionAll = descriptionAll
+            .replace(/\[quote=mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/quote\]/gim,
+              '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']')
+            .replace(/\[mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/mediainfo\]/gim,
+              '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']')
+            .replace(RegExp('(?:(?:\\[b\\])?mediainfo(?:\\[\\/b\\])?\\s*)?\\[(' + otherTagBoxes + ')\\]\\s*(General\\s+Unique\\s+ID[^]+?)\\[\\/\\1\\]', 'gi'),
+              '[' + replaceTag + '=mediainfo]$2[/' + replaceTag + ']')
             // 将box, mediainfo等tag都转换为quote的形式，后续（处理完对比图之后）会统一处理
             .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
               return p1 + p2.toLowerCase() + p3
@@ -663,10 +675,6 @@ const $ = window.jQuery;
               `[${replaceTag}` + '$1]')
             .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'),
               `[/${replaceTag}]`)
-            .replace(/\[quote=mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/quote\]/gim,
-              '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']')
-            .replace(/\[mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/mediainfo\]/gim,
-              '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']')
             .replace(/\[(size|color|font|b|i|pre)(=[^\]]+)?\]/g, '')
             .replace(/\[\/(size|color|font|b|i|pre)\]/g, '')
             .replace(/\[center\]/g, '\n')
