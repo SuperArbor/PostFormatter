@@ -1264,10 +1264,11 @@ const $ = window.jQuery;
                       imagesNonComparison.forEach(image => { screenshots += `[img]${image}[/img]` })
                     }
                   }
+                  globalMatch = textToConsume.match(slice)
                 }
+                // remove the matched comparison
+                textToConsume = textToConsume.substring(0, globalMatch.index) + textToConsume.substring(globalMatch.index + globalMatch[0].length)
                 if (imagesComparison.length > 0) {
-                  // remove the matched comparison
-                  textToConsume = textToConsume.substring(0, globalMatch.index) + textToConsume.substring(globalMatch.index + globalMatch[0].length)
                   // extract screenshots
                   if (imagesComparison.length % teamsComparison.length === 0) {
                     description += `[comparison=${teamsStr}]${imagesComparison.join(', ')}[/comparison]`
