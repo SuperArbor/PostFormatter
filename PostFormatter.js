@@ -106,8 +106,8 @@ const $ = window.jQuery;
         .replace(/\//g, '.')
     )
   }
-  // decode image urls
-  function decodeImageUrls (imagesWithUrl) {
+  // decode [url=...][img]...[/img][/url] -> [comparison=...]...[/comparison]
+  function urlImg2Comparison (imagesWithUrl) {
     imagesWithUrl = imagesWithUrl.trim()
     const imageHost = imagesWithUrl.match(/pixhost/i)
       ? PIXHOST
@@ -150,8 +150,45 @@ const $ = window.jQuery;
       return imagesWithUrl
         .replace(regex, replacement)
         .split(/\s+/)
-        // remove the last element ' '
-        .slice(0, -1)
+        .filter(ele => { return ele })
+    } else {
+      return []
+    }
+  }
+  // [comparison=...]...[/comparison] -> decode [url=...][img]...[/img][/url]
+  function comparison2UrlImg (imagesComparison) {
+    const imageHost = imagesComparison.match(/pixhost/i)
+      ? PIXHOST
+      : imagesComparison.match(/imgbox/i)
+        ? IMGBOX
+        : imagesComparison.match(/img4k/i)
+          ? IMG4K
+          : imagesComparison.match(/pterclub/i)
+            ? PTERCLUB
+            : imagesComparison.match(/imgpile/i)
+              ? IMGPILE
+              : imagesComparison.match(/ptpimg/i)
+                ? PTPIMG
+                : ''
+    if (!imageHost) {
+      return []
+    }
+    const regex = imageHost === PIXHOST
+      ? /https:\/\/img(\d+)\.pixhost\.to\/images\/([\w/]+)\.png/gi
+      : imageHost === IMGBOX
+        ? /https:\/\/images(\d+)\.imgbox\.com\/(\w+\/\w+)\/(\w+)_o\.png/gi
+        : ''
+    const replacement = imageHost === PIXHOST
+      ? '[url=https://pixhost.to/show/$2.png][img]https://t$1.pixhost.to/thumbs/$2.png[/img][/url]'
+      : imageHost === IMGBOX
+        ? '[url=https://imgbox.com/$3][img]https://thumbs$1.imgbox.com/$2/$3_t.png[/img][/url]'
+        : ''
+    const match = imagesComparison.match(regex)
+    if (match) {
+      return imagesComparison
+        .replace(regex, replacement)
+        .split(/\s+/)
+        .filter(ele => { return ele })
     } else {
       return []
     }
@@ -191,7 +228,8 @@ const $ = window.jQuery;
   const NHD = 'nhd'; const PTER = 'pter'; const PUTAO = 'putao'; const MTEAM = 'mteam'; const TTG = 'ttg'
   const GPW = 'gpw'; const UHD = 'uhd'
   const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
-  const PIXHOST = 'pixhost'; const IMGBOX = 'imghost'; const IMG4K = 'img4k'; const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'
+  const PIXHOST = 'pixhost'; const IMGBOX = 'imghost'; const IMG4K = 'img4k'
+  const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'
   const domainMatchArray = window.location.href.match(/(.*)\/(upload|edit|subtitles|dox)\.php/)
   if (!domainMatchArray) {
     return
@@ -1175,6 +1213,44 @@ const $ = window.jQuery;
           }
           areaSel.val(areaNum)
         }
+      }
+      //= ========================================================================================================
+      // checking screenshots
+      // compare with comparison (GPW style)
+      const regexScreenshotsComparison = /\[comparison=(\w[\w()-. ]+\s*(,\s*\w[\w()-. ]+?)+)\](\s*([^, [\]]+(\s+|\s*,)\s*)+[^, [\]]+)\[\/comparison\]/gmi
+      // compare with thumbs
+      const regexScreenshotsThumbs = /(\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+/gmi
+      if (construct === NEXUSPHP) {
+        const screenshotsArrayComparison = textToConsume.match(regexScreenshotsComparison)
+        let removePlainScreenshots = false
+        if (screenshotsArrayComparison) {
+          screenshotsArrayComparison.forEach(slice => {
+            const matchSlice = textToConsume.match(escapeRegExp(slice))
+            const matchSingle = slice.match(RegExp(regexScreenshotsComparison.source, 'im'))
+            let teamsStr = matchSingle[1].replace(/\s*,\s*/g, ', ')
+            const teams = teamsStr.split(',')
+            teams.forEach((value, i) => { teams[i] = value.trim() })
+            teamsStr = teams.join(' | ')
+            const imagesStr = matchSingle[3]
+            const imagesThumbs = comparison2UrlImg(imagesStr)
+            let currentCompareStr = ''
+            if (imagesThumbs.length > 0) {
+              currentCompareStr = `[b]${teamsStr}[/b]`
+              imagesThumbs.forEach((imagesThumbsSingle, i) => {
+                currentCompareStr += (i % teams.length === 0 ? '\n' : ' ' + imagesThumbsSingle)
+              })
+              currentCompareStr = `[center]${currentCompareStr}[/center]\n`
+              textToConsume = textToConsume.substring(0, matchSlice.index) +
+                currentCompareStr +
+                textToConsume.substring(matchSlice.index + matchSlice[0].length)
+              removePlainScreenshots = true
+            }
+          })
+          if (removePlainScreenshots) {
+            textToConsume = textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\])+/gi, '')
+          }
+          descrBox.val(textToConsume)
+        }
       } else if (construct === GAZELLE) {
         let description = ''
         if (site === GPW) {
@@ -1191,15 +1267,13 @@ const $ = window.jQuery;
           }
           let screenshots = ''
           let currentScreenshots = 0
-          // compair with comparison (GPW style)
-          const regexScreenshotsGPW = /\[comparison=(\w[\w()-. ]+\s*(,\s*\w[\w()-. ]+?)+)\](([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+(\s+|\s*,\s*))+[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/comparison\]/gmi
-          // 移除其他截图，重新生成
-          textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\])+/gi, '')
-          const screenshotsArrayGPW = textToConsume.match(regexScreenshotsGPW)
-          if (screenshotsArrayGPW) {
-            screenshotsArrayGPW.forEach(slice => {
+          const screenshotsArrayComparison = textToConsume.match(regexScreenshotsComparison)
+          if (screenshotsArrayComparison) {
+            // 移除其他截图，重新生成
+            textToConsume = textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\])+/gi, '')
+            screenshotsArrayComparison.forEach(slice => {
               const matchSlice = textToConsume.match(escapeRegExp(slice))
-              const matchSingle = slice.match(RegExp(regexScreenshotsGPW.source, 'im'))
+              const matchSingle = slice.match(RegExp(regexScreenshotsComparison.source, 'im'))
               const teamsStr = matchSingle[1].replace(/\s*,\s*/g, ', ')
               const teams = teamsStr.split(',')
               teams.forEach((value, i) => { teams[i] = value.trim() })
@@ -1224,10 +1298,9 @@ const $ = window.jQuery;
               }
             })
           } else {
-            // compair with thumbs
-            const regexScreenshots = /(\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+/gmi
-            const screenshotsArray = textToConsume.match(regexScreenshots)
-            const backtraceLength = 100
+            const screenshotsArray = textToConsume.match(regexScreenshotsThumbs)
+            // 用于回溯查找team
+            const maxBacktrace = 100
             // 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
             // possible splitters for teams: '|',',','/','-','vs'
             const regexComparison1 = /\[(box|hide|expand|spoiler|quote)\s*=\s*(\w[\w()-. ]{0,20}?(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\w[\w()-. ]{0,20}?)+)\]((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)\[\/(box|hide|expand|spoiler|quote)\]/mi
@@ -1262,7 +1335,7 @@ const $ = window.jQuery;
                   const imagesStr = matchSingle[5]
                   // check if '[/url] exists'
                   if (matchSingle[8]) {
-                    imagesComparison = decodeImageUrls(imagesStr)
+                    imagesComparison = urlImg2Comparison(imagesStr)
                   } else {
                     const matchSimple = imagesStr.match(regexSimpleImageUrl)
                     if (matchSimple) {
@@ -1283,7 +1356,7 @@ const $ = window.jQuery;
                     const imagesStr = matchSingle[5]
                     // check if '[/url] exists'
                     if (matchSingle[8]) {
-                      imagesComparison = decodeImageUrls(imagesStr)
+                      imagesComparison = urlImg2Comparison(imagesStr)
                     } else {
                       const matchSimple = imagesStr.match(regexSimpleImageUrl)
                       if (matchSimple) {
@@ -1299,7 +1372,7 @@ const $ = window.jQuery;
                     const imagesStr = slice
                     let imagesNonComparison = []
                     if (imagesStr.match(regexImageUrlWithThumb)) {
-                      imagesNonComparison = decodeImageUrls(imagesStr)
+                      imagesNonComparison = urlImg2Comparison(imagesStr)
                     } else {
                       const matchSimple = imagesStr.match(regexSimpleImageUrl)
                       if (matchSimple) {
