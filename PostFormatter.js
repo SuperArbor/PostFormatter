@@ -1217,7 +1217,7 @@ const $ = window.jQuery;
       //= ========================================================================================================
       // checking screenshots
       // compare with comparison (GPW style)
-      const regexScreenshotsComparison = /\[comparison=(\w[\w()-. ]+\s*(,\s*\w[\w()-. ]+?)+)\](\s*([^, [\]]+(\s+|\s*,)\s*)+[^, [\]]+)\[\/comparison\]/gmi
+      const regexScreenshotsComparison = /\[comparison=(\b\w[\w()-.[\] ]+\s*(,\s*\b\w[\w()-.[\] ]+?)+)\](\s*([^, [\]]+(\s+|\s*,)\s*)+[^, [\]]+)\[\/comparison\]/gmi
       // compare with thumbs
       const regexScreenshotsThumbs = /(\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+/gmi
       if (construct === NEXUSPHP) {
@@ -1303,9 +1303,9 @@ const $ = window.jQuery;
             const maxBacktrace = 100
             // 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
             // possible splitters for teams: '|',',','/','-','vs'
-            const regexComparison1 = /\[(box|hide|expand|spoiler|quote)\s*=\s*(\w[\w()-. ]{0,20}?(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\w[\w()-. ]{0,20}?)+)\]((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)\[\/(box|hide|expand|spoiler|quote)\]/mi
+            const regexComparison1 = /\[(box|hide|expand|spoiler|quote)\s*=\s*(\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)\]((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)\[\/(box|hide|expand|spoiler|quote)\]/mi
             // 第二种不包含[box|hide|expand|spoiler|quote=]标签，要求Source, Encode与截图之间至少有一个换行符
-            const regexComparison2 = /\W*((\w[\w()-. ]{0,20}?(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\w[\w()-. ]{0,20})+)[\W]*\n+\s*((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+))/mi
+            const regexComparison2 = /^\W*((\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)[\W]*\n+\s*((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+))/mi
             const regexImageUrlWithThumb = /\s*\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\]\[\/url\]\s*/gi
             const regexSimpleImageUrl = /\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/img\]\s*/gi
             const regexTeamsSplitter = /\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*/gi
@@ -1318,8 +1318,8 @@ const $ = window.jQuery;
                 }
                 const sliceStart = matchSlice.index
                 const sliceLength = matchSlice[0].length
-                const newStart = Math.max(0, sliceStart - backtraceLength)
-                const longerSlice = textToConsume.substring(newStart, sliceStart + sliceLength + backtraceLength)
+                const newStart = Math.max(0, sliceStart - maxBacktrace)
+                const longerSlice = textToConsume.substring(newStart, sliceStart + sliceLength)
                 let matchSingle = longerSlice.match(regexComparison1)
                 let teamsStr = ''
                 let imagesComparison = []
@@ -1384,8 +1384,8 @@ const $ = window.jQuery;
                     if (imagesNonComparison.length >= 3) {
                       imagesNonComparison.forEach(image => { screenshots += `[img]${image}[/img]` })
                     }
+                    globalMatch = textToConsume.match(escapeRegExp(slice))
                   }
-                  globalMatch = textToConsume.match(escapeRegExp(slice))
                 }
                 // remove the matched comparison
                 textToConsume = textToConsume.substring(0, globalMatch.index) + textToConsume.substring(globalMatch.index + globalMatch[0].length)
