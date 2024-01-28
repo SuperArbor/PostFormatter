@@ -649,6 +649,7 @@ const $ = window.jQuery;
         .replace(/\[size=(\d+)\]/g, (match, p1) => {
           return parseInt(p1) > 7 ? '[size=7]' : match
         })
+        .replace(/\[(\/?img)\d+\]/g, '[$1]') // for pterclub
       if (targetTagBox) {
         descriptionAll = compactContent(descriptionAll, targetTagBox)
       }
