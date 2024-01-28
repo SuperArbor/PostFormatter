@@ -369,7 +369,7 @@ const $ = window.jQuery;
     let slovenianSubCheck = null; let latinSubCheck = null; let ukrainianSubCheck = null; let hungarianSubCheck = null
     let persianSubCheck = null; let arabicSubCheck = null; let slovakSubCheck = null; let brazilianPortSubCheck = null
     let czechSubCheck = null; let idonesianSubCheck = null; let serbianSubCheck = null
-    let movieEditionCheck = null; let dcClick = null; let comentAudioCheck = null; let ccClick = null
+    let movieEditionCheck = null; let dcClick = null; let commentAudioClick = null; let ccClick = null
     let theatricClick = null; let uncutClick = null; let unratedClick = null; let extendedClick = null
     let containerNumDefault = 0; let containerNumMkv = 1; let containerNumMp4 = 2; let containerNumAvi = 3
     let maxScreenshots = 10
@@ -532,7 +532,7 @@ const $ = window.jQuery;
       hdr10Check = $('input[type="checkbox"][id="hdr10"]')[0]
       doviCheck = $('input[type="checkbox"][id="dolby_vision"]')[0]
       movieEditionCheck = $('input[type="checkbox"][id="movie_edition_information"]')[0]
-      comentAudioCheck = $("a:contains('评论音轨')")[0]
+      commentAudioClick = $("a:contains('评论音轨')")[0]
       dcClick = $("a:contains('导演剪辑版')")[0]
       ccClick = $("a:contains('标准收藏')")[0]
       theatricClick = $("a:contains('影院版')")[0]
@@ -981,9 +981,11 @@ const $ = window.jQuery;
                 }
               })
             }
-            chdubCheck.checked = chineseDub; comentAudioCheck.checked = commentary
+            chdubCheck.checked = chineseDub
             hdr10Check.checked = hdr10; doviCheck.checked = dovi
-
+            if (commentary) {
+              commentAudioClick.click()
+            }
             containerSel.val(containerNum)
           }
         }
