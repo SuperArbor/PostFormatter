@@ -1241,8 +1241,8 @@ const $ = window.jQuery;
                   } else {
                     const matchSimple = imagesStr.match(regexSimpleImageUrl)
                     if (matchSimple) {
-                      imagesComparison = imagesStr.replace(regexSimpleImageUrl, match => {
-                        return match + ' '
+                      imagesComparison = imagesStr.replace(regexSimpleImageUrl, (_, group) => {
+                        return group + ' '
                       }).split(/\s+/).filter(ele => { return ele })
                     }
                   }
@@ -1262,8 +1262,8 @@ const $ = window.jQuery;
                     } else {
                       const matchSimple = imagesStr.match(regexSimpleImageUrl)
                       if (matchSimple) {
-                        imagesComparison = imagesStr.replace(regexSimpleImageUrl, match => {
-                          return match + ' '
+                        imagesComparison = imagesStr.replace(regexSimpleImageUrl, (_, group) => {
+                          return group + ' '
                         }).split(/\s+/).filter(ele => { return ele })
                       }
                     }
@@ -1278,8 +1278,8 @@ const $ = window.jQuery;
                     } else {
                       const matchSimple = imagesStr.match(regexSimpleImageUrl)
                       if (matchSimple) {
-                        imagesNonComparison = imagesStr.replace(regexSimpleImageUrl, match => {
-                          return match + ' '
+                        imagesComparison = imagesStr.replace(regexSimpleImageUrl, (_, group) => {
+                          return group + ' '
                         }).split(/\s+/).filter(ele => { return ele })
                       }
                     }
