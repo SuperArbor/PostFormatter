@@ -1160,16 +1160,14 @@ const $ = window.jQuery;
               // remove the matched comparison
               textToConsume = textToConsume.substring(0, matchSlice.index) + textToConsume.substring(matchSlice.index + matchSlice[0].length)
               // extract screenshots
-              if (images.length % teams.length === 0) {
+              if (images.length > 0 && images.length % teams.length === 0) {
                 const groups = images.length / teams.length
                 if (!screenshots && groups >= 3) {
                   images.forEach((image, i) => {
                     const teamCurrent = teams[i % teams.length]
-                    if (currentScreenshots < maxScreenshots) {
-                      if (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase()) {
-                        screenshots += `[img]${image}[/img]`
-                        currentScreenshots += 1
-                      }
+                    if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase())) {
+                      screenshots += `[img]${image}[/img]`
+                      currentScreenshots += 1
                     }
                   })
                 }
@@ -1268,22 +1266,18 @@ const $ = window.jQuery;
                 }
                 // remove the matched comparison
                 textToConsume = textToConsume.substring(0, globalMatch.index) + textToConsume.substring(globalMatch.index + globalMatch[0].length)
-                if (imagesComparison.length > 0) {
-                  // extract screenshots
-                  if (imagesComparison.length % teamsComparison.length === 0) {
-                    description += `[comparison=${teamsStr}]${imagesComparison.join(', ')}[/comparison]`
-                    const groups = imagesComparison.length / teamsComparison.length
-                    if (!screenshots && groups >= 3) {
-                      imagesComparison.forEach((image, i) => {
-                        const teamCurrent = teamsComparison[i % teamsComparison.length]
-                        if (currentScreenshots < maxScreenshots) {
-                          if (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase()) {
-                            screenshots += `[img]${image}[/img]`
-                            currentScreenshots += 1
-                          }
-                        }
-                      })
-                    }
+                // extract screenshots
+                if (imagesComparison.length > 0 && imagesComparison.length % teamsComparison.length === 0) {
+                  description += `[comparison=${teamsStr}]${imagesComparison.join(', ')}[/comparison]`
+                  const groups = imagesComparison.length / teamsComparison.length
+                  if (!screenshots && groups >= 3) {
+                    imagesComparison.forEach((image, i) => {
+                      const teamCurrent = teamsComparison[i % teamsComparison.length]
+                      if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase())) {
+                        screenshots += `[img]${image}[/img]`
+                        currentScreenshots += 1
+                      }
+                    })
                   }
                 }
               })
