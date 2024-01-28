@@ -868,7 +868,7 @@ const $ = window.jQuery;
             .replace(/\s*\[\/\w+\]\s*$/g, '')
           const mediainfo = decodeMediaInfo(mediainfoStr)
           Object.entries(mediainfo).forEach(([infoKey, infoValue]) => {
-            if (infoKey.match(/text (#\d+)?/i)) {
+            if (infoKey.match(/text( #\d+)?/i)) {
               // subtitle
               nosub = false
               let matchLang = false
@@ -893,15 +893,17 @@ const $ = window.jQuery;
               } else {
                 console.log(`Other sub ${language}`)
               }
-            } else if (infoKey.match(/audio (#\d+)?/i)) {
+            } else if (infoKey.match(/audio( #\d+)?/i)) {
               // audio
-              if (infoValue.Title.match(/commentary/i)) {
+              const title = infoValue.Title || ''
+              const language = infoValue.Language || ''
+              if (title.match(/commentary/i)) {
                 commentary = true
               }
-              if (infoValue.Title.match(/cantonese/i)) {
+              if (title.match(/cantonese/i) || language.match(/cantonese/i)) {
                 cantoneseDub = true
                 console.log('Cantonese dub')
-              } else if (infoValue.Title.match(/chinese/i) || infoValue.Language.match(/chinese/i)) {
+              } else if (title.match(/chinese|mandarin/i) || language.match(/chinese|mandarin/i)) {
                 chineseDub = true
                 console.log('Chinese Mandarin dub')
               } else {
@@ -1135,13 +1137,13 @@ const $ = window.jQuery;
           let currentScreenshots = 0
           // simplify the text or the regex will be super time consuming
           textToConsume = textToConsume
-            .replace(/\s*\[(size|color|font|b|i)(=[^\]]+)?\]\s*/g, '')
-            .replace(/\s*\[\/(size|color|font|b|i)\]\s*/g, '')
-            .replace(/\s*\[center\]\s*/g, '\n')
-            .replace(/\s*\[\/center\]\s*/g, '\n')
+            .replace(/\[(size|color|font|b|i)(=[^\]]+)?\]/g, '')
+            .replace(/\[\/(size|color|font|b|i)\]/g, '')
+            .replace(/\[center\]/g, '\n')
+            .replace(/\[\/center\]/g, '\n')
             // compair with comparison (GPW style)
-          const regexScreenshotsGPW = /\[comparison=([\w()-\s]+\s*(,\s*[\w()-\s]+?)+)\](([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+(\s+|\s*,\s*))+[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/comparison\]/gmi
-          const regexScreenshotsGPWSingle = /\[comparison=([\w()-\s]+\s*(,\s*[\w()-\s]+?)+)\](([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+(\s+|\s*,\s*))+[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/comparison\]/mi
+          const regexScreenshotsGPW = /\[comparison=(\w[\w()-. ]+\s*(,\s*\w[\w()-. ]+?)+)\](([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+(\s+|\s*,\s*))+[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/comparison\]/gmi
+          const regexScreenshotsGPWSingle = /\[comparison=(\w[\w()-. ]+\s*(,\s*\w[\w()-. ]+?)+)\](([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+(\s+|\s*,\s*))+[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/comparison\]/mi
           // 移除其他截图，重新生成
           textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)+/gi, '')
           const screenshotsArrayGPW = textToConsume.match(regexScreenshotsGPW)
@@ -1179,66 +1181,100 @@ const $ = window.jQuery;
             const regexScreenshots = /(\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+/gmi
             const screenshotsArray = textToConsume.match(regexScreenshots)
             const backtraceLength = 100
-            const regexComparison1 = /\[(box|hide|expand|spoiler|quote)\s*=\s*([\w()-\s]{0,20}?(\s*(\||,|>?\s*vs\.?\s*<?)\s*[\w()-\s]{0,20}?)+)\]((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)\[\/(box|hide|expand|spoiler|quote)\]/mi
-            const regexComparison2 = /\W*(([\w()-\s]{0,20}?(\s*(\||,|>?\s*vs\.?\s*<?)\s*[\w()-\s]{0,20})+)[\W]*((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+))/mi
+            // 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
+            // possible splitters for teams: '|',',','/','-','vs'
+            const regexComparison1 = /\[(box|hide|expand|spoiler|quote)\s*=\s*(\w[\w()-. ]{0,20}?(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\w[\w()-. ]{0,20}?)+)\]((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)\[\/(box|hide|expand|spoiler|quote)\]/mi
+            // 第二种不包含[box|hide|expand|spoiler|quote=]标签，要求Source, Encode与截图之间至少有一个换行符
+            const regexComparison2 = /\W*((\w[\w()-. ]{0,20}?(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\w[\w()-. ]{0,20})+)[\W]*\n+\s*((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+))/mi
+            const regexImageUrlWithThumb = /\s*\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\]\[\/url\]\s*/gi
+            const regexSimpleImageUrl = /\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/img\]\s*/gi
             if (screenshotsArray) {
               screenshotsArray.forEach(slice => {
                 const matchSlice = textToConsume.match(escapeRegExp(slice))
+                if (!matchSlice) {
+                  // not possible generally
+                  return
+                }
                 const sliceStart = matchSlice.index
                 const sliceLength = matchSlice[0].length
                 const newStart = Math.max(0, sliceStart - backtraceLength)
                 const longerSlice = textToConsume.substring(newStart, sliceStart + sliceLength + backtraceLength)
                 let matchSingle = longerSlice.match(regexComparison1)
                 let teamsStr = ''
-                let images = []
-                let teams = []
+                let imagesComparison = []
+                let teamsComparison = []
                 // global match in the whole text
                 let globalMatch = []
                 if (matchSingle) {
                   // 'Source, Encode, Other'
-                  teamsStr = matchSingle[2].replace(/\s*(\||,|>?\s*vs\.?\s*<?)\s*/gi, ', ')
-                  teams = teamsStr.split(',')
-                  teams.forEach((value, i) => { teams[i] = value.trim() })
+                  teamsStr = matchSingle[2].replace(/\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*/gi, ', ')
+                  teamsComparison = teamsStr.split(',')
+                  teamsComparison.forEach((value, i) => { teamsComparison[i] = value.trim() })
                   // '[url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url]'
                   const imagesStr = matchSingle[5]
                   // check if '[/url] exists'
                   if (matchSingle[8]) {
-                    images = decodeImageUrls(imagesStr)
+                    imagesComparison = decodeImageUrls(imagesStr)
                   } else {
-                    const matchSimple = imagesStr.match(/\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/img\]/gi)
-                    images = imagesStr.replace(matchSimple, '$1 ').split(/\s+/)
+                    const matchSimple = imagesStr.match(regexSimpleImageUrl)
+                    if (matchSimple) {
+                      imagesComparison = imagesStr.replace(regexSimpleImageUrl, match => {
+                        return match + ' '
+                      }).split(/\s+/).filter(ele => { return ele })
+                    }
                   }
                   globalMatch = textToConsume.match(escapeRegExp(matchSingle[0]))
                 } else {
                   matchSingle = longerSlice.match(regexComparison2)
                   // 'Source, Encode, Other'
                   if (matchSingle) {
-                    teamsStr = matchSingle[2].replace(/\s*(\||,|>?\s*vs\.?\s*<?)\s*/gi, ', ')
-                    teams = teamsStr.split(',')
-                    teams.forEach((value, i) => { teams[i] = value.trim() })
+                    teamsStr = matchSingle[2].replace(/\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*/gi, ', ')
+                    teamsComparison = teamsStr.split(',')
+                    teamsComparison.forEach((value, i) => { teamsComparison[i] = value.trim() })
                     // '[url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url]'
                     const imagesStr = matchSingle[5]
                     // check if '[/url] exists'
                     if (matchSingle[8]) {
-                      images = decodeImageUrls(imagesStr)
+                      imagesComparison = decodeImageUrls(imagesStr)
                     } else {
-                      const matchSimple = imagesStr.match(/\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/img\]/gi)
-                      images = imagesStr.replace(matchSimple, '$1 ').split(/\s+/)
+                      const matchSimple = imagesStr.match(regexSimpleImageUrl)
+                      if (matchSimple) {
+                        imagesComparison = imagesStr.replace(regexSimpleImageUrl, match => {
+                          return match + ' '
+                        }).split(/\s+/).filter(ele => { return ele })
+                      }
                     }
                     // in this case, the \W* matched in the regex should be excluded
                     globalMatch = textToConsume.match(escapeRegExp(matchSingle[1]))
+                  } else if (!screenshots) {
+                    // consider the remained to be possible non-comparison screenshots
+                    const imagesStr = slice
+                    let imagesNonComparison = []
+                    if (imagesStr.match(regexImageUrlWithThumb)) {
+                      imagesNonComparison = decodeImageUrls(imagesStr)
+                    } else {
+                      const matchSimple = imagesStr.match(regexSimpleImageUrl)
+                      if (matchSimple) {
+                        imagesNonComparison = imagesStr.replace(regexSimpleImageUrl, match => {
+                          return match + ' '
+                        }).split(/\s+/).filter(ele => { return ele })
+                      }
+                    }
+                    if (imagesNonComparison.length >= 3) {
+                      imagesNonComparison.forEach(image => { screenshots += `[img]${image}[/img]` })
+                    }
                   }
                 }
-                if (images.length > 0) {
-                  description += `[comparison=${teamsStr}]${images.join(', ')}[/comparison]`
+                if (imagesComparison.length > 0) {
                   // remove the matched comparison
                   textToConsume = textToConsume.substring(0, globalMatch.index) + textToConsume.substring(globalMatch.index + globalMatch[0].length)
                   // extract screenshots
-                  if (images.length % teams.length === 0) {
-                    const groups = images.length / teams.length
+                  if (imagesComparison.length % teamsComparison.length === 0) {
+                    description += `[comparison=${teamsStr}]${imagesComparison.join(', ')}[/comparison]`
+                    const groups = imagesComparison.length / teamsComparison.length
                     if (!screenshots && groups >= 3) {
-                      images.forEach((image, i) => {
-                        const teamCurrent = teams[i % teams.length]
+                      imagesComparison.forEach((image, i) => {
+                        const teamCurrent = teamsComparison[i % teamsComparison.length]
                         if (currentScreenshots < maxScreenshots) {
                           if (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase()) {
                             screenshots += `[img]${image}[/img]`
@@ -1260,9 +1296,7 @@ const $ = window.jQuery;
           const matchQuote = textToConsume.match(regexQuote)
           let quotes = ''
           if (matchQuote) {
-            matchQuote.forEach(quote => {
-              quotes += quote
-            })
+            matchQuote.forEach(quote => { quotes += quote })
           }
           description = quotes + description
           descrBox.val(description)
