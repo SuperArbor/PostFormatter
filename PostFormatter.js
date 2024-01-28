@@ -138,7 +138,7 @@ const $ = window.jQuery;
               ? IMGPILE
               : ''
     if (!imageHost) {
-      return ''
+      return []
     }
     const regex = imageHost === PIXHOST
       ? /\[url=https:\/\/pixhost\.to\/show\/(.*?.png)\]\s*\[img\]https:\/\/t(.*?)\.pixhost.*?\[\/img\]\s*\[\/url\]/gi
@@ -875,7 +875,7 @@ const $ = window.jQuery;
             .replace(/\s*\[\/\w+\]\s*$/g, '')
           mediainfo = decodeMediaInfo(mediainfoStr)
         }
-        if (Object.keys(mediainfo).length === 0) {
+        if (Object.keys(mediainfo).length === 0 && mediainfoBox) {
           // 如果简介中没有有效的mediainfo，读取mediainfobox
           mediainfoStr = mediainfoBox.val()
           mediainfo = decodeMediaInfo(mediainfoStr)
@@ -887,7 +887,7 @@ const $ = window.jQuery;
             let matchLang = false
             const language = infoValue.Language || infoValue.Title
             if (language.match(/chinese|chs|cht/i)) {
-              if (language.match(/cht|(chinese(\s|_)traditional)/i)) {
+              if (language.match(/cht|(chinese( |_)traditional)/i)) {
                 subInfoDict.chinese_traditional.present = true
               } else {
                 subInfoDict.chinese_simplified.present = true
@@ -1169,7 +1169,7 @@ const $ = window.jQuery;
             // compair with comparison (GPW style)
           const regexScreenshotsGPW = /\[comparison=(\w[\w()-. ]+\s*(,\s*\w[\w()-. ]+?)+)\](([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+(\s+|\s*,\s*))+[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/comparison\]/gmi
           // 移除其他截图，重新生成
-          textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)+/gi, '')
+          textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\])+/gi, '')
           const screenshotsArrayGPW = textToConsume.match(regexScreenshotsGPW)
           if (screenshotsArrayGPW) {
             screenshotsArrayGPW.forEach(slice => {
