@@ -1276,7 +1276,6 @@ const $ = window.jQuery;
               const matchSlice = textToConsume.match(escapeRegExp(slice))
               const matchSingle = slice.match(RegExp(regexScreenshotsComparison.source, 'im'))
               const teams = matchSingle[1]
-                .replace(/\s*,\s*/g, ', ')
                 .split(',')
                 .map(value => { return value.trim() })
               const teamsStr = teams.join(' | ')
@@ -1302,7 +1301,7 @@ const $ = window.jQuery;
         } else if (construct === GAZELLE) {
           let description = ''
           if (site === GPW) {
-          // 如果没有选中种子文件，使用mediainfo来判断team名
+            // 如果没有选中种子文件，使用mediainfo来判断team名
             if (!torTitle && mediainfo && mediainfo.General) {
               let movieName = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
               if (movieName) {
@@ -1317,13 +1316,13 @@ const $ = window.jQuery;
             let currentScreenshots = 0
             const screenshotsArrayComparison = textToConsume.match(regexScreenshotsComparison)
             if (screenshotsArrayComparison) {
-            // 移除其他截图，重新生成
+              // 匹配到GPW风格的对比图
+              // 移除其他截图，重新生成
               textToConsume = textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\])+/gi, '')
               screenshotsArrayComparison.forEach(slice => {
                 const matchSlice = textToConsume.match(escapeRegExp(slice))
                 const matchSingle = slice.match(RegExp(regexScreenshotsComparison.source, 'im'))
                 const teams = matchSingle[1]
-                  .replace(/\s*,\s*/g, ', ')
                   .split(',')
                   .map(value => { return value.trim() })
                 const images = matchSingle[3]
@@ -1359,6 +1358,7 @@ const $ = window.jQuery;
               const regexSimpleImageUrl = /\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/img\]\s*/gi
               const regexTeamsSplitter = /\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*/gi
               if (screenshotsArray) {
+                // 匹配到带缩略图的对比图
                 screenshotsArray.forEach(slice => {
                   const matchSlice = textToConsume.match(escapeRegExp(slice))
                   if (!matchSlice) {
@@ -1376,7 +1376,8 @@ const $ = window.jQuery;
                   // global match in the whole text
                   let globalMatch = []
                   if (matchSingle) {
-                  // 'Source, Encode, Other'
+                    // 带box的对比图形式
+                    // 'Source, Encode, Other'
                     teamsStr = matchSingle[2].replace(regexTeamsSplitter, ', ')
                     teamsComparison = teamsStr
                       .split(',')
@@ -1385,10 +1386,12 @@ const $ = window.jQuery;
                     const imagesStr = matchSingle[5]
                     // check if '[/url] exists'
                     if (matchSingle[8]) {
+                      // 有缩略图
                       imagesComparison = urlImg2Comparison(imagesStr)
                     } else {
                       const matchSimple = imagesStr.match(regexSimpleImageUrl)
                       if (matchSimple) {
+                        // 无缩略图，匹配到图片链接
                         imagesComparison = imagesStr.replace(regexSimpleImageUrl, (_, group) => {
                           return group + ' '
                         }).split(/\s+/).filter(ele => { return ele })
@@ -1396,6 +1399,7 @@ const $ = window.jQuery;
                     }
                     globalMatch = textToConsume.match(escapeRegExp(matchSingle[0]))
                   } else {
+                    // 无box的对比图形式
                     matchSingle = longerSlice.match(regexComparison2)
                     // 'Source, Encode, Other'
                     if (matchSingle) {
@@ -1442,7 +1446,7 @@ const $ = window.jQuery;
                   textToConsume = textToConsume.substring(0, globalMatch.index) + textToConsume.substring(globalMatch.index + globalMatch[0].length)
                   // extract screenshots
                   if (imagesComparison.length > 0 && imagesComparison.length % teamsComparison.length === 0) {
-                    description += `[comparison=${teamsStr}]${imagesComparison.join(', ')}[/comparison]`
+                    description += `[comparison=${teamsStr}]${imagesComparison.join(' ')}[/comparison]`
                     const groups = imagesComparison.length / teamsComparison.length
                     if (!screenshots && groups >= 3) {
                       imagesComparison.forEach((image, i) => {
