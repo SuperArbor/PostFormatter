@@ -1281,7 +1281,7 @@ const $ = window.jQuery;
             if (imagesThumbs.length > 0) {
               currentCompareStr = `[b]${teamsStr}[/b]`
               imagesThumbs.forEach((imagesThumbsSingle, i) => {
-                currentCompareStr += (i % teams.length === 0 ? '\n' : ' ' + imagesThumbsSingle)
+                currentCompareStr += (i % teams.length === 0 ? '\n' + imagesThumbsSingle : ' ' + imagesThumbsSingle)
               })
               currentCompareStr = `[center]${currentCompareStr}[/center]\n`
               textToConsume = textToConsume.substring(0, matchSlice.index) +
@@ -1376,7 +1376,7 @@ const $ = window.jQuery;
                   teamsStr = matchSingle[2].replace(regexTeamsSplitter, ', ')
                   teamsComparison = teamsStr
                     .split(',')
-                    .map(value => { return value.trim })
+                    .map(value => { return value.trim() })
                   // '[url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url]'
                   const imagesStr = matchSingle[5]
                   // check if '[/url] exists'
@@ -1398,7 +1398,7 @@ const $ = window.jQuery;
                     teamsStr = matchSingle[2].replace(regexTeamsSplitter, ', ')
                     teamsComparison = teamsStr
                       .split(',')
-                      .map(value => { return value.trim })
+                      .map(value => { return value.trim() })
                     // '[url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url]'
                     const imagesStr = matchSingle[5]
                     // check if '[/url] exists'
