@@ -1288,8 +1288,8 @@ const $ = window.jQuery;
                 })
                 currentCompareStr = `[center]${currentCompareStr}[/center]\n`
                 textToConsume = textToConsume.substring(0, matchSlice.index) +
-                currentCompareStr +
-                textToConsume.substring(matchSlice.index + matchSlice[0].length)
+                  currentCompareStr +
+                  textToConsume.substring(matchSlice.index + matchSlice[0].length)
                 removePlainScreenshots = true
               }
             }
@@ -1351,9 +1351,9 @@ const $ = window.jQuery;
               const maxBacktrace = 100
               // 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
               // possible splitters for teams: '|',',','/','-','vs'
-              const regexComparison1 = /\[(box|hide|expand|spoiler|quote)\s*=\s*(\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)\]((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)\[\/(box|hide|expand|spoiler|quote)\]/mi
+              const regexComparisonBoxed = /\[(box|hide|expand|spoiler|quote)\s*=\s*(\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)\]((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)\[\/\1\]/mi
               // 第二种不包含[box|hide|expand|spoiler|quote=]标签，要求Source, Encode与截图之间至少有一个换行符
-              const regexComparison2 = /^\W*((\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)[\W]*\n+\s*((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+))/mi
+              const regexComparisonHeaded = /^\W*((\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)[\W]*\n+\s*((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+))/mi
               const regexImageUrlWithThumb = /\s*\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\]\[\/url\]\s*/gi
               const regexSimpleImageUrl = /\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/img\]\s*/gi
               const regexTeamsSplitter = /\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*/gi
@@ -1369,7 +1369,7 @@ const $ = window.jQuery;
                   const sliceLength = matchSlice[0].length
                   const newStart = Math.max(0, sliceStart - maxBacktrace)
                   const longerSlice = textToConsume.substring(newStart, sliceStart + sliceLength)
-                  let matchSingle = longerSlice.match(regexComparison1)
+                  let matchSingle = longerSlice.match(regexComparisonBoxed)
                   let teamsStr = ''
                   let imagesComparison = []
                   let teamsComparison = []
@@ -1400,7 +1400,7 @@ const $ = window.jQuery;
                     globalMatch = textToConsume.match(escapeRegExp(matchSingle[0]))
                   } else {
                     // 无box的对比图形式
-                    matchSingle = longerSlice.match(regexComparison2)
+                    matchSingle = longerSlice.match(regexComparisonHeaded)
                     // 'Source, Encode, Other'
                     if (matchSingle) {
                       teamsStr = matchSingle[2].replace(regexTeamsSplitter, ', ')
