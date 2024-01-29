@@ -10,6 +10,7 @@
 // @match        totheglory.im/*
 // @match        greatposterwall.com/*
 // @match        uhdbits.org/*
+// @grant        GM_xmlhttpRequest
 // @require      https://cdn.staticfile.org/jquery/2.1.4/jquery.js
 // @require      https://code.jquery.com/jquery-migrate-1.0.0.js
 // @icon         http://www.nexushd.org/favicon.ico
@@ -156,7 +157,7 @@ const $ = window.jQuery;
     }
   }
   // [comparison=...]...[/comparison] -> decode [url=...][img]...[/img][/url]
-  function comparison2UrlImg (imagesComparison) {
+  async function comparison2UrlImg (imagesComparison, numTeams) {
     const imageHost = imagesComparison.match(/pixhost/i)
       ? PIXHOST
       : imagesComparison.match(/imgbox/i)
@@ -173,24 +174,37 @@ const $ = window.jQuery;
     if (!imageHost) {
       return []
     }
-    const regex = imageHost === PIXHOST
-      ? /https:\/\/img(\d+)\.pixhost\.to\/images\/([\w/]+)\.png/gi
-      : imageHost === IMGBOX
-        ? /https:\/\/images(\d+)\.imgbox\.com\/(\w+\/\w+)\/(\w+)_o\.png/gi
-        : ''
-    const replacement = imageHost === PIXHOST
-      ? '[url=https://pixhost.to/show/$2.png][img]https://t$1.pixhost.to/thumbs/$2.png[/img][/url]'
-      : imageHost === IMGBOX
-        ? '[url=https://imgbox.com/$3][img]https://thumbs$1.imgbox.com/$2/$3_t.png[/img][/url]'
-        : ''
-    const match = imagesComparison.match(regex)
-    if (match) {
-      return imagesComparison
-        .replace(regex, replacement)
-        .split(/\s+/)
-        .filter(ele => { return ele })
+    let regex = ''
+    let replacement = ''
+    if (imageHost === PIXHOST) {
+      regex = /https:\/\/img(\d+)\.pixhost\.to\/images\/([\w/]+)\.png/gi
+      replacement = '[url=https://pixhost.to/show/$2.png][img]https://t$1.pixhost.to/thumbs/$2.png[/img][/url]'
+    } else if (imageHost === IMGBOX) {
+      regex = /https:\/\/images(\d+)\.imgbox\.com\/(\w+\/\w+)\/(\w+)_o\.png/gi
+      replacement = '[url=https://imgbox.com/$3][img]https://thumbs$1.imgbox.com/$2/$3_t.png[/img][/url]'
+    }
+    if (regex && replacement) {
+      const matches = imagesComparison.match(regex)
+      return matches
+        ? matches.map(matched => {
+          return matched.replace(regex, replacement)
+        })
+        : []
     } else {
-      return []
+      regex = /(https?:[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\.(png|jpg))/gi
+      const matches = imagesComparison.match(regex)
+      const urlsToSend = matches || []
+      const size = numTeams === 2
+        ? 350
+        : numTeams === 3
+          ? 250
+          : numTeams === 4
+            ? 190
+            : numTeams === 5
+              ? 150
+              : 150
+      const urls = await sendImagesToPixhost(urlsToSend, size)
+      return urls
     }
   }
   function decodeMediaInfo (mediainfoStr) {
@@ -222,6 +236,36 @@ const $ = window.jQuery;
       }
     })
     return mi
+  }
+  async function sendImagesToPixhost (urls, size) {
+    return new Promise((resolve, reject) => {
+      GM_xmlhttpRequest({
+        method: 'POST',
+        url: 'https://pixhost.to/remote/',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Accept: 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36'
+        },
+        data: encodeURI(`imgs=${urls.join('\r\n')}&content_type=0&max_th_size=${size}`),
+        onload: response => {
+          if (response.status !== 200) {
+            reject(response.status)
+          } else {
+            const data = response.responseText.match(/(upload_results = )({.*})(;)/)
+            if (data && data.length) {
+              const imgResultList = JSON.parse(data[2]).images
+              resolve(imgResultList.map(item => {
+                return `[url=${item.show_url}][img]${item.th_url}[/img][/url]`
+              }))
+            } else {
+              console.log(response)
+              reject('上传失败，请重试')
+            }
+          }
+        }
+      })
+    })
   }
   //= ========================================================================================================
   // Main
@@ -1224,15 +1268,15 @@ const $ = window.jQuery;
         const screenshotsArrayComparison = textToConsume.match(regexScreenshotsComparison)
         let removePlainScreenshots = false
         if (screenshotsArrayComparison) {
-          screenshotsArrayComparison.forEach(slice => {
+          for (const slice of screenshotsArrayComparison) {
             const matchSlice = textToConsume.match(escapeRegExp(slice))
             const matchSingle = slice.match(RegExp(regexScreenshotsComparison.source, 'im'))
-            let teamsStr = matchSingle[1].replace(/\s*,\s*/g, ', ')
-            const teams = teamsStr.split(',')
-            teams.forEach((value, i) => { teams[i] = value.trim() })
-            teamsStr = teams.join(' | ')
-            const imagesStr = matchSingle[3]
-            const imagesThumbs = comparison2UrlImg(imagesStr)
+            const teams = matchSingle[1]
+              .replace(/\s*,\s*/g, ', ')
+              .split(',')
+              .map(value => { return value.trim() })
+            const teamsStr = teams.join(' | ')
+            const imagesThumbs = await comparison2UrlImg(matchSingle[3], teams.length)
             let currentCompareStr = ''
             if (imagesThumbs.length > 0) {
               currentCompareStr = `[b]${teamsStr}[/b]`
@@ -1245,7 +1289,7 @@ const $ = window.jQuery;
                 textToConsume.substring(matchSlice.index + matchSlice[0].length)
               removePlainScreenshots = true
             }
-          })
+          }
           if (removePlainScreenshots) {
             textToConsume = textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\])+/gi, '')
           }
@@ -1274,12 +1318,13 @@ const $ = window.jQuery;
             screenshotsArrayComparison.forEach(slice => {
               const matchSlice = textToConsume.match(escapeRegExp(slice))
               const matchSingle = slice.match(RegExp(regexScreenshotsComparison.source, 'im'))
-              const teamsStr = matchSingle[1].replace(/\s*,\s*/g, ', ')
-              const teams = teamsStr.split(',')
-              teams.forEach((value, i) => { teams[i] = value.trim() })
-              const imagesStr = matchSingle[3]
-              const images = imagesStr.split(/\s+|\s*,\s*/gi)
-              images.forEach((img, i) => { images[i] = img.trim() })
+              const teams = matchSingle[1]
+                .replace(/\s*,\s*/g, ', ')
+                .split(',')
+                .map(value => { return value.trim() })
+              const images = matchSingle[3]
+                .split(/\s+|\s*,\s*/gi)
+                .map(img => { return img.trim() })
               description += slice
               // remove the matched comparison
               textToConsume = textToConsume.substring(0, matchSlice.index) + textToConsume.substring(matchSlice.index + matchSlice[0].length)
@@ -1329,8 +1374,9 @@ const $ = window.jQuery;
                 if (matchSingle) {
                   // 'Source, Encode, Other'
                   teamsStr = matchSingle[2].replace(regexTeamsSplitter, ', ')
-                  teamsComparison = teamsStr.split(',')
-                  teamsComparison.forEach((value, i) => { teamsComparison[i] = value.trim() })
+                  teamsComparison = teamsStr
+                    .split(',')
+                    .map(value => { return value.trim })
                   // '[url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url]'
                   const imagesStr = matchSingle[5]
                   // check if '[/url] exists'
@@ -1350,8 +1396,9 @@ const $ = window.jQuery;
                   // 'Source, Encode, Other'
                   if (matchSingle) {
                     teamsStr = matchSingle[2].replace(regexTeamsSplitter, ', ')
-                    teamsComparison = teamsStr.split(',')
-                    teamsComparison.forEach((value, i) => { teamsComparison[i] = value.trim() })
+                    teamsComparison = teamsStr
+                      .split(',')
+                      .map(value => { return value.trim })
                     // '[url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url]'
                     const imagesStr = matchSingle[5]
                     // check if '[/url] exists'
