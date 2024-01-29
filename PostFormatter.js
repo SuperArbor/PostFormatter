@@ -586,10 +586,10 @@ const $ = window.jQuery;
       cateNumTvShowJap = 101; cateNumTvShowKor = 103; cateNumTvShow = 60
     } else if (site === GPW) {
       inputFile = $('#file')
-      targetTagBox = ''
+      targetTagBox = 'hide'
       // GPW 并不支持带description的box类标签，为了方便处理特殊设置，最后会统一去掉quote里的说明
       boxSupportDescr = true
-      otherTagBoxes = ['box', 'hide', 'spoiler', 'expand'].join('|')
+      otherTagBoxes = ['box', 'spoiler', 'expand'].join('|')
       unsupportedTags = ['align'].join('|')
       mediainfoBox = $('textarea[name="mediainfo[]"]')
       descrBox = $('#release_desc')
