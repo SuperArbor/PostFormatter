@@ -668,74 +668,28 @@ const $ = window.jQuery;
       containerNumDefault = '---'; containerNumMkv = 'MKV'; containerNumMp4 = 'MP4'; containerNumAvi = 'AVI'
     }
     // function definition
-    btnBingo.click(async function () {
-      //= ========================================================================================================
-      // prehandling description
-      let textToConsume = ''
-      if (construct === NEXUSPHP) {
-        if (anonymousControl) {
-          if (site === NHD || site === PTER || site === PUTAO || site === MTEAM) {
-            anonymousControl.checked = anonymous
-          } else if (site === TTG) {
-            anonymousControl.val(anonymous ? 'yes' : 'no')
+    btnBingo.on('click', async function () {
+      const oriTextBingo = btnBingo.val()
+      try {
+        btnBingo.val('Handling')
+        //= ========================================================================================================
+        // prehandling description
+        let textToConsume = ''
+        if (construct === NEXUSPHP) {
+          if (anonymousControl) {
+            if (site === NHD || site === PTER || site === PUTAO || site === MTEAM) {
+              anonymousControl.checked = anonymous
+            } else if (site === TTG) {
+              anonymousControl.val(anonymous ? 'yes' : 'no')
+            }
           }
-        }
-        const oldText = descrBox.val()
-        let readClipboard = false
-        if (site === NHD || site === PTER || site === PUTAO || site === MTEAM) {
-          readClipboard = !oldText
-        } else if (site === TTG) {
-          readClipboard = !oldText ? true : oldText.length < 125
-        }
-        let descriptionAll = readClipboard ? await navigator.clipboard.readText() : oldText
-        // 对于不支持box标签的站，统一替换为'quote'标签
-        const replaceTag = targetTagBox || 'quote'
-        if (targetTagBox) {
-          descriptionAll = nestExplode(descriptionAll, targetTagBox)
-          descriptionAll = compactContent(descriptionAll, targetTagBox)
-        }
-        descriptionAll = descriptionAll
-          // PuTao mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
-          .replace(/\[quote=mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/quote\]/gim,
-            boxSupportDescr
-              ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']'
-              : '[b]MediaInfo[/b]\n[' + replaceTag + ']$1[/' + replaceTag + ']')
-          // NHD mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
-          .replace(/\[mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/mediainfo\]/gim,
-            boxSupportDescr
-              ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']'
-              : '[b]MediaInfo[/b]\n[' + replaceTag + ']$1[/' + replaceTag + ']')
-          // mediainfo style for sites that do not support box tags，该条必须置于下一条上方，否则会被影响导致该类别mediainfo识别不到
-          .replace(RegExp('(?:(?:\\[b\\])?mediainfo(?:\\[\\/b\\])?\\s*)?\\[(' + otherTagBoxes + ')\\]\\s*(General\\s+Unique\\s+ID[^]+?)\\[\\/\\1\\]', 'gi'),
-            boxSupportDescr
-              ? '[' + replaceTag + '=mediainfo]$2[/' + replaceTag + ']'
-              : '[b]MediaInfo[/b]\n[' + replaceTag + ']$2[/' + replaceTag + ']')
-          .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
-            return p1 + p2.toLowerCase() + p3
-          })
-          // 注意otherTagBoxes不需要escape
-          .replace(RegExp('\\[(?:' + otherTagBoxes + ')((=([^\\]]+))?)\\]', 'g'),
-            boxSupportDescr
-              ? `[${replaceTag}` + '$1]'
-              : '[b]$1[/b]\n[' + `${replaceTag}]`)
-          .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'), `[/${replaceTag}]`)
-          .replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, matches => {
-            return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
-          })
-          .replace(RegExp('\\[\\/?(' + unsupportedTags + ')(=[^\\]]+)?\\]', 'g'), '')
-          .replace(/\[pre\]/g, '[font=courier new]').replace(/\[\/pre\]/g, '[/font]')
-          .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
-          .replace(/\[size=(\d+)\]/g, (match, p1) => {
-            return parseInt(p1) > 7 ? '[size=7]' : match
-          })
-          .replace(/\[(\/?img)\d+\]/g, '[$1]') // for pterclub
-        descrBox.val(descriptionAll)
-        textToConsume = descriptionAll
-      } else if (construct === GAZELLE) {
-        if (site === GPW) {
           const oldText = descrBox.val()
           let readClipboard = false
-          readClipboard = !oldText
+          if (site === NHD || site === PTER || site === PUTAO || site === MTEAM) {
+            readClipboard = !oldText
+          } else if (site === TTG) {
+            readClipboard = !oldText ? true : oldText.length < 125
+          }
           let descriptionAll = readClipboard ? await navigator.clipboard.readText() : oldText
           // 对于不支持box标签的站，统一替换为'quote'标签
           const replaceTag = targetTagBox || 'quote'
@@ -744,658 +698,685 @@ const $ = window.jQuery;
             descriptionAll = compactContent(descriptionAll, targetTagBox)
           }
           descriptionAll = descriptionAll
+          // PuTao mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
             .replace(/\[quote=mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/quote\]/gim,
-              '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']')
+              boxSupportDescr
+                ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']'
+                : '[b]MediaInfo[/b]\n[' + replaceTag + ']$1[/' + replaceTag + ']')
+          // NHD mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
             .replace(/\[mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/mediainfo\]/gim,
-              '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']')
+              boxSupportDescr
+                ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']'
+                : '[b]MediaInfo[/b]\n[' + replaceTag + ']$1[/' + replaceTag + ']')
+          // mediainfo style for sites that do not support box tags，该条必须置于下一条上方，否则会被影响导致该类别mediainfo识别不到
             .replace(RegExp('(?:(?:\\[b\\])?mediainfo(?:\\[\\/b\\])?\\s*)?\\[(' + otherTagBoxes + ')\\]\\s*(General\\s+Unique\\s+ID[^]+?)\\[\\/\\1\\]', 'gi'),
-              '[' + replaceTag + '=mediainfo]$2[/' + replaceTag + ']')
-            // 将box, mediainfo等tag都转换为quote的形式，后续（处理完对比图之后）会统一处理
+              boxSupportDescr
+                ? '[' + replaceTag + '=mediainfo]$2[/' + replaceTag + ']'
+                : '[b]MediaInfo[/b]\n[' + replaceTag + ']$2[/' + replaceTag + ']')
             .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
               return p1 + p2.toLowerCase() + p3
             })
+          // 注意otherTagBoxes不需要escape
             .replace(RegExp('\\[(?:' + otherTagBoxes + ')((=([^\\]]+))?)\\]', 'g'),
-              `[${replaceTag}` + '$1]')
-            .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'),
-              `[/${replaceTag}]`)
-            .replace(/\[(size|color|font|b|i|pre)(=[^\]]+)?\]/g, '')
-            .replace(/\[\/(size|color|font|b|i|pre)\]/g, '')
-            .replace(/\[center\]/g, '\n')
-            .replace(/\[\/center\]/g, '\n')
+              boxSupportDescr
+                ? `[${replaceTag}` + '$1]'
+                : '[b]$1[/b]\n[' + `${replaceTag}]`)
+            .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'), `[/${replaceTag}]`)
             .replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, matches => {
               return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
             })
             .replace(RegExp('\\[\\/?(' + unsupportedTags + ')(=[^\\]]+)?\\]', 'g'), '')
+            .replace(/\[pre\]/g, '[font=courier new]').replace(/\[\/pre\]/g, '[/font]')
             .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
+            .replace(/\[size=(\d+)\]/g, (match, p1) => {
+              return parseInt(p1) > 7 ? '[size=7]' : match
+            })
             .replace(/\[(\/?img)\d+\]/g, '[$1]') // for pterclub
           descrBox.val(descriptionAll)
           textToConsume = descriptionAll
+        } else if (construct === GAZELLE) {
+          if (site === GPW) {
+            const oldText = descrBox.val()
+            let readClipboard = false
+            readClipboard = !oldText
+            let descriptionAll = readClipboard ? await navigator.clipboard.readText() : oldText
+            // 对于不支持box标签的站，统一替换为'quote'标签
+            const replaceTag = targetTagBox || 'quote'
+            if (targetTagBox) {
+              descriptionAll = nestExplode(descriptionAll, targetTagBox)
+              descriptionAll = compactContent(descriptionAll, targetTagBox)
+            }
+            descriptionAll = descriptionAll
+              .replace(/\[quote=mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/quote\]/gim,
+                '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']')
+              .replace(/\[mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/mediainfo\]/gim,
+                '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']')
+              .replace(RegExp('(?:(?:\\[b\\])?mediainfo(?:\\[\\/b\\])?\\s*)?\\[(' + otherTagBoxes + ')\\]\\s*(General\\s+Unique\\s+ID[^]+?)\\[\\/\\1\\]', 'gi'),
+                '[' + replaceTag + '=mediainfo]$2[/' + replaceTag + ']')
+            // 将box, mediainfo等tag都转换为quote的形式，后续（处理完对比图之后）会统一处理
+              .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
+                return p1 + p2.toLowerCase() + p3
+              })
+              .replace(RegExp('\\[(?:' + otherTagBoxes + ')((=([^\\]]+))?)\\]', 'g'),
+              `[${replaceTag}` + '$1]')
+              .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'),
+              `[/${replaceTag}]`)
+              .replace(/\[(size|color|font|b|i|pre)(=[^\]]+)?\]/g, '')
+              .replace(/\[\/(size|color|font|b|i|pre)\]/g, '')
+              .replace(/\[center\]/g, '\n')
+              .replace(/\[\/center\]/g, '\n')
+              .replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, matches => {
+                return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
+              })
+              .replace(RegExp('\\[\\/?(' + unsupportedTags + ')(=[^\\]]+)?\\]', 'g'), '')
+              .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
+              .replace(/\[(\/?img)\d+\]/g, '[$1]') // for pterclub
+            descrBox.val(descriptionAll)
+            textToConsume = descriptionAll
+          }
         }
-      }
-      //= ========================================================================================================
-      // checking torrent name
-      // name
-      let torTitle = inputFile.val()
-      let containerNum = ''
-      let cc = false; let dc = false; let uncut = false; let unrated = false; let theatric = false; let extended = false
-      if (torTitle) {
-        torTitle = /([^\\]+)$/.exec(torTitle)[1]
-        torTitle = formatTorrentName(torTitle)
-        cc = torTitle.match(/\bcc|criterion\b/i)
-        dc = torTitle.match(/\bdc\b/i)
-        unrated = torTitle.match(/\bunrated\b/i)
-        uncut = torTitle.match(/\buncut\b/i)
-        theatric = torTitle.match(/\btheatrical\b/i)
-        extended = torTitle.match(/\bextended\b/i)
-      }
-      if (site === GPW) {
-        movieEditionCheck.click()
-        if (cc) { ccClick.click() }
-        if (dc) { dcClick.click() }
-        if (unrated) { unratedClick.click() }
-        if (uncut) { uncutClick.click() }
-        if (theatric) { theatricClick.click() }
-        if (extended) { extendedClick.click() }
-      }
-      // source
-      let sourceNum = sourceNumDefault
-      if (site === PTER || site === MTEAM) {
-        sourceNum = torTitle.match(/\b(remux)\b/i)
-          ? sourceNumRemux// remux
-          : torTitle.match(/\b(blu-?ray|bdrip|dvdrip|webrip)\b/i)
-            ? sourceNumEncode// encode
+        //= ========================================================================================================
+        // checking torrent name
+        // name
+        let torTitle = inputFile.val()
+        let containerNum = ''
+        let cc = false; let dc = false; let uncut = false; let unrated = false; let theatric = false; let extended = false
+        if (torTitle) {
+          torTitle = /([^\\]+)$/.exec(torTitle)[1]
+          torTitle = formatTorrentName(torTitle)
+          cc = torTitle.match(/\bcc|criterion\b/i)
+          dc = torTitle.match(/\bdc\b/i)
+          unrated = torTitle.match(/\bunrated\b/i)
+          uncut = torTitle.match(/\buncut\b/i)
+          theatric = torTitle.match(/\btheatrical\b/i)
+          extended = torTitle.match(/\bextended\b/i)
+        }
+        if (site === GPW) {
+          movieEditionCheck.click()
+          if (cc) { ccClick.click() }
+          if (dc) { dcClick.click() }
+          if (unrated) { unratedClick.click() }
+          if (uncut) { uncutClick.click() }
+          if (theatric) { theatricClick.click() }
+          if (extended) { extendedClick.click() }
+        }
+        // source
+        let sourceNum = sourceNumDefault
+        if (site === PTER || site === MTEAM) {
+          sourceNum = torTitle.match(/\b(remux)\b/i)
+            ? sourceNumRemux// remux
+            : torTitle.match(/\b(blu-?ray|bdrip|dvdrip|webrip)\b/i)
+              ? sourceNumEncode// encode
+              : torTitle.match(/\bhdtv\b/i)
+                ? sourceNumHdtv// hdtv
+                : torTitle.match(/\bweb-?dl\b/i)
+                  ? sourceNumWebDl// web-dl
+                  : sourceNumDefault// other
+        } else if (site === NHD) {
+          sourceNum = torTitle.match(/\b(blu-?ray|bdrip)\b/i)
+            ? sourceNumBluray
             : torTitle.match(/\bhdtv\b/i)
-              ? sourceNumHdtv// hdtv
-              : torTitle.match(/\bweb-?dl\b/i)
-                ? sourceNumWebDl// web-dl
-                : sourceNumDefault// other
-      } else if (site === NHD) {
-        sourceNum = torTitle.match(/\b(blu-?ray|bdrip)\b/i)
-          ? sourceNumBluray
-          : torTitle.match(/\bhdtv\b/i)
-            ? sourceNumHddvd
-            : torTitle.match(/\bdvd(rip)?/i)
-              ? sourceNumDvd
-              : torTitle.match(/\bweb-?dl\b/i)
-                ? sourceNumWebDl
-                : torTitle.match(/\bwebrip\b/i)
-                  ? sourceNumWebrip
+              ? sourceNumHddvd
+              : torTitle.match(/\bdvd(rip)?/i)
+                ? sourceNumDvd
+                : torTitle.match(/\bweb-?dl\b/i)
+                  ? sourceNumWebDl
+                  : torTitle.match(/\bwebrip\b/i)
+                    ? sourceNumWebrip
+                    : sourceNumDefault
+        } else if (site === GPW) {
+          sourceNum = torTitle.match(/\b(blu-?ray|bdrip)\b/i)
+            ? sourceNumBluray
+            : torTitle.match(/\bhdtv\b/i)
+              ? sourceNumHddvd
+              : torTitle.match(/\bdvd(rip)?/i)
+                ? sourceNumDvd
+                : torTitle.match(/\bweb(-?dl|rip)?\b/i)
+                  ? sourceNumWeb
                   : sourceNumDefault
-      } else if (site === GPW) {
-        sourceNum = torTitle.match(/\b(blu-?ray|bdrip)\b/i)
-          ? sourceNumBluray
-          : torTitle.match(/\bhdtv\b/i)
-            ? sourceNumHddvd
-            : torTitle.match(/\bdvd(rip)?/i)
-              ? sourceNumDvd
-              : torTitle.match(/\bweb(-?dl|rip)?\b/i)
-                ? sourceNumWeb
-                : sourceNumDefault
-      }
-      if (sourceSel) {
-        sourceSel.val(sourceNum)
-      }
-      // resolution
-      let standardNum = standardNumDefault
-      if (site === NHD || site === PUTAO || site === MTEAM || site === TTG || site === GPW) {
-        standardNum = torTitle.match(/\b1080p\b/i)
-          ? standardNum1080p
-          : torTitle.match(/\b1080i\b/i)
-            ? standardNum1080i
-            : torTitle.match(/\b720p\b/i)
-              ? standardNum720p
-              : torTitle.match(/\b(2160p|4k)\b/i)
-                ? standardNum2160p
-                : torTitle.match(/\bdvd(rip)?\b/i)
-                  ? standardNumSd
-                  : standardNumDefault
-      }
-      if (standardSel) {
-        standardSel.val(standardNum)
-      }
-      // processing
-      let processNum = processNumDefault
-      if (site === NHD) {
-        processNum = torTitle.match(/\b(remux|web-?dl|(bd|dvd)?iso)\b/i)
-          ? processNumRaw
-          : processNumEncode
-      } else if (site === GPW) {
-        processingSel.closest('tr.hidden').removeClass('hidden')
-        processNum = torTitle.match(/\bremux\b/i)
-          ? processNumRemux
-          : processNumEncode
-      }
-      if (processingSel) {
-        processingSel.val(processNum)
-      }
-      // codec
-      let codecNum = codecNumDefault
-      if (site === NHD || site === PUTAO || site === MTEAM) {
-        codecNum = torTitle.match(/\b(h|x)\.?264\b/i)
-          ? codecNumH264
-          : torTitle.match(/\b(h|x)\.?265\b/i)
-            ? codecNumH265
-            : torTitle.match(/\bavc\b/i)
-              ? codecNumH264
-              : torTitle.match(/\bhevc\b/i)
-                ? codecNumH265
-                : torTitle.match(/\bvc-1\b/i)
-                  ? codecNumVc1
-                  : torTitle.match(/\bmpeg-2\b/i)
-                    ? codecNumMpeg2
-                    : torTitle.match(/\bxvid\b/i)
-                      ? codecNumXvid
-                      : torTitle.match(/\bflac\b/i)
-                        ? codecNumFlac
-                        : torTitle.match(/\bape\b/i)
-                          ? codecNumApe
-                          : codecNumDefault
-      } else if (site === GPW) {
-        codecNum = torTitle.match(/\bh\.?264\b/i)
-          ? codecNumH264
-          : torTitle.match(/\bh\.?265\b/i)
-            ? codecNumH265
-            : torTitle.match(/\bavc|x264\b/i)
-              ? codecNumX264
-              : torTitle.match(/\bhevc|x265\b/i)
-                ? codecNumX265
-                : torTitle.match(/\bxvid\b/i)
-                  ? codecNumXvid
-                  : torTitle.match(/\bdivx\b/i)
-                    ? codecNumDivX
-                    : codecNumDefault
-      }
-      if (codecSel) {
-        codecSel.val(codecNum)
-      }
-      // team
-      let team = ''
-      const teamArray = torTitle.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
-      if (teamArray) {
-        team = teamArray[0]
-        if (teamSel && site === MTEAM) {
-          teamSel.find('option').each((_, element) => {
-            if (element.text.toLowerCase() === team.toLowerCase()) {
-              teamSel.val(element.value)
+        }
+        if (sourceSel) {
+          sourceSel.val(sourceNum)
+        }
+        // resolution
+        let standardNum = standardNumDefault
+        if (site === NHD || site === PUTAO || site === MTEAM || site === TTG || site === GPW) {
+          standardNum = torTitle.match(/\b1080p\b/i)
+            ? standardNum1080p
+            : torTitle.match(/\b1080i\b/i)
+              ? standardNum1080i
+              : torTitle.match(/\b720p\b/i)
+                ? standardNum720p
+                : torTitle.match(/\b(2160p|4k)\b/i)
+                  ? standardNum2160p
+                  : torTitle.match(/\bdvd(rip)?\b/i)
+                    ? standardNumSd
+                    : standardNumDefault
+        }
+        if (standardSel) {
+          standardSel.val(standardNum)
+        }
+        // processing
+        let processNum = processNumDefault
+        if (site === NHD) {
+          processNum = torTitle.match(/\b(remux|web-?dl|(bd|dvd)?iso)\b/i)
+            ? processNumRaw
+            : processNumEncode
+        } else if (site === GPW) {
+          processingSel.closest('tr.hidden').removeClass('hidden')
+          processNum = torTitle.match(/\bremux\b/i)
+            ? processNumRemux
+            : processNumEncode
+        }
+        if (processingSel) {
+          processingSel.val(processNum)
+        }
+        // codec
+        let codecNum = codecNumDefault
+        if (site === NHD || site === PUTAO || site === MTEAM) {
+          codecNum = torTitle.match(/\b(h|x)\.?264\b/i)
+            ? codecNumH264
+            : torTitle.match(/\b(h|x)\.?265\b/i)
+              ? codecNumH265
+              : torTitle.match(/\bavc\b/i)
+                ? codecNumH264
+                : torTitle.match(/\bhevc\b/i)
+                  ? codecNumH265
+                  : torTitle.match(/\bvc-1\b/i)
+                    ? codecNumVc1
+                    : torTitle.match(/\bmpeg-2\b/i)
+                      ? codecNumMpeg2
+                      : torTitle.match(/\bxvid\b/i)
+                        ? codecNumXvid
+                        : torTitle.match(/\bflac\b/i)
+                          ? codecNumFlac
+                          : torTitle.match(/\bape\b/i)
+                            ? codecNumApe
+                            : codecNumDefault
+        } else if (site === GPW) {
+          codecNum = torTitle.match(/\bh\.?264\b/i)
+            ? codecNumH264
+            : torTitle.match(/\bh\.?265\b/i)
+              ? codecNumH265
+              : torTitle.match(/\bavc|x264\b/i)
+                ? codecNumX264
+                : torTitle.match(/\bhevc|x265\b/i)
+                  ? codecNumX265
+                  : torTitle.match(/\bxvid\b/i)
+                    ? codecNumXvid
+                    : torTitle.match(/\bdivx\b/i)
+                      ? codecNumDivX
+                      : codecNumDefault
+        }
+        if (codecSel) {
+          codecSel.val(codecNum)
+        }
+        // team
+        let team = ''
+        const teamArray = torTitle.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
+        if (teamArray) {
+          team = teamArray[0]
+          if (teamSel && site === MTEAM) {
+            teamSel.find('option').each((_, element) => {
+              if (element.text.toLowerCase() === team.toLowerCase()) {
+                teamSel.val(element.value)
+              }
+            })
+          }
+        }
+        //= ========================================================================================================
+        // checking mediainfo
+        let chineseDub = false; let cantoneseDub = false; let commentary = false; let nosub = true
+        const subInfoDict = {
+          chinese_simplified: { check: chineseSimplifiedSubCheck, present: false },
+          chinese_traditional: { check: chineseTraditionalSubCheck, present: false },
+          japanese: { check: japaneseSubCheck, present: false },
+          korean: { check: koreanSubCheck, present: false },
+          english: { check: englishSubCheck, present: false },
+          french: { check: frenchSubCheck, present: false },
+          german: { check: germanSubCheck, present: false },
+          italian: { check: italianSubCheck, present: false },
+          polish: { check: polishSubCheck, present: false },
+          romanian: { check: romanianSubCheck, present: false },
+          russian: { check: russianSubCheck, present: false },
+          spanish: { check: spanishSubCheck, present: false },
+          thai: { check: thaiSubCheck, present: false },
+          turkish: { check: turkishSubCheck, present: false },
+          vietnamese: { check: vietnameseSubCheck, present: false },
+          hindi: { check: hindiSubCheck, present: false },
+          greek: { check: greekSubCheck, present: false },
+          swedish: { check: swedishSubCheck, present: false },
+          azerbaijani: { check: azerbaijaniSubCheck, present: false },
+          bulgarian: { check: bulgarianSubCheck, present: false },
+          danish: { check: danishSubCheck, present: false },
+          estonian: { check: estonianSubCheck, present: false },
+          finnish: { check: finnishSubCheck, present: false },
+          hebrew: { check: hebrewSubCheck, present: false },
+          croatian: { check: croatianSubCheck, present: false },
+          hungarian: { check: hungarianSubCheck, present: false },
+          icelandic: { check: icelandicSubCheck, present: false },
+          latvian: { check: latvianSubCheck, present: false },
+          lithuanian: { check: lithuanianSubCheck, present: false },
+          dutch: { check: dutchSubCheck, present: false },
+          norwegian: { check: norwegianSubCheck, present: false },
+          portuguese: { check: portugueseSubCheck, present: false },
+          slovenian: { check: slovenianSubCheck, present: false },
+          slovak: { check: slovakSubCheck, present: false },
+          latin: { check: latinSubCheck, present: false },
+          ukrainian: { check: ukrainianSubCheck, present: false },
+          persian: { check: persianSubCheck, present: false },
+          arabic: { check: arabicSubCheck, present: false },
+          brazilian_port: { check: brazilianPortSubCheck, present: false },
+          czech: { check: czechSubCheck, present: false },
+          idonesian: { check: idonesianSubCheck, present: false },
+          serbian: { check: serbianSubCheck, present: false }
+        }
+        let hdr10 = false; let dovi = false
+        let mediainfo = {}
+        if (decodingMediainfo) {
+          let mediainfoStr = ''
+          // 优先从简介中获取mediainfo
+          const tagForMediainfo = targetTagBox || 'quote'
+          const regexMIStr = boxSupportDescr
+            ? '\\[' + tagForMediainfo + '\\s*=\\s*mediainfo\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
+            : '\\[' + tagForMediainfo + '\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
+          const regexMI = RegExp(regexMIStr, 'im')
+          const mediainfoArray = textToConsume.match(regexMI)
+          if (mediainfoArray) {
+            const consumeStart = mediainfoArray.index
+            const consumLength = mediainfoArray[0].length
+            // remove text consumed (to ease regex matching later)
+            textToConsume = textToConsume.substring(0, consumeStart) + textToConsume.substring(consumeStart + consumLength)
+            mediainfoStr = mediainfoArray[1]
+              .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
+              .replace(/\s*\[\/\w+\]\s*$/g, '')
+            mediainfo = decodeMediaInfo(mediainfoStr)
+          }
+          if (Object.keys(mediainfo).length === 0 && mediainfoBox) {
+          // 如果简介中没有有效的mediainfo，读取mediainfobox
+            mediainfoStr = mediainfoBox.val()
+            mediainfo = decodeMediaInfo(mediainfoStr)
+          }
+          Object.entries(mediainfo).forEach(([infoKey, infoValue]) => {
+            if (infoKey.match(/text( #\d+)?/i)) {
+            // subtitle
+              nosub = false
+              let matchLang = false
+              const language = infoValue.Language || infoValue.Title
+              if (language.match(/chinese|chs|cht/i)) {
+                if (language.match(/cht|(chinese( |_)traditional)/i)) {
+                  subInfoDict.chinese_traditional.present = true
+                } else {
+                  subInfoDict.chinese_simplified.present = true
+                }
+                matchLang = true
+              } else {
+                Object.keys(subInfoDict).forEach(lang => {
+                  if (language.match(RegExp(escapeRegExp(lang), 'i')) || language.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
+                    subInfoDict[lang].present = true
+                    matchLang = true
+                  }
+                })
+              }
+              if (matchLang) {
+                console.log(`Match sub ${language}`)
+              } else {
+                console.log(`Other sub ${language}`)
+              }
+            } else if (infoKey.match(/audio( #\d+)?/i)) {
+            // audio
+              const title = infoValue.Title || ''
+              const language = infoValue.Language || ''
+              if (title.match(/commentary/i)) {
+                commentary = true
+              }
+              if (title.match(/cantonese/i) || language.match(/cantonese/i)) {
+                cantoneseDub = true
+                console.log('Cantonese dub')
+              } else if (title.match(/chinese|mandarin/i) || language.match(/chinese|mandarin/i)) {
+                chineseDub = true
+                console.log('Chinese Mandarin dub')
+              } else {
+                console.log('Other dub')
+              }
+            } else if (infoKey.match(/video/i)) {
+            // video
+              const hdrFormat = infoValue['HDR format']
+              if (hdrFormat) {
+                if (hdrFormat.match(/HDR10/i)) {
+                  hdr10 = true
+                  console.log('HDR10')
+                }
+                if (hdrFormat.match(/Dolby Vision/i)) {
+                  dovi = true
+                  console.log('Dolby Vision')
+                }
+              }
+            } else if (infoKey.match(/general/i)) {
+            // general
+              if (infoValue.Format === 'Matroska') {
+                containerNum = containerNumMkv
+                console.log('MKV')
+              } else if (infoValue.Format === 'MPEG-4') {
+                containerNum = containerNumMp4
+                console.log('MP4')
+              } else if (infoValue.Format === 'AVI') {
+                containerNum = containerNumAvi
+                console.log('AVI')
+              } else {
+                containerNum = containerNumDefault
+              }
             }
           })
-        }
-      }
-      //= ========================================================================================================
-      // checking mediainfo
-      let chineseDub = false; let cantoneseDub = false; let commentary = false; let nosub = true
-      const subInfoDict = {
-        chinese_simplified: { check: chineseSimplifiedSubCheck, present: false },
-        chinese_traditional: { check: chineseTraditionalSubCheck, present: false },
-        japanese: { check: japaneseSubCheck, present: false },
-        korean: { check: koreanSubCheck, present: false },
-        english: { check: englishSubCheck, present: false },
-        french: { check: frenchSubCheck, present: false },
-        german: { check: germanSubCheck, present: false },
-        italian: { check: italianSubCheck, present: false },
-        polish: { check: polishSubCheck, present: false },
-        romanian: { check: romanianSubCheck, present: false },
-        russian: { check: russianSubCheck, present: false },
-        spanish: { check: spanishSubCheck, present: false },
-        thai: { check: thaiSubCheck, present: false },
-        turkish: { check: turkishSubCheck, present: false },
-        vietnamese: { check: vietnameseSubCheck, present: false },
-        hindi: { check: hindiSubCheck, present: false },
-        greek: { check: greekSubCheck, present: false },
-        swedish: { check: swedishSubCheck, present: false },
-        azerbaijani: { check: azerbaijaniSubCheck, present: false },
-        bulgarian: { check: bulgarianSubCheck, present: false },
-        danish: { check: danishSubCheck, present: false },
-        estonian: { check: estonianSubCheck, present: false },
-        finnish: { check: finnishSubCheck, present: false },
-        hebrew: { check: hebrewSubCheck, present: false },
-        croatian: { check: croatianSubCheck, present: false },
-        hungarian: { check: hungarianSubCheck, present: false },
-        icelandic: { check: icelandicSubCheck, present: false },
-        latvian: { check: latvianSubCheck, present: false },
-        lithuanian: { check: lithuanianSubCheck, present: false },
-        dutch: { check: dutchSubCheck, present: false },
-        norwegian: { check: norwegianSubCheck, present: false },
-        portuguese: { check: portugueseSubCheck, present: false },
-        slovenian: { check: slovenianSubCheck, present: false },
-        slovak: { check: slovakSubCheck, present: false },
-        latin: { check: latinSubCheck, present: false },
-        ukrainian: { check: ukrainianSubCheck, present: false },
-        persian: { check: persianSubCheck, present: false },
-        arabic: { check: arabicSubCheck, present: false },
-        brazilian_port: { check: brazilianPortSubCheck, present: false },
-        czech: { check: czechSubCheck, present: false },
-        idonesian: { check: idonesianSubCheck, present: false },
-        serbian: { check: serbianSubCheck, present: false }
-      }
-      let hdr10 = false; let dovi = false
-      let mediainfo = {}
-      if (decodingMediainfo) {
-        let mediainfoStr = ''
-        // 优先从简介中获取mediainfo
-        const tagForMediainfo = targetTagBox || 'quote'
-        const regexMIStr = boxSupportDescr
-          ? '\\[' + tagForMediainfo + '\\s*=\\s*mediainfo\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
-          : '\\[' + tagForMediainfo + '\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
-        const regexMI = RegExp(regexMIStr, 'im')
-        const mediainfoArray = textToConsume.match(regexMI)
-        if (mediainfoArray) {
-          const consumeStart = mediainfoArray.index
-          const consumLength = mediainfoArray[0].length
-          // remove text consumed (to ease regex matching later)
-          textToConsume = textToConsume.substring(0, consumeStart) + textToConsume.substring(consumeStart + consumLength)
-          mediainfoStr = mediainfoArray[1]
-            .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
-            .replace(/\s*\[\/\w+\]\s*$/g, '')
-          mediainfo = decodeMediaInfo(mediainfoStr)
-        }
-        if (Object.keys(mediainfo).length === 0 && mediainfoBox) {
-          // 如果简介中没有有效的mediainfo，读取mediainfobox
-          mediainfoStr = mediainfoBox.val()
-          mediainfo = decodeMediaInfo(mediainfoStr)
-        }
-        Object.entries(mediainfo).forEach(([infoKey, infoValue]) => {
-          if (infoKey.match(/text( #\d+)?/i)) {
-            // subtitle
-            nosub = false
-            let matchLang = false
-            const language = infoValue.Language || infoValue.Title
-            if (language.match(/chinese|chs|cht/i)) {
-              if (language.match(/cht|(chinese( |_)traditional)/i)) {
-                subInfoDict.chinese_traditional.present = true
-              } else {
-                subInfoDict.chinese_simplified.present = true
-              }
-              matchLang = true
-            } else {
-              Object.keys(subInfoDict).forEach(lang => {
-                if (language.match(RegExp(escapeRegExp(lang), 'i')) || language.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
-                  subInfoDict[lang].present = true
-                  matchLang = true
-                }
-              })
-            }
-            if (matchLang) {
-              console.log(`Match sub ${language}`)
-            } else {
-              console.log(`Other sub ${language}`)
-            }
-          } else if (infoKey.match(/audio( #\d+)?/i)) {
-            // audio
-            const title = infoValue.Title || ''
-            const language = infoValue.Language || ''
-            if (title.match(/commentary/i)) {
-              commentary = true
-            }
-            if (title.match(/cantonese/i) || language.match(/cantonese/i)) {
-              cantoneseDub = true
-              console.log('Cantonese dub')
-            } else if (title.match(/chinese|mandarin/i) || language.match(/chinese|mandarin/i)) {
-              chineseDub = true
-              console.log('Chinese Mandarin dub')
-            } else {
-              console.log('Other dub')
-            }
-          } else if (infoKey.match(/video/i)) {
-            // video
-            const hdrFormat = infoValue['HDR format']
-            if (hdrFormat) {
-              if (hdrFormat.match(/HDR10/i)) {
-                hdr10 = true
-                console.log('HDR10')
-              }
-              if (hdrFormat.match(/Dolby Vision/i)) {
-                dovi = true
-                console.log('Dolby Vision')
-              }
-            }
-          } else if (infoKey.match(/general/i)) {
-            // general
-            if (infoValue.Format === 'Matroska') {
-              containerNum = containerNumMkv
-              console.log('MKV')
-            } else if (infoValue.Format === 'MPEG-4') {
-              containerNum = containerNumMp4
-              console.log('MP4')
-            } else if (infoValue.Format === 'AVI') {
-              containerNum = containerNumAvi
-              console.log('AVI')
-            } else {
-              containerNum = containerNumDefault
-            }
-          }
-        })
-        if (site === PTER) {
-          if (chsubCheck && englishSubCheck && chdubCheck && cantodubCheck) {
-            chsubCheck.checked = subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present
-            englishSubCheck.checked = subInfoDict.english.present
-            chdubCheck.checked = chineseDub
-            cantodubCheck.checked = cantoneseDub
-          }
-        } else if (site === MTEAM) {
-          if (chsubCheck && chdubCheck) {
-            chsubCheck.checked = subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present
-            chdubCheck.checked = chineseDub
-          }
-        } else if (site === TTG) {
-          if (subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present) {
-            subtitleBox.val('* 内封简繁字幕')
-          } else if (subInfoDict.chinese_simplified.present) {
-            subtitleBox.val('* 内封简体字幕')
-          } else if (subInfoDict.chinese_traditional.present) {
-            subtitleBox.val('* 内封繁体字幕')
-          }
-        } else if (site === GPW) {
-          if (Object.keys(mediainfo).length > 0) {
-            let mediainfoNew = mediainfoStr
-            const completeNameArray = mediainfo.General['Complete name']
-            if (!completeNameArray) {
-              const movieNameArray = mediainfoStr.match(/^Movie name\s*:\s*(.+?)\s*$/mi)
-              if (movieNameArray) {
-                const completeName = mediainfo.General['Movie name'] + `.${containerNum.toLowerCase()}`
-                mediainfoNew = mediainfoStr.replace(/(General\s+Unique ID.+$)\s+(Format\s+.+$)/mi,
-                  '$1\n' + `Complete name                            : ${completeName}` + '\n$2')
-              }
-            }
-            mediainfoBox.val(mediainfoNew)
-            noSubCheck.checked = nosub; mixedSubCheck.checked = !nosub
-            if (!nosub) {
-              otherSubtitlesDiv.removeClass('hidden')
-              Object.values(subInfoDict).forEach(infoLang => {
-                if (infoLang.check) {
-                  infoLang.check.checked = infoLang.present
-                }
-              })
-            }
-            chdubCheck.checked = chineseDub
-            hdr10Check.checked = hdr10; doviCheck.checked = dovi
-            if (commentary) {
-              commentAudioClick.click()
-            }
-            containerSel.val(containerNum)
-          }
-        }
-      }
-      //= ========================================================================================================
-      // checking movie info
-      let cateNum = cateNumDefault
-      if (construct === NEXUSPHP) {
-        // container for small_desc (副标题)
-        const smallDescrArray = []
-        // name
-        const translatedTitleArray = textToConsume.match(/译\s*名\s*([^/\n]+)(?:\/|\n)/)
-        const originalTitleArray = textToConsume.match(/片\s*名\s*([^/\n]+)(?:\/|\n)/)
-        // area
-        const areaArray = textToConsume.match(/产\s*地\s*(.*)\s*/)
-        const area = areaArray ? areaArray[1] : ''
-        if (area.match(/中国大陆/)) {
-          areaCnMl = true
-        } else if (area.match(/香港/)) {
-          areaHk = true
-        } else if (area.match(/台湾/)) {
-          areaTw = true
-        } else if (area.match(/美国|加拿大|英国|法国|德国|希腊|匈牙利|爱尔兰|意大利|阿尔巴尼亚|安道尔|奥地利|白俄罗斯|比利时|波斯尼亚|黑塞哥维那|保加利亚|克罗地亚|塞浦路斯|捷克|丹麦|爱沙尼亚|法罗群岛|冰岛|芬兰|拉脱维亚|列支敦士登|立陶宛|卢森堡|马其顿|马耳他|摩尔多瓦|摩纳哥|荷兰|挪威|波兰|葡萄牙|罗马尼亚|俄罗斯|圣马力诺|塞黑|斯洛伐克|斯洛文尼亚|西班牙|瑞典|瑞士|乌克兰|梵蒂冈/)) {
-          areaEuAme = true
-        } else if (area.match(/印度|韩国|日本|新加坡|泰国|印度尼西亚|菲律宾|越南|土耳其|老挝|柬埔寨|缅甸|马来西亚|文莱|东帝汶|尼泊尔|不丹|孟加拉国|巴基斯坦|斯里兰卡|马尔代夫|阿富汗|伊拉克|伊朗|叙利亚|约旦|黎巴嫩|以色列|巴勒斯坦|沙特阿拉伯|阿曼|也门|格鲁吉亚|亚美尼亚|塞浦路斯|哈萨克斯坦|吉尔吉斯斯坦|塔吉克斯坦|乌兹别克斯坦|土库曼斯坦|蒙古|朝鲜/)) {
-          areaAsia = true
-          if (area.match(area.match(/韩国/))) {
-            areaKor = true
-          } else if (area.match(/日本/)) {
-            areaJap = true
-          } else if (area.match(/印度/)) {
-            areaInd = true
-          }
-        }
-        if (translatedTitleArray && originalTitleArray) {
-          const transTitle = translatedTitleArray[1]
-          const oriTitle = originalTitleArray[1]
-          if (site === NHD || site === PTER || site === MTEAM || site === TTG) {
-            if (areaCnMl) {
-              smallDescrArray.push(torTitle.match(oriTitle) ? transTitle : oriTitle)
-            } else {
-              smallDescrArray.push(transTitle)
-            }
-          } else if (site === PUTAO) {
-            if (areaCnMl) {
-              torTitle = torTitle.match(oriTitle) ? torTitle : `[${oriTitle}] ${torTitle}`
-              nameBox.val(torTitle)
-            } else {
-              torTitle = torTitle.match(transTitle) ? torTitle : `[${transTitle}] ${torTitle}`
-              nameBox.val(torTitle)
-            }
-          }
-        }
-        // festival
-        const festivalArray = textToConsume.match(/(\d{4})-\d{2}-\d{2}\((\S+电影节)\)/)
-        if (festivalArray) {
-          smallDescrArray.push(festivalArray[1] + festivalArray[2])
-        }
-        // category
-        const categoryArray = textToConsume.match(/类\s*别\s+([^\n]*)\s*\n/)
-        let category = ''
-        if (categoryArray) {
-          category = categoryArray[1].replace(/([^ ])\/([^ ])/g, '$1 / $2')
-          smallDescrArray.push(category)
-        }
-        cateNum = category.match('纪录')
-          ? cateNumDocumentary
-          : category.match('动画')
-            ? cateNumAnimation
-            : textToConsume.match(/集\s*数\s+/g)
-              ? cateNumTvSeries
-              : category.match('秀')
-                ? cateNumTvShow
-                : cateNumMovie
-        // douban and imdb score in small_desc
-        if (site === NHD || site === PUTAO) {
-          const doubScoreArray = textToConsume.match(/豆\s*瓣\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/)
-          if (doubScoreArray) {
-            smallDescrArray.push('豆瓣 ' + doubScoreArray[1] + '（' + doubScoreArray[2] + '）')
-          }
-          const imdbScoreArray = textToConsume.match(/IMDb\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/i)
-          if (imdbScoreArray) {
-            smallDescrArray.push('IMDb ' + imdbScoreArray[1] + '（' + imdbScoreArray[2] + '）')
-          }
-        }
-        // director
-        const directorArray = textToConsume.match(/导\s*演\s+([^\w\n\s]*)\s*/)
-        if (directorArray) {
-          smallDescrArray.push(directorArray[1])
-        }
-        // complete small_descr
-        const smallDescr = smallDescrArray.join(' | ')
-        smallDescBox.val(smallDescr)
-        // douban link
-        if (doubanLinkBox) {
-          const doubanLinkArray = textToConsume.match(/豆瓣\s*链\s*接.+(https?:\/\/movie\.douban\.com\/subject\/(\d+)\/?)/)
-          if (site === NHD || site === PTER || site === PUTAO) {
-            doubanLinkBox.val(doubanLinkArray ? doubanLinkArray[1] : '')
-          } else if (site === TTG) {
-            console.log(`current content in douban link ${doubanLinkBox.val()}`)
-            doubanLinkBox.val(doubanLinkArray ? doubanLinkArray[2] : '')
-          }
-        }
-        // imdb link
-        if (imdbLinkBox) {
-          const imdbLinkArray = textToConsume.match(/IMDb\s*链\s*接.+(https?:\/\/www\.imdb\.com\/title\/(tt\d+)\/?)/i)
-          if (site === NHD || site === PTER || site === PUTAO || site === MTEAM) {
-            imdbLinkBox.val(imdbLinkArray ? imdbLinkArray[1] : '')
-          } else if (site === TTG) {
-            imdbLinkBox.val(imdbLinkArray ? imdbLinkArray[2] : '')
-          }
-        }
-        // area selection
-        if (areaSel) {
-          let areaNum = areaNumDefault
           if (site === PTER) {
-            areaNum = areaCnMl
-              ? areaNumCnMl
-              : areaHk
-                ? areaNumHk
-                : areaTw
-                  ? areaNumTw
-                  : areaEuAme
-                    ? areaNumEuAme
-                    : areaKor
-                      ? areaNumKor
-                      : areaJap
-                        ? areaNumJap
-                        : areaInd
-                          ? areaNumInd
-                          : areaNumOther
+            if (chsubCheck && englishSubCheck && chdubCheck && cantodubCheck) {
+              chsubCheck.checked = subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present
+              englishSubCheck.checked = subInfoDict.english.present
+              chdubCheck.checked = chineseDub
+              cantodubCheck.checked = cantoneseDub
+            }
           } else if (site === MTEAM) {
-            areaNum = areaCnMl
-              ? areaNumCnMl
-              : areaEuAme
-                ? areaNumEuAme
-                : areaHk || areaTw
-                  ? areaNumHk
-                  : areaJap
-                    ? areaNumJap
-                    : areaKor
-                      ? areaNumKor
-                      : areaNumOther
-          }
-          areaSel.val(areaNum)
-        }
-      }
-      //= ========================================================================================================
-      // checking screenshots
-      // compare with comparison (GPW style)
-      const regexScreenshotsComparison = /\[comparison=(\b\w[\w()-.[\] ]+\s*(,\s*\b\w[\w()-.[\] ]+?)+)\](\s*([^, [\]]+(\s+|\s*,)\s*)+[^, [\]]+)\[\/comparison\]/gmi
-      // compare with thumbs
-      const regexScreenshotsThumbs = /(\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+/gmi
-      if (construct === NEXUSPHP) {
-        const screenshotsArrayComparison = textToConsume.match(regexScreenshotsComparison)
-        let removePlainScreenshots = false
-        if (screenshotsArrayComparison) {
-          for (const slice of screenshotsArrayComparison) {
-            const matchSlice = textToConsume.match(escapeRegExp(slice))
-            const matchSingle = slice.match(RegExp(regexScreenshotsComparison.source, 'im'))
-            const teams = matchSingle[1]
-              .replace(/\s*,\s*/g, ', ')
-              .split(',')
-              .map(value => { return value.trim() })
-            const teamsStr = teams.join(' | ')
-            const imagesThumbs = await comparison2UrlImg(matchSingle[3], teams.length)
-            let currentCompareStr = ''
-            if (imagesThumbs.length > 0) {
-              currentCompareStr = `[b]${teamsStr}[/b]`
-              imagesThumbs.forEach((imagesThumbsSingle, i) => {
-                currentCompareStr += (i % teams.length === 0 ? '\n' + imagesThumbsSingle : ' ' + imagesThumbsSingle)
-              })
-              currentCompareStr = `[center]${currentCompareStr}[/center]\n`
-              textToConsume = textToConsume.substring(0, matchSlice.index) +
-                currentCompareStr +
-                textToConsume.substring(matchSlice.index + matchSlice[0].length)
-              removePlainScreenshots = true
+            if (chsubCheck && chdubCheck) {
+              chsubCheck.checked = subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present
+              chdubCheck.checked = chineseDub
+            }
+          } else if (site === TTG) {
+            if (subInfoDict.chinese_simplified.present || subInfoDict.chinese_traditional.present) {
+              subtitleBox.val('* 内封简繁字幕')
+            } else if (subInfoDict.chinese_simplified.present) {
+              subtitleBox.val('* 内封简体字幕')
+            } else if (subInfoDict.chinese_traditional.present) {
+              subtitleBox.val('* 内封繁体字幕')
+            }
+          } else if (site === GPW) {
+            if (Object.keys(mediainfo).length > 0) {
+              let mediainfoNew = mediainfoStr
+              const completeNameArray = mediainfo.General['Complete name']
+              if (!completeNameArray) {
+                const movieNameArray = mediainfoStr.match(/^Movie name\s*:\s*(.+?)\s*$/mi)
+                if (movieNameArray) {
+                  const completeName = mediainfo.General['Movie name'] + `.${containerNum.toLowerCase()}`
+                  mediainfoNew = mediainfoStr.replace(/(General\s+Unique ID.+$)\s+(Format\s+.+$)/mi,
+                    '$1\n' + `Complete name                            : ${completeName}` + '\n$2')
+                }
+              }
+              mediainfoBox.val(mediainfoNew)
+              noSubCheck.checked = nosub; mixedSubCheck.checked = !nosub
+              if (!nosub) {
+                otherSubtitlesDiv.removeClass('hidden')
+                Object.values(subInfoDict).forEach(infoLang => {
+                  if (infoLang.check) {
+                    infoLang.check.checked = infoLang.present
+                  }
+                })
+              }
+              chdubCheck.checked = chineseDub
+              hdr10Check.checked = hdr10; doviCheck.checked = dovi
+              if (commentary) {
+                commentAudioClick.click()
+              }
+              containerSel.val(containerNum)
             }
           }
-          if (removePlainScreenshots) {
-            textToConsume = textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\])+/gi, '')
-          }
-          descrBox.val(textToConsume)
         }
-      } else if (construct === GAZELLE) {
-        let description = ''
-        if (site === GPW) {
-          // 如果没有选中种子文件，使用mediainfo来判断team名
-          if (!torTitle && mediainfo && mediainfo.General) {
-            let movieName = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
-            if (movieName) {
-              movieName = formatTorrentName(movieName)
-              const teamArray = movieName.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
-              if (teamArray) {
-                team = teamArray[0]
+        //= ========================================================================================================
+        // checking movie info
+        let cateNum = cateNumDefault
+        if (construct === NEXUSPHP) {
+        // container for small_desc (副标题)
+          const smallDescrArray = []
+          // name
+          const translatedTitleArray = textToConsume.match(/译\s*名\s*([^/\n]+)(?:\/|\n)/)
+          const originalTitleArray = textToConsume.match(/片\s*名\s*([^/\n]+)(?:\/|\n)/)
+          // area
+          const areaArray = textToConsume.match(/产\s*地\s*(.*)\s*/)
+          const area = areaArray ? areaArray[1] : ''
+          if (area.match(/中国大陆/)) {
+            areaCnMl = true
+          } else if (area.match(/香港/)) {
+            areaHk = true
+          } else if (area.match(/台湾/)) {
+            areaTw = true
+          } else if (area.match(/美国|加拿大|英国|法国|德国|希腊|匈牙利|爱尔兰|意大利|阿尔巴尼亚|安道尔|奥地利|白俄罗斯|比利时|波斯尼亚|黑塞哥维那|保加利亚|克罗地亚|塞浦路斯|捷克|丹麦|爱沙尼亚|法罗群岛|冰岛|芬兰|拉脱维亚|列支敦士登|立陶宛|卢森堡|马其顿|马耳他|摩尔多瓦|摩纳哥|荷兰|挪威|波兰|葡萄牙|罗马尼亚|俄罗斯|圣马力诺|塞黑|斯洛伐克|斯洛文尼亚|西班牙|瑞典|瑞士|乌克兰|梵蒂冈/)) {
+            areaEuAme = true
+          } else if (area.match(/印度|韩国|日本|新加坡|泰国|印度尼西亚|菲律宾|越南|土耳其|老挝|柬埔寨|缅甸|马来西亚|文莱|东帝汶|尼泊尔|不丹|孟加拉国|巴基斯坦|斯里兰卡|马尔代夫|阿富汗|伊拉克|伊朗|叙利亚|约旦|黎巴嫩|以色列|巴勒斯坦|沙特阿拉伯|阿曼|也门|格鲁吉亚|亚美尼亚|塞浦路斯|哈萨克斯坦|吉尔吉斯斯坦|塔吉克斯坦|乌兹别克斯坦|土库曼斯坦|蒙古|朝鲜/)) {
+            areaAsia = true
+            if (area.match(area.match(/韩国/))) {
+              areaKor = true
+            } else if (area.match(/日本/)) {
+              areaJap = true
+            } else if (area.match(/印度/)) {
+              areaInd = true
+            }
+          }
+          if (translatedTitleArray && originalTitleArray) {
+            const transTitle = translatedTitleArray[1]
+            const oriTitle = originalTitleArray[1]
+            if (site === NHD || site === PTER || site === MTEAM || site === TTG) {
+              if (areaCnMl) {
+                smallDescrArray.push(torTitle.match(oriTitle) ? transTitle : oriTitle)
+              } else {
+                smallDescrArray.push(transTitle)
+              }
+            } else if (site === PUTAO) {
+              if (areaCnMl) {
+                torTitle = torTitle.match(oriTitle) ? torTitle : `[${oriTitle}] ${torTitle}`
+                nameBox.val(torTitle)
+              } else {
+                torTitle = torTitle.match(transTitle) ? torTitle : `[${transTitle}] ${torTitle}`
+                nameBox.val(torTitle)
               }
             }
           }
-          let screenshots = ''
-          let currentScreenshots = 0
+          // festival
+          const festivalArray = textToConsume.match(/(\d{4})-\d{2}-\d{2}\((\S+电影节)\)/)
+          if (festivalArray) {
+            smallDescrArray.push(festivalArray[1] + festivalArray[2])
+          }
+          // category
+          const categoryArray = textToConsume.match(/类\s*别\s+([^\n]*)\s*\n/)
+          let category = ''
+          if (categoryArray) {
+            category = categoryArray[1].replace(/([^ ])\/([^ ])/g, '$1 / $2')
+            smallDescrArray.push(category)
+          }
+          cateNum = category.match('纪录')
+            ? cateNumDocumentary
+            : category.match('动画')
+              ? cateNumAnimation
+              : textToConsume.match(/集\s*数\s+/g)
+                ? cateNumTvSeries
+                : category.match('秀')
+                  ? cateNumTvShow
+                  : cateNumMovie
+          // douban and imdb score in small_desc
+          if (site === NHD || site === PUTAO) {
+            const doubScoreArray = textToConsume.match(/豆\s*瓣\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/)
+            if (doubScoreArray) {
+              smallDescrArray.push('豆瓣 ' + doubScoreArray[1] + '（' + doubScoreArray[2] + '）')
+            }
+            const imdbScoreArray = textToConsume.match(/IMDb\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/i)
+            if (imdbScoreArray) {
+              smallDescrArray.push('IMDb ' + imdbScoreArray[1] + '（' + imdbScoreArray[2] + '）')
+            }
+          }
+          // director
+          const directorArray = textToConsume.match(/导\s*演\s+([^\w\n\s]*)\s*/)
+          if (directorArray) {
+            smallDescrArray.push(directorArray[1])
+          }
+          // complete small_descr
+          const smallDescr = smallDescrArray.join(' | ')
+          smallDescBox.val(smallDescr)
+          // douban link
+          if (doubanLinkBox) {
+            const doubanLinkArray = textToConsume.match(/豆瓣\s*链\s*接.+(https?:\/\/movie\.douban\.com\/subject\/(\d+)\/?)/)
+            if (site === NHD || site === PTER || site === PUTAO) {
+              doubanLinkBox.val(doubanLinkArray ? doubanLinkArray[1] : '')
+            } else if (site === TTG) {
+              console.log(`current content in douban link ${doubanLinkBox.val()}`)
+              doubanLinkBox.val(doubanLinkArray ? doubanLinkArray[2] : '')
+            }
+          }
+          // imdb link
+          if (imdbLinkBox) {
+            const imdbLinkArray = textToConsume.match(/IMDb\s*链\s*接.+(https?:\/\/www\.imdb\.com\/title\/(tt\d+)\/?)/i)
+            if (site === NHD || site === PTER || site === PUTAO || site === MTEAM) {
+              imdbLinkBox.val(imdbLinkArray ? imdbLinkArray[1] : '')
+            } else if (site === TTG) {
+              imdbLinkBox.val(imdbLinkArray ? imdbLinkArray[2] : '')
+            }
+          }
+          // area selection
+          if (areaSel) {
+            let areaNum = areaNumDefault
+            if (site === PTER) {
+              areaNum = areaCnMl
+                ? areaNumCnMl
+                : areaHk
+                  ? areaNumHk
+                  : areaTw
+                    ? areaNumTw
+                    : areaEuAme
+                      ? areaNumEuAme
+                      : areaKor
+                        ? areaNumKor
+                        : areaJap
+                          ? areaNumJap
+                          : areaInd
+                            ? areaNumInd
+                            : areaNumOther
+            } else if (site === MTEAM) {
+              areaNum = areaCnMl
+                ? areaNumCnMl
+                : areaEuAme
+                  ? areaNumEuAme
+                  : areaHk || areaTw
+                    ? areaNumHk
+                    : areaJap
+                      ? areaNumJap
+                      : areaKor
+                        ? areaNumKor
+                        : areaNumOther
+            }
+            areaSel.val(areaNum)
+          }
+        }
+        //= ========================================================================================================
+        // checking screenshots
+        // compare with comparison (GPW style)
+        const regexScreenshotsComparison = /\[comparison=(\b\w[\w()-.[\] ]+\s*(,\s*\b\w[\w()-.[\] ]+?)+)\](\s*([^, [\]]+(\s+|\s*,)\s*)+[^, [\]]+)\[\/comparison\]/gmi
+        // compare with thumbs
+        const regexScreenshotsThumbs = /(\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+/gmi
+        if (construct === NEXUSPHP) {
           const screenshotsArrayComparison = textToConsume.match(regexScreenshotsComparison)
+          let removePlainScreenshots = false
           if (screenshotsArrayComparison) {
-            // 移除其他截图，重新生成
-            textToConsume = textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\])+/gi, '')
-            screenshotsArrayComparison.forEach(slice => {
+            for (const slice of screenshotsArrayComparison) {
               const matchSlice = textToConsume.match(escapeRegExp(slice))
               const matchSingle = slice.match(RegExp(regexScreenshotsComparison.source, 'im'))
               const teams = matchSingle[1]
                 .replace(/\s*,\s*/g, ', ')
                 .split(',')
                 .map(value => { return value.trim() })
-              const images = matchSingle[3]
-                .split(/\s+|\s*,\s*/gi)
-                .map(img => { return img.trim() })
-              description += slice
-              // remove the matched comparison
-              textToConsume = textToConsume.substring(0, matchSlice.index) + textToConsume.substring(matchSlice.index + matchSlice[0].length)
-              // extract screenshots
-              if (images.length > 0 && images.length % teams.length === 0) {
-                const groups = images.length / teams.length
-                if (!screenshots && groups >= 3) {
-                  images.forEach((image, i) => {
-                    const teamCurrent = teams[i % teams.length]
-                    if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase())) {
-                      screenshots += `[img]${image}[/img]`
-                      currentScreenshots += 1
-                    }
-                  })
+              const teamsStr = teams.join(' | ')
+              const imagesThumbs = await comparison2UrlImg(matchSingle[3], teams.length)
+              let currentCompareStr = ''
+              if (imagesThumbs.length > 0) {
+                currentCompareStr = `[b]${teamsStr}[/b]`
+                imagesThumbs.forEach((imagesThumbsSingle, i) => {
+                  currentCompareStr += (i % teams.length === 0 ? '\n' + imagesThumbsSingle : ' ' + imagesThumbsSingle)
+                })
+                currentCompareStr = `[center]${currentCompareStr}[/center]\n`
+                textToConsume = textToConsume.substring(0, matchSlice.index) +
+                currentCompareStr +
+                textToConsume.substring(matchSlice.index + matchSlice[0].length)
+                removePlainScreenshots = true
+              }
+            }
+            if (removePlainScreenshots) {
+              textToConsume = textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\])+/gi, '')
+            }
+            descrBox.val(textToConsume)
+          }
+        } else if (construct === GAZELLE) {
+          let description = ''
+          if (site === GPW) {
+          // 如果没有选中种子文件，使用mediainfo来判断team名
+            if (!torTitle && mediainfo && mediainfo.General) {
+              let movieName = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
+              if (movieName) {
+                movieName = formatTorrentName(movieName)
+                const teamArray = movieName.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
+                if (teamArray) {
+                  team = teamArray[0]
                 }
               }
-            })
-          } else {
-            const screenshotsArray = textToConsume.match(regexScreenshotsThumbs)
-            // 用于回溯查找team
-            const maxBacktrace = 100
-            // 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
-            // possible splitters for teams: '|',',','/','-','vs'
-            const regexComparison1 = /\[(box|hide|expand|spoiler|quote)\s*=\s*(\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)\]((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)\[\/(box|hide|expand|spoiler|quote)\]/mi
-            // 第二种不包含[box|hide|expand|spoiler|quote=]标签，要求Source, Encode与截图之间至少有一个换行符
-            const regexComparison2 = /^\W*((\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)[\W]*\n+\s*((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+))/mi
-            const regexImageUrlWithThumb = /\s*\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\]\[\/url\]\s*/gi
-            const regexSimpleImageUrl = /\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/img\]\s*/gi
-            const regexTeamsSplitter = /\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*/gi
-            if (screenshotsArray) {
-              screenshotsArray.forEach(slice => {
+            }
+            let screenshots = ''
+            let currentScreenshots = 0
+            const screenshotsArrayComparison = textToConsume.match(regexScreenshotsComparison)
+            if (screenshotsArrayComparison) {
+            // 移除其他截图，重新生成
+              textToConsume = textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\])+/gi, '')
+              screenshotsArrayComparison.forEach(slice => {
                 const matchSlice = textToConsume.match(escapeRegExp(slice))
-                if (!matchSlice) {
-                  // not possible generally
-                  return
-                }
-                const sliceStart = matchSlice.index
-                const sliceLength = matchSlice[0].length
-                const newStart = Math.max(0, sliceStart - maxBacktrace)
-                const longerSlice = textToConsume.substring(newStart, sliceStart + sliceLength)
-                let matchSingle = longerSlice.match(regexComparison1)
-                let teamsStr = ''
-                let imagesComparison = []
-                let teamsComparison = []
-                // global match in the whole text
-                let globalMatch = []
-                if (matchSingle) {
-                  // 'Source, Encode, Other'
-                  teamsStr = matchSingle[2].replace(regexTeamsSplitter, ', ')
-                  teamsComparison = teamsStr
-                    .split(',')
-                    .map(value => { return value.trim() })
-                  // '[url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url]'
-                  const imagesStr = matchSingle[5]
-                  // check if '[/url] exists'
-                  if (matchSingle[8]) {
-                    imagesComparison = urlImg2Comparison(imagesStr)
-                  } else {
-                    const matchSimple = imagesStr.match(regexSimpleImageUrl)
-                    if (matchSimple) {
-                      imagesComparison = imagesStr.replace(regexSimpleImageUrl, (_, group) => {
-                        return group + ' '
-                      }).split(/\s+/).filter(ele => { return ele })
-                    }
+                const matchSingle = slice.match(RegExp(regexScreenshotsComparison.source, 'im'))
+                const teams = matchSingle[1]
+                  .replace(/\s*,\s*/g, ', ')
+                  .split(',')
+                  .map(value => { return value.trim() })
+                const images = matchSingle[3]
+                  .split(/\s+|\s*,\s*/gi)
+                  .map(img => { return img.trim() })
+                description += slice
+                // remove the matched comparison
+                textToConsume = textToConsume.substring(0, matchSlice.index) + textToConsume.substring(matchSlice.index + matchSlice[0].length)
+                // extract screenshots
+                if (images.length > 0 && images.length % teams.length === 0) {
+                  const groups = images.length / teams.length
+                  if (!screenshots && groups >= 3) {
+                    images.forEach((image, i) => {
+                      const teamCurrent = teams[i % teams.length]
+                      if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase())) {
+                        screenshots += `[img]${image}[/img]`
+                        currentScreenshots += 1
+                      }
+                    })
                   }
-                  globalMatch = textToConsume.match(escapeRegExp(matchSingle[0]))
-                } else {
-                  matchSingle = longerSlice.match(regexComparison2)
-                  // 'Source, Encode, Other'
+                }
+              })
+            } else {
+              const screenshotsArray = textToConsume.match(regexScreenshotsThumbs)
+              // 用于回溯查找team
+              const maxBacktrace = 100
+              // 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
+              // possible splitters for teams: '|',',','/','-','vs'
+              const regexComparison1 = /\[(box|hide|expand|spoiler|quote)\s*=\s*(\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)\]((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)\[\/(box|hide|expand|spoiler|quote)\]/mi
+              // 第二种不包含[box|hide|expand|spoiler|quote=]标签，要求Source, Encode与截图之间至少有一个换行符
+              const regexComparison2 = /^\W*((\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)[\W]*\n+\s*((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+))/mi
+              const regexImageUrlWithThumb = /\s*\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\]\[\/url\]\s*/gi
+              const regexSimpleImageUrl = /\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/img\]\s*/gi
+              const regexTeamsSplitter = /\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*/gi
+              if (screenshotsArray) {
+                screenshotsArray.forEach(slice => {
+                  const matchSlice = textToConsume.match(escapeRegExp(slice))
+                  if (!matchSlice) {
+                  // not possible generally
+                    return
+                  }
+                  const sliceStart = matchSlice.index
+                  const sliceLength = matchSlice[0].length
+                  const newStart = Math.max(0, sliceStart - maxBacktrace)
+                  const longerSlice = textToConsume.substring(newStart, sliceStart + sliceLength)
+                  let matchSingle = longerSlice.match(regexComparison1)
+                  let teamsStr = ''
+                  let imagesComparison = []
+                  let teamsComparison = []
+                  // global match in the whole text
+                  let globalMatch = []
                   if (matchSingle) {
+                  // 'Source, Encode, Other'
                     teamsStr = matchSingle[2].replace(regexTeamsSplitter, ', ')
                     teamsComparison = teamsStr
                       .split(',')
@@ -1413,157 +1394,184 @@ const $ = window.jQuery;
                         }).split(/\s+/).filter(ele => { return ele })
                       }
                     }
-                    // in this case, the \W* matched in the regex should be excluded
-                    globalMatch = textToConsume.match(escapeRegExp(matchSingle[1]))
-                  } else if (!screenshots) {
+                    globalMatch = textToConsume.match(escapeRegExp(matchSingle[0]))
+                  } else {
+                    matchSingle = longerSlice.match(regexComparison2)
+                    // 'Source, Encode, Other'
+                    if (matchSingle) {
+                      teamsStr = matchSingle[2].replace(regexTeamsSplitter, ', ')
+                      teamsComparison = teamsStr
+                        .split(',')
+                        .map(value => { return value.trim() })
+                      // '[url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url]'
+                      const imagesStr = matchSingle[5]
+                      // check if '[/url] exists'
+                      if (matchSingle[8]) {
+                        imagesComparison = urlImg2Comparison(imagesStr)
+                      } else {
+                        const matchSimple = imagesStr.match(regexSimpleImageUrl)
+                        if (matchSimple) {
+                          imagesComparison = imagesStr.replace(regexSimpleImageUrl, (_, group) => {
+                            return group + ' '
+                          }).split(/\s+/).filter(ele => { return ele })
+                        }
+                      }
+                      // in this case, the \W* matched in the regex should be excluded
+                      globalMatch = textToConsume.match(escapeRegExp(matchSingle[1]))
+                    } else if (!screenshots) {
                     // consider the remained to be possible non-comparison screenshots
-                    const imagesStr = slice
-                    let imagesNonComparison = []
-                    if (imagesStr.match(regexImageUrlWithThumb)) {
-                      imagesNonComparison = urlImg2Comparison(imagesStr)
-                    } else {
-                      const matchSimple = imagesStr.match(regexSimpleImageUrl)
-                      if (matchSimple) {
-                        imagesComparison = imagesStr.replace(regexSimpleImageUrl, (_, group) => {
-                          return group + ' '
-                        }).split(/\s+/).filter(ele => { return ele })
+                      const imagesStr = slice
+                      let imagesNonComparison = []
+                      if (imagesStr.match(regexImageUrlWithThumb)) {
+                        imagesNonComparison = urlImg2Comparison(imagesStr)
+                      } else {
+                        const matchSimple = imagesStr.match(regexSimpleImageUrl)
+                        if (matchSimple) {
+                          imagesComparison = imagesStr.replace(regexSimpleImageUrl, (_, group) => {
+                            return group + ' '
+                          }).split(/\s+/).filter(ele => { return ele })
+                        }
                       }
-                    }
-                    if (imagesNonComparison.length >= 3) {
-                      imagesNonComparison.forEach(image => { screenshots += `[img]${image}[/img]` })
-                    }
-                    globalMatch = textToConsume.match(escapeRegExp(slice))
-                  }
-                }
-                // remove the matched comparison
-                textToConsume = textToConsume.substring(0, globalMatch.index) + textToConsume.substring(globalMatch.index + globalMatch[0].length)
-                // extract screenshots
-                if (imagesComparison.length > 0 && imagesComparison.length % teamsComparison.length === 0) {
-                  description += `[comparison=${teamsStr}]${imagesComparison.join(', ')}[/comparison]`
-                  const groups = imagesComparison.length / teamsComparison.length
-                  if (!screenshots && groups >= 3) {
-                    imagesComparison.forEach((image, i) => {
-                      const teamCurrent = teamsComparison[i % teamsComparison.length]
-                      if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase())) {
-                        screenshots += `[img]${image}[/img]`
-                        currentScreenshots += 1
+                      if (imagesNonComparison.length >= 3) {
+                        imagesNonComparison.forEach(image => { screenshots += `[img]${image}[/img]` })
                       }
-                    })
+                      globalMatch = textToConsume.match(escapeRegExp(slice))
+                    }
                   }
-                }
+                  // remove the matched comparison
+                  textToConsume = textToConsume.substring(0, globalMatch.index) + textToConsume.substring(globalMatch.index + globalMatch[0].length)
+                  // extract screenshots
+                  if (imagesComparison.length > 0 && imagesComparison.length % teamsComparison.length === 0) {
+                    description += `[comparison=${teamsStr}]${imagesComparison.join(', ')}[/comparison]`
+                    const groups = imagesComparison.length / teamsComparison.length
+                    if (!screenshots && groups >= 3) {
+                      imagesComparison.forEach((image, i) => {
+                        const teamCurrent = teamsComparison[i % teamsComparison.length]
+                        if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase())) {
+                          screenshots += `[img]${image}[/img]`
+                          currentScreenshots += 1
+                        }
+                      })
+                    }
+                  }
+                })
+              }
+            }
+            if (screenshots) {
+              screenshots = '[b]Screenshots[/b]\n' + screenshots
+              description += screenshots
+            }
+            const regexQuote = /\[quote(=(.*?))?\]([^]+)\[\/quote\]/gim
+            const matchQuote = textToConsume.match(regexQuote)
+            let quotes = ''
+            if (matchQuote) {
+              matchQuote.forEach(quote => {
+                quotes += quote.replace(/\[quote=(.*?)\]/gi, '[b]$1[/b][quote]')
               })
             }
+            description = quotes + description
+            descrBox.val(description)
           }
-          if (screenshots) {
-            screenshots = '[b]Screenshots[/b]\n' + screenshots
-            description += screenshots
-          }
-          const regexQuote = /\[quote(=(.*?))?\]([^]+)\[\/quote\]/gim
-          const matchQuote = textToConsume.match(regexQuote)
-          let quotes = ''
-          if (matchQuote) {
-            matchQuote.forEach(quote => {
-              quotes += quote.replace(/\[quote=(.*?)\]/gi, '[b]$1[/b][quote]')
-            })
-          }
-          description = quotes + description
-          descrBox.val(description)
         }
-      }
-      // category selection
-      if (categorySel) {
-        if (site === PUTAO) {
-          if (cateNum === cateNumMovie) {
-            cateNum = areaCnMl
-              ? cateNumMovieCnMl
-              : areaEuAme
-                ? cateNumMovieEuAme
+        // category selection
+        if (categorySel) {
+          if (site === PUTAO) {
+            if (cateNum === cateNumMovie) {
+              cateNum = areaCnMl
+                ? cateNumMovieCnMl
+                : areaEuAme
+                  ? cateNumMovieEuAme
+                  : areaAsia
+                    ? cateNumMovieAsia
+                    : cateNumMovieEuAme
+            } else if (cateNum === cateNumDocumentary) {
+            // for clarification
+              cateNum = cateNumDocumentary
+            } else if (cateNum === cateNumAnimation) {
+            // for clarification
+              cateNum = cateNumAnimation
+            } else if (cateNum === cateNumTvSeries) {
+              cateNum = areaHk || areaTw
+                ? cateNumTvSeriesHkTw
                 : areaAsia
-                  ? cateNumMovieAsia
-                  : cateNumMovieEuAme
-          } else if (cateNum === cateNumDocumentary) {
-            // for clarification
-            cateNum = cateNumDocumentary
-          } else if (cateNum === cateNumAnimation) {
-            // for clarification
-            cateNum = cateNumAnimation
-          } else if (cateNum === cateNumTvSeries) {
-            cateNum = areaHk || areaTw
-              ? cateNumTvSeriesHkTw
-              : areaAsia
-                ? cateNumTvSeriesAsia
-                : areaCnMl
-                  ? cateNumTvSeriesCnMl
+                  ? cateNumTvSeriesAsia
+                  : areaCnMl
+                    ? cateNumTvSeriesCnMl
+                    : areaEuAme
+                      ? cateNumTvSeriesEuAme
+                      : cateNumTvSeriesEuAme
+            } else if (cateNum === cateNumTvShow) {
+              cateNum = areaCnMl
+                ? cateNumTvShowCnMl
+                : areaHk || areaTw
+                  ? cateNumTvShowHkTw
+                  : areaEuAme
+                    ? cateNumTvShowEuAme
+                    : areaJap || areaKor
+                      ? cateNumTvShowJpKor
+                      : cateNumDefault
+            }
+          } else if (site === MTEAM) {
+            if (cateNum === cateNumMovie) {
+              cateNum = sourceNum === sourceNumRemux
+                ? cateNumMovieRemux
+                : sourceNum === sourceNumEncode || sourceNum === sourceNumHdtv || sourceNum === sourceNumHddvd || sourceNum === sourceNumWebDl
+                  ? cateNumMovieHd
+                  : cateNumDefault
+            } else if (cateNum === cateNumTvSeries || cateNum === cateNumTvShow) {
+              cateNum = sourceNum === sourceNumEncode || sourceNum === sourceNumHdtv || sourceNum === sourceNumHddvd || sourceNum === sourceNumWebDl
+                ? cateNumTvSeriesHd
+                : cateNumDefault
+            } else if (cateNum === cateNumDocumentary) {
+              cateNum = cateNumDocumentary
+            } else if (cateNum === cateNumAnimation) {
+              cateNum = cateNumAnimation
+            } else {
+              cateNum = cateNumDefault
+            }
+          } else if (site === TTG) {
+            if (cateNum === cateNumMovie) {
+              cateNum = standardNum === standardNum720p
+                ? cateNumMovie720p
+                : standardNum === standardNum1080i || standardNum === standardNum1080p
+                  ? cateNumMovie1080ip
+                  : standardNum === standardNum2160p
+                    ? cateNumMovie2160p
+                    : cateNumDefault
+            } else if (cateNum === cateNumDocumentary) {
+              cateNum = standardNum === standardNum720p
+                ? cateNumDocumentary720p
+                : standardNum === standardNum1080i || standardNum === standardNum1080p
+                  ? cateNumDocumentary1080ip
+                  : cateNumDefault
+            } else if (cateNum === cateNumAnimation) {
+              cateNum = cateNumAnimation
+            } else if (cateNum === cateNumTvSeries) {
+              cateNum = areaJap
+                ? cateNumTvSeriesJap
+                : areaKor
+                  ? cateNumTvSeriesKor
                   : areaEuAme
                     ? cateNumTvSeriesEuAme
-                    : cateNumTvSeriesEuAme
-          } else if (cateNum === cateNumTvShow) {
-            cateNum = areaCnMl
-              ? cateNumTvShowCnMl
-              : areaHk || areaTw
-                ? cateNumTvShowHkTw
-                : areaEuAme
-                  ? cateNumTvShowEuAme
-                  : areaJap || areaKor
-                    ? cateNumTvShowJpKor
-                    : cateNumDefault
+                    : areaCnMl || areaHk || areaTw
+                      ? cateNumTvSeriesCnMl
+                      : cateNumDefault
+            } else if (cateNum === cateNumTvShow) {
+              cateNum = areaKor
+                ? cateNumTvShowKor
+                : areaJap
+                  ? cateNumTvShowJap
+                  : cateNumTvShow
+            }
           }
-        } else if (site === MTEAM) {
-          if (cateNum === cateNumMovie) {
-            cateNum = sourceNum === sourceNumRemux
-              ? cateNumMovieRemux
-              : sourceNum === sourceNumEncode || sourceNum === sourceNumHdtv || sourceNum === sourceNumHddvd || sourceNum === sourceNumWebDl
-                ? cateNumMovieHd
-                : cateNumDefault
-          } else if (cateNum === cateNumTvSeries || cateNum === cateNumTvShow) {
-            cateNum = sourceNum === sourceNumEncode || sourceNum === sourceNumHdtv || sourceNum === sourceNumHddvd || sourceNum === sourceNumWebDl
-              ? cateNumTvSeriesHd
-              : cateNumDefault
-          } else if (cateNum === cateNumDocumentary) {
-            cateNum = cateNumDocumentary
-          } else if (cateNum === cateNumAnimation) {
-            cateNum = cateNumAnimation
-          } else {
-            cateNum = cateNumDefault
-          }
-        } else if (site === TTG) {
-          if (cateNum === cateNumMovie) {
-            cateNum = standardNum === standardNum720p
-              ? cateNumMovie720p
-              : standardNum === standardNum1080i || standardNum === standardNum1080p
-                ? cateNumMovie1080ip
-                : standardNum === standardNum2160p
-                  ? cateNumMovie2160p
-                  : cateNumDefault
-          } else if (cateNum === cateNumDocumentary) {
-            cateNum = standardNum === standardNum720p
-              ? cateNumDocumentary720p
-              : standardNum === standardNum1080i || standardNum === standardNum1080p
-                ? cateNumDocumentary1080ip
-                : cateNumDefault
-          } else if (cateNum === cateNumAnimation) {
-            cateNum = cateNumAnimation
-          } else if (cateNum === cateNumTvSeries) {
-            cateNum = areaJap
-              ? cateNumTvSeriesJap
-              : areaKor
-                ? cateNumTvSeriesKor
-                : areaEuAme
-                  ? cateNumTvSeriesEuAme
-                  : areaCnMl || areaHk || areaTw
-                    ? cateNumTvSeriesCnMl
-                    : cateNumDefault
-          } else if (cateNum === cateNumTvShow) {
-            cateNum = areaKor
-              ? cateNumTvShowKor
-              : areaJap
-                ? cateNumTvShowJap
-                : cateNumTvShow
-          }
+          categorySel.val(cateNum)
         }
-        categorySel.val(cateNum)
+        descrBox.focus()
+      } catch (error) {
+        console.error('Error:', error)
+      } finally {
+        btnBingo.val(oriTextBingo)
       }
-      descrBox.focus()
     })
   } else if (page === 'subtitles') {
     //= ========================================================================================================
