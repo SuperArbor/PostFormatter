@@ -239,6 +239,7 @@ const $ = window.jQuery;
   }
   async function sendImagesToPixhost (urls, size) {
     return new Promise((resolve, reject) => {
+      // eslint-disable-next-line no-undef
       GM_xmlhttpRequest({
         method: 'POST',
         url: 'https://pixhost.to/remote/',
@@ -260,7 +261,7 @@ const $ = window.jQuery;
               }))
             } else {
               console.log(response)
-              reject('上传失败，请重试')
+              reject(new Error('上传失败，请重试'))
             }
           }
         }
