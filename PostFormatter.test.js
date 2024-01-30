@@ -1,7 +1,8 @@
 // module imports
 const {
   collectComparisons,
-  generateComparison
+  generateComparison,
+  processDescription
 } = require('./PostFormatter')
 const fs = require('fs')
 const path = require('path')
@@ -200,8 +201,9 @@ test('test whole screenshots conversion', async () => {
   for (const input of inputs) {
     const [movieName, originalSite] = path.basename(input).split('.')
     try {
-      const data = fs.readFileSync(input, 'utf8')
+      let data = fs.readFileSync(input, 'utf8')
       for (const targetSite of targetSites) {
+        data = processDescription(targetSite, data)
         const description = await generateComparison(targetSite, data, '', {}, 10)
         const output = `./test files/output/${movieName}.${targetSite} from ${originalSite}.bbcode`
         if (description) {
