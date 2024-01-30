@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info and smilies
-// @version      1.3.1.4
+// @version      1.3.1.5
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -17,264 +17,390 @@
 // @namespace    d8e7078b-abee-407d-bcb6-096b59eeac17
 // @license      MIT
 // ==/UserScript==
-const $ = window.jQuery;
-(function () {
-  'use strict'
-  function insertTyt (myValue, switcher) {
-    let objTarget
-    if (switcher === 1) {
-      objTarget = $('#compose textarea', window.opener.document)[0]
-    } else if (switcher === 0) {
-      if ($('#compose textarea').length) {
-        objTarget = $('#compose textarea')[0]
-      } else if ($('#shbox_text').length) {
-        objTarget = $('#shbox_text')[0]
-      }
-    } else {
-      return false
-    }
-    const matchObj = /(\n\[\/|\](\[\/|$))/.exec(myValue)
-    const startPos = objTarget.selectionStart
-    const endPos = objTarget.selectionEnd
-    objTarget.value = objTarget.value.substring(0, startPos) + myValue + objTarget.value.substring(endPos, objTarget.value.length)
-    objTarget.selectionEnd = startPos + myValue.length
-    objTarget.focus()
-    if (matchObj) {
-      objTarget.setSelectionRange(startPos + matchObj.index + 1, startPos + matchObj.index + 1)
-    }
-    return true
-  }
-  function escapeRegExp (string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-  }
-  function nestExplode (inputText, targetBoxTag) {
-    let outputText, c
-    const pat1 = '\\[' +
-            targetBoxTag + '((?:=[^\\]]+)?\\](?:(?!\\[\\/' +
-            targetBoxTag + '\\])[\\s\\S])*\\[' +
-            targetBoxTag + '(?:=[^\\]]+)?\\])'
-    const pat2 = '(\\[\\/' +
-            targetBoxTag + '\\](?:(?!\\[' +
-            targetBoxTag + '(?:=[^\\]]+)?\\])[\\s\\S])*)\\[\\/' +
-            targetBoxTag + '\\]'
-    const regex1 = RegExp(pat1, 'g')
-    const regex2 = RegExp(pat2, 'g')
-    do {
-      outputText = inputText.replace(regex1, '[quote$1').replace(regex2, '$1[/quote]')
-      c = (inputText !== outputText)
-      inputText = outputText
-    } while (c)
-    return outputText
-  }
-  function compactContent (inputText, targetBoxTag) {
-    let outputText, c
-    const pat1 = '(\\[\\/?(?:' + targetBoxTag + ')(?:=[^\\]]+)?\\])\\s+(\\S)'
-    const pat2 = '(\\S)\\s+(\\[\\/?(?:' + targetBoxTag + ')(?:=[^\\]]+)?\\])'
-    const pat3 = '(\\[' + targetBoxTag + '(?:=[^\\]]+)?\\](?:(?!\\[\\/)[\\s\\S])*\\[(?:font|b|i|u|color|size)(?:=[^\\]]+)?\\])\\n+([^\\n])'
-    const regex1 = RegExp(pat1, 'g')
-    const regex2 = RegExp(pat2, 'g')
-    const regex3 = RegExp(pat3, 'g')
-    do {
-      outputText = inputText.replace(regex1, '$1$2').replace(regex2, '$1$2').replace(regex3, '$1$2')
-      c = (inputText !== outputText)
-      inputText = outputText
-    } while (c)
-    return outputText
-  }
-  function formatTorrentName (torrentName) {
-    return (
-      torrentName
-        .replace(/(\.torrent)+$/, '')
-        .replace(/^\s?(\[.*?\]\s?)+/gi, '')
-        .replace(/\s?(\(\d+\)\s?)+$/gi, '')
-        .replace(/(\.(mkv|mp4|avi|ts|wmv|mpg|torrent))+$/, '')
-        .replace(/\bh\.(26[45])\b/gi, 'H/$1')
-        .replace(/(\b[a-zA-Z]*\d{1,2})\.(\d{1,2}\b)/g, function (_, p1, p2) {
-          return p1 + '/' + p2
-        })
-        .replace(/\b\((\d{4})\)\b/g, '$1')
-        .replace(/\bWEB(?!-DL)\b/gi, 'WEB-DL')
-        .replace(/\bweb-?rip\b/gi, 'WEBRip')
-        .replace(/\bblu-?ray\b/gi, 'BluRay')
-        .replace(/\bdvd(rip)?\b/gi, function (_, p1) {
-          return 'DVD' + (p1 ? 'Rip' : '')
-        })
-        .replace(/\b(480|720|1080|2160)([PI])\b/g, function (_, p1, p2) {
-          return p1 + p2.toLowerCase()
-        })
-        .replace(/\bx\.?(26[45])\b/gi, 'x$1')
-        .replace(/\./g, ' ')
-        .replace(/\//g, '.')
-    )
-  }
-  // decode [url=...][img]...[/img][/url] -> [comparison=...]...[/comparison]
-  function urlImg2Comparison (imagesWithUrl) {
-    imagesWithUrl = imagesWithUrl.trim()
-    const imageHost = imagesWithUrl.match(/pixhost/i)
-      ? PIXHOST
-      : imagesWithUrl.match(/imgbox/i)
-        ? IMGBOX
-        : imagesWithUrl.match(/img4k/i)
-          ? IMG4K
-          : imagesWithUrl.match(/pterclub/i)
-            ? PTERCLUB
-            : imagesWithUrl.match(/imgpile/i)
-              ? IMGPILE
-              : ''
-    if (!imageHost) {
-      return []
-    }
-    const regex = imageHost === PIXHOST
-      ? /\[url=https:\/\/pixhost\.to\/show\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+.png)\]\s*\[img\]https:\/\/t([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.pixhost[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\]\s*\[\/url\]/gi
-      : imageHost === IMGBOX
-        ? /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]https:\/\/thumbs([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)_t\.png\[\/img\]\s*\[\/url\]/gi
-        : imageHost === IMG4K
-          ? /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.md\.png\[\/img\]\s*\[\/url\]/gi
-          : imageHost === PTERCLUB
-            ? /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.th\.png\[\/img\]\s*\[\/url\]/gi
-            : imageHost === IMGPILE
-              ? /\[url=https:\/\/imgpile\.com\/i\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\]\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\.png\[\/img\]\s*\[\/url\]/gi
-              : ''
-    const replacement = imageHost === PIXHOST
-      ? 'https://img$2.pixhost.to/images/$1 '
-      : imageHost === IMGBOX
-        ? 'https://images$1_o.png '
-        : imageHost === IMG4K
-          ? '$1.png '
-          : imageHost === PTERCLUB
-            ? '$1.png '
-            : imageHost === IMGPILE
-              ? 'https://imgpile.com/images/$1.png '
-              : ''
-    const matches = imagesWithUrl.match(regex)
-    if (matches) {
-      return imagesWithUrl
-        .replace(regex, replacement)
-        .split(/\s+/)
-        .filter(ele => { return ele })
-    } else {
-      return []
-    }
-  }
-  // [comparison=...]...[/comparison] -> decode [url=...][img]...[/img][/url]
-  async function comparison2UrlImg (imagesComparison, numTeams) {
-    const imageHost = imagesComparison.match(/pixhost/i)
-      ? PIXHOST
-      : imagesComparison.match(/imgbox/i)
-        ? IMGBOX
-        : imagesComparison.match(/img4k/i)
-          ? IMG4K
-          : imagesComparison.match(/pterclub/i)
-            ? PTERCLUB
-            : imagesComparison.match(/imgpile/i)
-              ? IMGPILE
-              : imagesComparison.match(/ptpimg/i)
-                ? PTPIMG
-                : ''
-    if (!imageHost) {
-      return []
-    }
-    let regex = ''
-    let replacement = ''
-    if (imageHost === PIXHOST) {
-      regex = /https:\/\/img(\d+)\.pixhost\.to\/images\/([\w/]+)\.png/gi
-      replacement = '[url=https://pixhost.to/show/$2.png][img]https://t$1.pixhost.to/thumbs/$2.png[/img][/url]'
-    } else if (imageHost === IMGBOX) {
-      regex = /https:\/\/images(\d+)\.imgbox\.com\/(\w+\/\w+)\/(\w+)_o\.png/gi
-      replacement = '[url=https://imgbox.com/$3][img]https://thumbs$1.imgbox.com/$2/$3_t.png[/img][/url]'
-    }
-    if (regex && replacement) {
-      const matches = imagesComparison.match(regex)
-      return matches
-        ? matches.map(matched => {
-          return matched.replace(regex, replacement)
-        })
-        : []
-    } else {
-      regex = /(https?:[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\.(png|jpg))/gi
-      const matches = imagesComparison.match(regex)
-      const urlsToSend = matches || []
-      const size = numTeams === 2
-        ? 350
-        : numTeams === 3
-          ? 250
-          : numTeams === 4
-            ? 190
-            : numTeams === 5
-              ? 150
-              : 150
-      const urls = await sendImagesToPixhost(urlsToSend, size)
-      return urls
-    }
-  }
-  function decodeMediaInfo (mediainfoStr) {
-    if (!mediainfoStr) {
-      return {}
-    }
-    function matchField (text) {
-      return text.match(/^\s*(.+?)\s+:\s*(.+)\s*$/)
-    }
-    function matchHead (text) {
-      return text.match(/^\s*([\w]+(\s#\d+)?)$/)
-    }
-    let mi = {}
-    mediainfoStr.split('\n\n').forEach(sector => {
-      const miSector = {}
-      let hasHead = false
-      sector.split('\n').forEach(line => {
-        const fieldArray = matchField(line)
-        const headArray = matchHead(line)
-        if (fieldArray) {
-          miSector[fieldArray[1]] = fieldArray[2]
-        } else if (headArray) {
-          mi[headArray[1]] = miSector
-          hasHead = true
-        }
+//= ========================================================================================================
+// constants
+const $ = window.jQuery
+const NHD = 'nhd'; const PTER = 'pter'; const PUTAO = 'putao'; const MTEAM = 'mteam'; const TTG = 'ttg'
+const GPW = 'gpw'; const UHD = 'uhd'
+const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
+const PIXHOST = 'pixhost'; const IMGBOX = 'imghost'; const IMG4K = 'img4k'
+const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'
+// compare with comparison (GPW style)
+const regexTeam = /\b(?:(?:\w[\w()-. ]+)|(?:D-Z0N3)|(?:de\[42\]))/i
+const regexTeamsSplitter = /\||,|\/|-|>?\s*vs\.?\s*<?/i
+const regexNormalUrl = /[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
+const regexImageUrl = RegExp(
+  'https?:' + regexNormalUrl.source + '?\\.(?:png|jpg)',
+  'i')
+// const regexScreenshotsComparison = /\[comparison=(\b\w[\w()-.[\] ]+\s*(,\s*\b\w[\w()-.[\] ]+?)+)\](\s*([^, [\]]+(\s+|\s*,)\s*)+[^, [\]]+)\[\/comparison\]/mi
+const regexScreenshotsComparison = RegExp(
+  '\\[comparison=(' +
+  regexTeam.source + '\\s*(?:,\\s*' + regexTeam.source +
+  '?)+)\\](\\s*(?:' +
+  regexImageUrl.source + '(?:\\s+|\\s*,)\\s*)+' + regexImageUrl.source +
+  ')\\[\\/comparison\\]',
+  'mig')
+// compare with thumbs
+// const regexScreenshotsThumbs = /(\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+/mi
+const regexScreenshotsThumbsCombined = RegExp(
+  '((?:\\s*(\\[url=' +
+  regexNormalUrl.source + '?\\])?\\[img\\]' +
+  regexImageUrl.source + '?\\[\\/img\\](?:\\[\\/url\\])?\\s*)+)',
+  'mi')
+const regexScreenshotsThumbsSeparated = RegExp(
+  '(\\[url=' +
+  regexNormalUrl.source + '?\\])?\\[img\\]' +
+  regexImageUrl.source + '?\\[\\/img\\](?:\\[\\/url\\])?',
+  'mig')
+const regexImageUrlsSeparated = RegExp(
+  '(' + regexImageUrl.source + ')',
+  'mig')
+// 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
+// possible splitters for teams: '|',',','/','-','vs'
+// const regexScreenshotsThumbsBoxed = /\[(box|hide|expand|spoiler|quote)\s*=\s*(\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)\]((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)\[\/\1\]/mi
+const regexScreenshotsThumbsBoxed = RegExp(
+  '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*(' +
+  regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
+  ')+)\\]' +
+  regexScreenshotsThumbsCombined.source +
+  '\\[\\/\\1\\]',
+  'mig')
+// 第二种不包含[box|hide|expand|spoiler|quote=]标签，要求Source, Encode与截图之间至少有一个换行符
+const regexScreenshotsThumbsTitled = RegExp(
+  '^\\W*(' +
+  regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
+  ')+)[\\W]*\\n+\\s*' +
+  regexScreenshotsThumbsCombined.source,
+  'mig')
+const regexScreenshotsSimple = RegExp(
+  '(?:\\[b\\])?Screenshots(?:\\[\\/b\\])?\\s*(\\[img\\]' + regexImageUrl + '\\[\\/img\\]+)',
+  'mig')
+const regexInfo = {
+  boxed: { regex: regexScreenshotsThumbsBoxed, groupForTeams: 2, groupForUrls: 3, groupForThumbs: 4 },
+  titled: { regex: regexScreenshotsThumbsTitled, groupForTeams: 1, groupForUrls: 2, groupForThumbs: 3 },
+  comparison: { regex: regexScreenshotsComparison, groupForTeams: 1, groupForUrls: 2, groupForThumbs: -1 },
+  simple: { regex: regexScreenshotsSimple, groupForTeams: -1, groupForUrls: 1, groupForThumbs: -1 }
+}
+//= ========================================================================================================
+// functions
+function escapeRegExp (string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+function nestExplode (inputText, targetBoxTag) {
+  let outputText, c
+  const pat1 = '\\[' +
+          targetBoxTag + '((?:=[^\\]]+)?\\](?:(?!\\[\\/' +
+          targetBoxTag + '\\])[\\s\\S])*\\[' +
+          targetBoxTag + '(?:=[^\\]]+)?\\])'
+  const pat2 = '(\\[\\/' +
+          targetBoxTag + '\\](?:(?!\\[' +
+          targetBoxTag + '(?:=[^\\]]+)?\\])[\\s\\S])*)\\[\\/' +
+          targetBoxTag + '\\]'
+  const regex1 = RegExp(pat1, 'g')
+  const regex2 = RegExp(pat2, 'g')
+  do {
+    outputText = inputText.replace(regex1, '[quote$1').replace(regex2, '$1[/quote]')
+    c = (inputText !== outputText)
+    inputText = outputText
+  } while (c)
+  return outputText
+}
+function compactContent (inputText, targetBoxTag) {
+  let outputText, c
+  const pat1 = '(\\[\\/?(?:' + targetBoxTag + ')(?:=[^\\]]+)?\\])\\s+(\\S)'
+  const pat2 = '(\\S)\\s+(\\[\\/?(?:' + targetBoxTag + ')(?:=[^\\]]+)?\\])'
+  const pat3 = '(\\[' + targetBoxTag + '(?:=[^\\]]+)?\\](?:(?!\\[\\/)[\\s\\S])*\\[(?:font|b|i|u|color|size)(?:=[^\\]]+)?\\])\\n+([^\\n])'
+  const regex1 = RegExp(pat1, 'g')
+  const regex2 = RegExp(pat2, 'g')
+  const regex3 = RegExp(pat3, 'g')
+  do {
+    outputText = inputText.replace(regex1, '$1$2').replace(regex2, '$1$2').replace(regex3, '$1$2')
+    c = (inputText !== outputText)
+    inputText = outputText
+  } while (c)
+  return outputText
+}
+function formatTorrentName (torrentName) {
+  return (
+    torrentName
+      .replace(/(\.torrent)+$/, '')
+      .replace(/^\s?(\[.*?\]\s?)+/gi, '')
+      .replace(/\s?(\(\d+\)\s?)+$/gi, '')
+      .replace(/(\.(mkv|mp4|avi|ts|wmv|mpg|torrent))+$/, '')
+      .replace(/\bh\.(26[45])\b/gi, 'H/$1')
+      .replace(/(\b[a-zA-Z]*\d{1,2})\.(\d{1,2}\b)/g, function (_, p1, p2) {
+        return p1 + '/' + p2
       })
-      if (!hasHead) {
-        mi = Object.assign({}, mi, miSector)
+      .replace(/\b\((\d{4})\)\b/g, '$1')
+      .replace(/\bWEB(?!-DL)\b/gi, 'WEB-DL')
+      .replace(/\bweb-?rip\b/gi, 'WEBRip')
+      .replace(/\bblu-?ray\b/gi, 'BluRay')
+      .replace(/\bdvd(rip)?\b/gi, function (_, p1) {
+        return 'DVD' + (p1 ? 'Rip' : '')
+      })
+      .replace(/\b(480|720|1080|2160)([PI])\b/g, function (_, p1, p2) {
+        return p1 + p2.toLowerCase()
+      })
+      .replace(/\bx\.?(26[45])\b/gi, 'x$1')
+      .replace(/\./g, ' ')
+      .replace(/\//g, '.')
+  )
+}
+// decode [url=...][img]...[/img][/url] -> [comparison=...]...[/comparison]
+function urlImg2Comparison (imagesWithUrl) {
+  imagesWithUrl = imagesWithUrl.trim()
+  const imageHost = imagesWithUrl.match(/pixhost/i)
+    ? PIXHOST
+    : imagesWithUrl.match(/imgbox/i)
+      ? IMGBOX
+      : imagesWithUrl.match(/img4k/i)
+        ? IMG4K
+        : imagesWithUrl.match(/pterclub/i)
+          ? PTERCLUB
+          : imagesWithUrl.match(/imgpile/i)
+            ? IMGPILE
+            : ''
+  if (!imageHost) {
+    return []
+  }
+  const regex = imageHost === PIXHOST
+    ? /\[url=https:\/\/pixhost\.to\/show\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+.png)\]\s*\[img\]https:\/\/t([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.pixhost[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\]\s*\[\/url\]/gi
+    : imageHost === IMGBOX
+      ? /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]https:\/\/thumbs([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)_t\.png\[\/img\]\s*\[\/url\]/gi
+      : imageHost === IMG4K
+        ? /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.md\.png\[\/img\]\s*\[\/url\]/gi
+        : imageHost === PTERCLUB
+          ? /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.th\.png\[\/img\]\s*\[\/url\]/gi
+          : imageHost === IMGPILE
+            ? /\[url=https:\/\/imgpile\.com\/i\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\]\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\.png\[\/img\]\s*\[\/url\]/gi
+            : ''
+  const replacement = imageHost === PIXHOST
+    ? 'https://img$2.pixhost.to/images/$1 '
+    : imageHost === IMGBOX
+      ? 'https://images$1_o.png '
+      : imageHost === IMG4K
+        ? '$1.png '
+        : imageHost === PTERCLUB
+          ? '$1.png '
+          : imageHost === IMGPILE
+            ? 'https://imgpile.com/images/$1.png '
+            : ''
+  const matches = imagesWithUrl.match(regex)
+  if (matches) {
+    return imagesWithUrl
+      .replace(regex, replacement)
+      .split(/\s+/)
+      .filter(ele => { return ele })
+  } else {
+    return []
+  }
+}
+// [comparison=...]...[/comparison] -> decode [url=...][img]...[/img][/url]
+async function comparison2UrlImg (imagesComparison, numTeams) {
+  const imageHost = imagesComparison.match(/pixhost/i)
+    ? PIXHOST
+    : imagesComparison.match(/imgbox/i)
+      ? IMGBOX
+      : imagesComparison.match(/img4k/i)
+        ? IMG4K
+        : imagesComparison.match(/pterclub/i)
+          ? PTERCLUB
+          : imagesComparison.match(/imgpile/i)
+            ? IMGPILE
+            : imagesComparison.match(/ptpimg/i)
+              ? PTPIMG
+              : ''
+  if (!imageHost) {
+    return []
+  }
+  let regex = ''
+  let replacement = ''
+  if (imageHost === PIXHOST) {
+    regex = /https:\/\/img(\d+)\.pixhost\.to\/images\/([\w/]+)\.png/gi
+    replacement = '[url=https://pixhost.to/show/$2.png][img]https://t$1.pixhost.to/thumbs/$2.png[/img][/url]'
+  } else if (imageHost === IMGBOX) {
+    regex = /https:\/\/images(\d+)\.imgbox\.com\/(\w+\/\w+)\/(\w+)_o\.png/gi
+    replacement = '[url=https://imgbox.com/$3][img]https://thumbs$1.imgbox.com/$2/$3_t.png[/img][/url]'
+  }
+  if (regex && replacement) {
+    const matches = imagesComparison.match(regex)
+    return matches
+      ? matches.map(matched => {
+        return matched.replace(regex, replacement)
+      })
+      : []
+  } else {
+    regex = /(https?:[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\.(png|jpg))/gi
+    const matches = imagesComparison.match(regex)
+    const urlsToSend = matches || []
+    const size = numTeams === 2
+      ? 350
+      : numTeams === 3
+        ? 250
+        : numTeams === 4
+          ? 190
+          : numTeams === 5
+            ? 150
+            : 150
+    const urls = await sendImagesToPixhost(urlsToSend, size)
+    return urls
+  }
+}
+function decodeMediaInfo (mediainfoStr) {
+  if (!mediainfoStr) {
+    return {}
+  }
+  function matchField (text) {
+    return text.match(/^\s*(.+?)\s+:\s*(.+)\s*$/)
+  }
+  function matchHead (text) {
+    return text.match(/^\s*([\w]+(\s#\d+)?)$/)
+  }
+  let mi = {}
+  mediainfoStr.split('\n\n').forEach(sector => {
+    const miSector = {}
+    let hasHead = false
+    sector.split('\n').forEach(line => {
+      const fieldArray = matchField(line)
+      const headArray = matchHead(line)
+      if (fieldArray) {
+        miSector[fieldArray[1]] = fieldArray[2]
+      } else if (headArray) {
+        mi[headArray[1]] = miSector
+        hasHead = true
       }
     })
-    return mi
-  }
-  async function sendImagesToPixhost (urls, size) {
-    return new Promise((resolve, reject) => {
-      // eslint-disable-next-line no-undef
-      GM_xmlhttpRequest({
-        method: 'POST',
-        url: 'https://pixhost.to/remote/',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Accept: 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36'
-        },
-        data: encodeURI(`imgs=${urls.join('\r\n')}&content_type=0&max_th_size=${size}`),
-        onload: response => {
-          if (response.status !== 200) {
-            reject(response.status)
+    if (!hasHead) {
+      mi = Object.assign({}, mi, miSector)
+    }
+  })
+  return mi
+}
+async function sendImagesToPixhost (urls, size) {
+  return new Promise((resolve, reject) => {
+    // eslint-disable-next-line no-undef
+    GM_xmlhttpRequest({
+      method: 'POST',
+      url: 'https://pixhost.to/remote/',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36'
+      },
+      data: encodeURI(`imgs=${urls.join('\r\n')}&content_type=0&max_th_size=${size}`),
+      onload: response => {
+        if (response.status !== 200) {
+          reject(response.status)
+        } else {
+          const data = response.responseText.match(/(upload_results = )({.*})(;)/)
+          if (data && data.length) {
+            const imgResultList = JSON.parse(data[2]).images
+            resolve(imgResultList.map(item => {
+              return `[url=${item.show_url}][img]${item.th_url}[/img][/url]`
+            }))
           } else {
-            const data = response.responseText.match(/(upload_results = )({.*})(;)/)
-            if (data && data.length) {
-              const imgResultList = JSON.parse(data[2]).images
-              resolve(imgResultList.map(item => {
-                return `[url=${item.show_url}][img]${item.th_url}[/img][/url]`
-              }))
-            } else {
-              console.log(response)
-              reject(new Error('上传失败，请重试'))
-            }
+            console.log(response)
+            reject(new Error('上传失败，请重试'))
           }
         }
-      })
+      }
     })
+  })
+}
+// 提取单个对比图信息
+function getOneComparison (text, index = 0, preferedRegex = '') {
+  const regexArray = Object.keys(regexInfo)
+  if (preferedRegex) {
+    const currentPos = regexArray.findIndex(x => x === preferedRegex)
+    if (currentPos > 0) {
+      const temp = regexArray[0]
+      regexArray[currentPos] = temp
+      regexArray[0] = preferedRegex
+    }
   }
+  const result = { teams: [], urls: [], regexType: '', thumbs: false, slice: [0, 0] }
+  for (const key of regexArray) {
+    const regex = regexInfo[key].regex
+    regex.lastIndex = index
+    const match = regex.exec(text)
+    if (match) {
+      result.regexType = key
+      if (regexInfo[key].groupForTeams >= 0) {
+        result.teams = match[regexInfo[key].groupForTeams]
+          .split(regexTeamsSplitter)
+          .map(ele => { return ele.trim() })
+      }
+      if (regexInfo[key].groupForUrls >= 0) {
+        const urls = match[regexInfo[key].groupForUrls]
+        if (key === 'comparison') {
+          result.urls = urls.match(regexImageUrlsSeparated)
+        } else {
+          result.urls = urls.match(regexScreenshotsThumbsSeparated)
+        }
+      }
+      if (regexInfo[key].groupForThumbs >= 0) {
+        result.thumbs = !!match[regexInfo[key].groupForThumbs]
+      } else if (key === 'comparison') {
+        result.thumbs = false
+      } else if (key === 'simple') {
+        result.thumbs = false
+      }
+      result.slice = [match.index, match.index + match[0].length]
+      return result
+    }
+  }
+  return result
+}
+// 提取全部对比图信息
+function collectComparisons (text) {
+  const replacements = []
+  let lastIndex = 0
+  while (true) {
+    const currentIndex = lastIndex
+    for (const key in regexInfo) {
+      const regex = regexInfo[key].regex
+      regex.lastIndex = lastIndex
+      const match = regex.exec(text)
+      if (match) {
+        const result = { starts: 0, ends: 0, teams: [], urls: [], regexType: '', thumbs: false, text: '' }
+        result.regexType = key
+        if (regexInfo[key].groupForTeams >= 0) {
+          result.teams = match[regexInfo[key].groupForTeams]
+            .split(regexTeamsSplitter)
+            .map(ele => { return ele.trim() })
+        }
+        if (regexInfo[key].groupForUrls >= 0) {
+          const urls = match[regexInfo[key].groupForUrls]
+          if (key === 'comparison') {
+            result.urls = urls.match(regexImageUrlsSeparated)
+          } else {
+            result.urls = urls.match(regexScreenshotsThumbsSeparated)
+          }
+        }
+        if (regexInfo[key].groupForThumbs >= 0) {
+          result.thumbs = !!match[regexInfo[key].groupForThumbs]
+        } else if (key === 'comparison') {
+          result.thumbs = false
+        } else if (key === 'simple') {
+          result.thumbs = false
+        }
+        result.starts = match.index
+        result.ends = match.index + match[0].length
+        result.text = match[0]
+        replacements.push(result)
+        lastIndex = result.ends
+        break
+      }
+    }
+    if (lastIndex === currentIndex) {
+      return replacements
+    }
+  }
+}
+(function () {
+  'use strict'
   //= ========================================================================================================
   // Main
-  const NHD = 'nhd'; const PTER = 'pter'; const PUTAO = 'putao'; const MTEAM = 'mteam'; const TTG = 'ttg'
-  const GPW = 'gpw'; const UHD = 'uhd'
-  const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
-  const PIXHOST = 'pixhost'; const IMGBOX = 'imghost'; const IMG4K = 'img4k'
-  const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'
   const domainMatchArray = window.location.href.match(/(.*)\/(upload|edit|subtitles|dox)\.php/)
   if (!domainMatchArray) {
     return
@@ -347,14 +473,6 @@ const $ = window.jQuery;
       } else if (site === TTG) {
         $('#upload input[name="quote"]').closest('table').after(table1)
       }
-      let switcher = 0
-      if (window.location.href.match(/moresmilies\.php/)) {
-        switcher = 1
-      }
-      $("a[href*='SmileIT']").click(function () {
-        insertTyt(this.getAttribute('href').match(/\[em\d+\]/)[0], switcher)
-        return false
-      })
     } else if (construct === GAZELLE) {
       btnBingo.attr({
         type: 'button',
@@ -1264,218 +1382,98 @@ const $ = window.jQuery;
         }
         //= ========================================================================================================
         // checking screenshots
-        // compare with comparison (GPW style)
-        const regexScreenshotsComparison = /\[comparison=(\b\w[\w()-.[\] ]+\s*(,\s*\b\w[\w()-.[\] ]+?)+)\](\s*([^, [\]]+(\s+|\s*,)\s*)+[^, [\]]+)\[\/comparison\]/gmi
-        // compare with thumbs
-        const regexScreenshotsThumbs = /(\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+/gmi
         if (construct === NEXUSPHP) {
-          const screenshotsArrayComparison = textToConsume.match(regexScreenshotsComparison)
           let removePlainScreenshots = false
-          if (screenshotsArrayComparison) {
-            for (const slice of screenshotsArrayComparison) {
-              const matchSlice = textToConsume.match(escapeRegExp(slice))
-              const matchSingle = slice.match(RegExp(regexScreenshotsComparison.source, 'im'))
-              const teams = matchSingle[1]
-                .split(',')
-                .map(value => { return value.trim() })
-              const teamsStr = teams.join(' | ')
-              const imagesThumbs = await comparison2UrlImg(matchSingle[3], teams.length)
-              let currentCompareStr = ''
-              if (imagesThumbs.length > 0) {
-                currentCompareStr = `[b]${teamsStr}[/b]`
-                imagesThumbs.forEach((imagesThumbsSingle, i) => {
-                  currentCompareStr += (i % teams.length === 0 ? '\n' + imagesThumbsSingle : ' ' + imagesThumbsSingle)
-                })
-                currentCompareStr = `[center]${currentCompareStr}[/center]\n`
-                textToConsume = textToConsume.substring(0, matchSlice.index) +
-                  currentCompareStr +
-                  textToConsume.substring(matchSlice.index + matchSlice[0].length)
-                removePlainScreenshots = true
+          const comparisons = collectComparisons(textToConsume)
+            .sort((a, b) => b.starts - a.starts)
+          for (let { starts, ends, teams, urls, regexType, thumbs } of comparisons) {
+            let screenshotsStr = ''
+            if (regexType === 'boxed' || regexType === 'titled' || regexType === 'comparison') {
+              screenshotsStr = `[b]${teams.join(' | ')}[/b]`
+              if (!thumbs) {
+                urls = await comparison2UrlImg(urls.join(' '), teams.length)
               }
-            }
-            if (removePlainScreenshots) {
-              textToConsume = textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\])+/gi, '')
-            }
-            descrBox.val(textToConsume)
-          }
-        } else if (construct === GAZELLE) {
-          let description = ''
-          if (site === GPW) {
-            // 如果没有选中种子文件，使用mediainfo来判断team名
-            if (!torTitle && mediainfo && mediainfo.General) {
-              let movieName = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
-              if (movieName) {
-                movieName = formatTorrentName(movieName)
-                const teamArray = movieName.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
-                if (teamArray) {
-                  team = teamArray[0]
-                }
-              }
-            }
-            let screenshots = ''
-            let currentScreenshots = 0
-            const screenshotsArrayComparison = textToConsume.match(regexScreenshotsComparison)
-            if (screenshotsArrayComparison) {
-              // 匹配到GPW风格的对比图
-              // 移除其他截图，重新生成
-              textToConsume = textToConsume.replace(/(\[b\])?Screenshots(\[\/b\])?(\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\])+/gi, '')
-              screenshotsArrayComparison.forEach(slice => {
-                const matchSlice = textToConsume.match(escapeRegExp(slice))
-                const matchSingle = slice.match(RegExp(regexScreenshotsComparison.source, 'im'))
-                const teams = matchSingle[1]
-                  .split(',')
-                  .map(value => { return value.trim() })
-                const images = matchSingle[3]
-                  .split(/\s+|\s*,\s*/gi)
-                  .map(img => { return img.trim() })
-                description += slice
-                // remove the matched comparison
-                textToConsume = textToConsume.substring(0, matchSlice.index) + textToConsume.substring(matchSlice.index + matchSlice[0].length)
-                // extract screenshots
-                if (images.length > 0 && images.length % teams.length === 0) {
-                  const groups = images.length / teams.length
-                  if (!screenshots && groups >= 3) {
-                    images.forEach((image, i) => {
-                      const teamCurrent = teams[i % teams.length]
-                      if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase())) {
-                        screenshots += `[img]${image}[/img]`
-                        currentScreenshots += 1
-                      }
-                    })
-                  }
-                }
+              urls.forEach((url, i) => {
+                screenshotsStr += (i % teams.length === 0
+                  ? '\n' + url
+                  : ' ' + url)
               })
+              screenshotsStr = `[center]${screenshotsStr}[/center]\n`
+              removePlainScreenshots = true
+            } else if (regexType === 'simple') {
+              if (removePlainScreenshots) {
+                screenshotsStr = ''
+              } else {
+                screenshotsStr = textToConsume.substring(starts, ends)
+              }
             } else {
-              const screenshotsArray = textToConsume.match(regexScreenshotsThumbs)
-              // 用于回溯查找team
-              const maxBacktrace = 100
-              // 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
-              // possible splitters for teams: '|',',','/','-','vs'
-              const regexComparisonBoxed = /\[(box|hide|expand|spoiler|quote)\s*=\s*(\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)\]((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)\[\/\1\]/mi
-              // 第二种不包含[box|hide|expand|spoiler|quote=]标签，要求Source, Encode与截图之间至少有一个换行符
-              const regexComparisonHeaded = /^\W*((\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)[\W]*\n+\s*((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+))/mi
-              const regexImageUrlWithThumb = /\s*\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\]\[\/url\]\s*/gi
-              const regexSimpleImageUrl = /\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\[\/img\]\s*/gi
-              const regexTeamsSplitter = /\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*/gi
-              if (screenshotsArray) {
-                // 匹配到带缩略图的对比图
-                screenshotsArray.forEach(slice => {
-                  const matchSlice = textToConsume.match(escapeRegExp(slice))
-                  if (!matchSlice) {
-                  // not possible generally
-                    return
-                  }
-                  const sliceStart = matchSlice.index
-                  const sliceLength = matchSlice[0].length
-                  const newStart = Math.max(0, sliceStart - maxBacktrace)
-                  const longerSlice = textToConsume.substring(newStart, sliceStart + sliceLength)
-                  let matchSingle = longerSlice.match(regexComparisonBoxed)
-                  let teamsStr = ''
-                  let imagesComparison = []
-                  let teamsComparison = []
-                  // global match in the whole text
-                  let globalMatch = []
-                  if (matchSingle) {
-                    // 带box的对比图形式
-                    // 'Source, Encode, Other'
-                    teamsStr = matchSingle[2].replace(regexTeamsSplitter, ', ')
-                    teamsComparison = teamsStr
-                      .split(',')
-                      .map(value => { return value.trim() })
-                    // '[url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url]'
-                    const imagesStr = matchSingle[5]
-                    // check if '[/url] exists'
-                    if (matchSingle[8]) {
-                      // 有缩略图
-                      imagesComparison = urlImg2Comparison(imagesStr)
-                    } else {
-                      const matchSimple = imagesStr.match(regexSimpleImageUrl)
-                      if (matchSimple) {
-                        // 无缩略图，匹配到图片链接
-                        imagesComparison = imagesStr.replace(regexSimpleImageUrl, (_, group) => {
-                          return group + ' '
-                        }).split(/\s+/).filter(ele => { return ele })
-                      }
-                    }
-                    globalMatch = textToConsume.match(escapeRegExp(matchSingle[0]))
-                  } else {
-                    // 无box的对比图形式
-                    matchSingle = longerSlice.match(regexComparisonHeaded)
-                    // 'Source, Encode, Other'
-                    if (matchSingle) {
-                      teamsStr = matchSingle[2].replace(regexTeamsSplitter, ', ')
-                      teamsComparison = teamsStr
-                        .split(',')
-                        .map(value => { return value.trim() })
-                      // '[url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url][url=https://show.png][img]https://thumb.png[/img][/url]'
-                      const imagesStr = matchSingle[5]
-                      // check if '[/url] exists'
-                      if (matchSingle[8]) {
-                        imagesComparison = urlImg2Comparison(imagesStr)
-                      } else {
-                        const matchSimple = imagesStr.match(regexSimpleImageUrl)
-                        if (matchSimple) {
-                          imagesComparison = imagesStr.replace(regexSimpleImageUrl, (_, group) => {
-                            return group + ' '
-                          }).split(/\s+/).filter(ele => { return ele })
-                        }
-                      }
-                      // in this case, the \W* matched in the regex should be excluded
-                      globalMatch = textToConsume.match(escapeRegExp(matchSingle[1]))
-                    } else if (!screenshots) {
-                    // consider the remained to be possible non-comparison screenshots
-                      const imagesStr = slice
-                      let imagesNonComparison = []
-                      if (imagesStr.match(regexImageUrlWithThumb)) {
-                        imagesNonComparison = urlImg2Comparison(imagesStr)
-                      } else {
-                        const matchSimple = imagesStr.match(regexSimpleImageUrl)
-                        if (matchSimple) {
-                          imagesComparison = imagesStr.replace(regexSimpleImageUrl, (_, group) => {
-                            return group + ' '
-                          }).split(/\s+/).filter(ele => { return ele })
-                        }
-                      }
-                      if (imagesNonComparison.length >= 3) {
-                        imagesNonComparison.forEach(image => { screenshots += `[img]${image}[/img]` })
-                      }
-                      globalMatch = textToConsume.match(escapeRegExp(slice))
-                    }
-                  }
-                  // remove the matched comparison
-                  textToConsume = textToConsume.substring(0, globalMatch.index) + textToConsume.substring(globalMatch.index + globalMatch[0].length)
-                  // extract screenshots
-                  if (imagesComparison.length > 0 && imagesComparison.length % teamsComparison.length === 0) {
-                    description += `[comparison=${teamsStr}]${imagesComparison.join(' ')}[/comparison]`
-                    const groups = imagesComparison.length / teamsComparison.length
-                    if (!screenshots && groups >= 3) {
-                      imagesComparison.forEach((image, i) => {
-                        const teamCurrent = teamsComparison[i % teamsComparison.length]
-                        if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase())) {
-                          screenshots += `[img]${image}[/img]`
-                          currentScreenshots += 1
-                        }
-                      })
-                    }
+              screenshotsStr = ''
+            }
+            textToConsume = textToConsume.substring(0, starts) +
+              screenshotsStr +
+              textToConsume.substring(ends)
+          }
+          descrBox.val(textToConsume)
+        } else if (construct === GAZELLE && site === GPW) {
+          let description = ''
+          let screenshots = ''
+          let currentScreenshots = 0
+          // 如果没有选中种子文件，使用mediainfo来判断team名
+          if (!torTitle && mediainfo && mediainfo.General) {
+            let movieName = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
+            if (movieName) {
+              movieName = formatTorrentName(movieName)
+              const teamArray = movieName.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
+              if (teamArray) {
+                team = teamArray[0]
+              }
+            }
+          }
+          const comparisons = collectComparisons(textToConsume)
+            .sort((a, b) => b.starts - a.starts)
+          for (let { starts, ends, teams, urls, regexType, thumbs } of comparisons) {
+            let screenshotsStr = ''
+            if (regexType === 'comparison') {
+              screenshotsStr = textToConsume.substring(starts, ends)
+            } else if (regexType === 'boxed' || regexType === 'titled') {
+              if (thumbs) {
+                urls = urlImg2Comparison(urls.join(' '))
+              }
+              screenshotsStr = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
+            } else if (regexType === 'simple') {
+              screenshotsStr = ''
+            } else {
+              screenshotsStr = ''
+            }
+            description += screenshotsStr
+            if (urls.length > 0 && urls.length % teams.length === 0) {
+              if (!screenshots && urls.length / teams.length >= 3) {
+                urls.forEach((image, i) => {
+                  const teamCurrent = teams[i % teams.length]
+                  if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase())) {
+                    screenshots += `[img]${image}[/img]`
+                    currentScreenshots += 1
                   }
                 })
               }
             }
-            if (screenshots) {
-              screenshots = '[b]Screenshots[/b]\n' + screenshots
-              description += screenshots
-            }
-            const regexQuote = /\[quote(=(.*?))?\]([^]+)\[\/quote\]/gim
-            const matchQuote = textToConsume.match(regexQuote)
-            let quotes = ''
-            if (matchQuote) {
-              matchQuote.forEach(quote => {
-                quotes += quote.replace(/\[quote=(.*?)\]/gi, '[b]$1[/b][quote]')
-              })
-            }
-            description = quotes + description
-            descrBox.val(description)
+            textToConsume = textToConsume.substring(0, starts) +
+              screenshotsStr +
+              textToConsume.substring(ends)
           }
+          if (screenshots) {
+            description += `[b]Screenshots[/b]\n${screenshots}`
+          }
+          const regexQuote = RegExp('\\[(quote|' + targetTagBox + ')(=(.*?))?\\]([^]+)\\[\\/\\1\\]', 'gim')
+          const matchQuote = textToConsume.match(regexQuote)
+          let quotes = ''
+          if (matchQuote) {
+            matchQuote.forEach(quote => {
+              quotes += quote.replace(/\[quote=(.*?)\]/gi, '[b]$1[/b][quote]')
+            })
+          }
+          description = quotes + description
+          descrBox.val(description)
         }
         // category selection
         if (categorySel) {
