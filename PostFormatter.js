@@ -38,19 +38,19 @@ const regexScreenshotsComparison = RegExp(
   regexTeam.source + '\\s*(?:,\\s*' + regexTeam.source +
   '?)+)\\](\\s*(?:' +
   regexImageUrl.source + '(?:\\s+|\\s*,)\\s*)+' + regexImageUrl.source +
-  ')\\[\\/comparison\\]',
+  ')\\s*\\[\\/comparison\\]',
   'mig')
 // compare with thumbs
 // const regexScreenshotsThumbs = /(\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+/mi
 const regexScreenshotsThumbsCombined = RegExp(
   '((?:\\s*(\\[url=' +
-  regexNormalUrl.source + '?\\])?\\[img\\]' +
-  regexImageUrl.source + '?\\[\\/img\\](?:\\[\\/url\\])?\\s*)+)',
+  regexNormalUrl.source + '?\\])?\\s*\\[img\\]' +
+  regexImageUrl.source + '?\\[\\/img\\]\\s*(?:\\[\\/url\\])?\\s*)+)',
   'mi')
 const regexScreenshotsThumbsSeparated = RegExp(
   '(\\[url=' +
-  regexNormalUrl.source + '?\\])?\\[img\\]' +
-  regexImageUrl.source + '?\\[\\/img\\](?:\\[\\/url\\])?',
+  regexNormalUrl.source + '?\\])?\\s*\\[img\\]' +
+  regexImageUrl.source + '?\\[\\/img\\]\\s*(?:\\[\\/url\\])?',
   'mig')
 const regexImageUrlsSeparated = RegExp(
   '(' + regexImageUrl.source + ')',
@@ -63,7 +63,7 @@ const regexScreenshotsThumbsBoxed = RegExp(
   regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
   ')+)\\]' +
   regexScreenshotsThumbsCombined.source +
-  '\\[\\/\\1\\]',
+  '\\s*\\[\\/\\1\\]',
   'mig')
 // 第二种不包含[box|hide|expand|spoiler|quote=]标签，要求Source, Encode与截图之间至少有一个换行符
 const regexScreenshotsThumbsTitled = RegExp(
@@ -73,7 +73,7 @@ const regexScreenshotsThumbsTitled = RegExp(
   regexScreenshotsThumbsCombined.source,
   'mig')
 const regexScreenshotsSimple = RegExp(
-  '(?:\\[b\\])?Screenshots(?:\\[\\/b\\])?\\s*(\\[img\\]' + regexImageUrl + '\\[\\/img\\]+)',
+  '(?:\\[b\\])?Screenshots(?:\\[\\/b\\])?\\s*(\\[img\\]' + regexImageUrl + '\\s*\\[\\/img\\]+)',
   'mig')
 const regexInfo = {
   boxed: { regex: regexScreenshotsThumbsBoxed, groupForTeams: 2, groupForUrls: 3, groupForThumbs: 4 },
