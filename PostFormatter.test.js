@@ -198,12 +198,12 @@ test('test whole screenshots conversion', async () => {
   const inputs = await glob('./test files/input/*.bbcode')
   const targetSites = ['NHD', 'GPW']
   for (const input of inputs) {
-    const movieName = path.basename(input).split('.')[0]
+    const [movieName, originalSite] = path.basename(input).split('.')
     try {
       const data = fs.readFileSync(input, 'utf8')
       for (const targetSite of targetSites) {
         const description = await generateComparison(targetSite, data, '', {}, 10)
-        const output = `./test files/output/${movieName}.${targetSite}.bbcode`
+        const output = `./test files/output/${movieName}.${targetSite} from ${originalSite}.bbcode`
         if (description) {
           fs.writeFileSync(output, description)
         }
