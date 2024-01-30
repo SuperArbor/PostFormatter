@@ -1664,3 +1664,15 @@ const $ = window.jQuery;
     })
   }
 })()
+// ////////////////////////////////////////////////////////////////////////////////////////////////
+// for unit test
+// module.exports = {
+//   collectComparisons,
+//   regexTeam,
+//   regexTeamsSplitter,
+//   regexImageUrl,
+//   regexNormalUrl,
+//   regexScreenshotsComparison,
+//   regexScreenshotsThumbsBoxed,
+//   regexScreenshotsThumbsCombined
+// }
