@@ -308,6 +308,7 @@ async function sendImagesToPixhost (urls, size) {
   })
 }
 // 提取单个对比图信息
+// eslint-disable-next-line no-unused-vars
 function getOneComparison (text, index = 0, preferedRegex = '') {
   const regexArray = Object.keys(regexInfo)
   if (preferedRegex) {
@@ -1664,13 +1665,16 @@ function collectComparisons (text) {
 })()
 // ////////////////////////////////////////////////////////////////////////////////////////////////
 // for unit test
-// module.exports = {
-//   collectComparisons,
-//   regexTeam,
-//   regexTeamsSplitter,
-//   regexImageUrl,
-//   regexNormalUrl,
-//   regexScreenshotsComparison,
-//   regexScreenshotsThumbsBoxed,
-//   regexScreenshotsThumbsCombined
-// }
+// Conditionally export for unit testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    collectComparisons,
+    regexTeam,
+    regexTeamsSplitter,
+    regexImageUrl,
+    regexNormalUrl,
+    regexScreenshotsComparison,
+    regexScreenshotsThumbsBoxed,
+    regexScreenshotsThumbsCombined
+  }
+}
