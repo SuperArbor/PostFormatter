@@ -20,8 +20,8 @@
 //= ========================================================================================================
 // constants
 const $ = window.jQuery
-const NHD = 'nhd'; const PTER = 'pter'; const PUTAO = 'putao'; const MTEAM = 'mteam'; const TTG = 'ttg'
-const GPW = 'gpw'; const UHD = 'uhd'
+const NHD = 'NHD'; const PTER = 'PTER'; const PUTAO = 'PUTAO'; const MTEAM = 'MTEAM'; const TTG = 'TTG'
+const GPW = 'GPW'; const UHD = 'UHD'
 const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
 const PIXHOST = 'pixhost'; const IMGBOX = 'imghost'; const IMG4K = 'img4k'
 const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'
@@ -80,6 +80,48 @@ const regexInfo = {
   titled: { regex: regexScreenshotsThumbsTitled, groupForTeams: 1, groupForUrls: 2, groupForThumbs: 3 },
   comparison: { regex: regexScreenshotsComparison, groupForTeams: 1, groupForUrls: 2, groupForThumbs: -1 },
   simple: { regex: regexScreenshotsSimple, groupForTeams: -1, groupForUrls: 1, groupForThumbs: -1 }
+}
+const siteInfo = {
+  NHD: {
+    construct: NEXUSPHP,
+    targetTagBox: 'box',
+    boxSupportDescr: true,
+    otherTagBoxes: ['hide', 'spoiler', 'expand'].join('|'),
+    unsupportedTags: ['align'].join('|'),
+    decodingMediainfo: false
+  },
+  PTER: {
+    construct: NEXUSPHP,
+    targetBoxTag: 'hide',
+    boxSupportDescr: true,
+    otherTagBoxes: ['box', 'spoiler', 'expand'].join('|'),
+    unsupportedTags: ['align'].join('|'),
+    decodingMediainfo: true
+  },
+  PUTAO: {
+    construct: NEXUSPHP,
+    targetTagBox: '',
+    boxSupportDescr: true,
+    otherTagBoxes: ['box', 'hide', 'spoiler', 'expand'].join('|'),
+    unsupportedTags: ['align', 'center'].join('|'),
+    decodingMediainfo: false
+  },
+  MTEAM: {
+    construct: NEXUSPHP,
+    targetTagBox: 'expand',
+    boxSupportDescr: false,
+    otherTagBoxes: ['box', 'hide', 'spoiler'].join('|'),
+    unsupportedTags: ['align'].join('|'),
+    decodingMediainfo: true
+  },
+  GPW: {
+    construct: GAZELLE,
+    targetTagBox: 'hide',
+    boxSupportDescr: true,
+    otherTagBoxes: ['box', 'spoiler', 'expand'].join('|'),
+    unsupportedTags: ['align'].join('|'),
+    decodingMediainfo: true
+  }
 }
 //= ========================================================================================================
 // functions
@@ -277,17 +319,20 @@ function decodeMediaInfo (mediainfoStr) {
   return mi
 }
 async function sendImagesToPixhost (urls, size) {
+  const hostname = 'https://pixhost.to/remote/'
+  const data = encodeURI(`imgs=${urls.join('\r\n')}&content_type=0&max_th_size=${size}`)
+  const headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+    Accept: 'application/json',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36'
+  }
   return new Promise((resolve, reject) => {
     // eslint-disable-next-line no-undef
     GM_xmlhttpRequest({
       method: 'POST',
-      url: 'https://pixhost.to/remote/',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Accept: 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36'
-      },
-      data: encodeURI(`imgs=${urls.join('\r\n')}&content_type=0&max_th_size=${size}`),
+      url: hostname,
+      headers,
+      data,
       onload: response => {
         if (response.status !== 200) {
           reject(response.status)
@@ -396,6 +441,103 @@ function collectComparisons (text) {
     if (lastIndex === currentIndex) {
       return replacements
     }
+  }
+}
+// 对比图信息转换
+async function generateComparison (site, textToConsume, torTitle, mediainfo, maxScreenshots) {
+  if (siteInfo[site].construct === NEXUSPHP) {
+    let removePlainScreenshots = false
+    const comparisons = collectComparisons(textToConsume)
+      .sort((a, b) => b.starts - a.starts)
+    for (let { starts, ends, teams, urls, regexType, thumbs } of comparisons) {
+      let screenshotsStr = ''
+      if (regexType === 'boxed' || regexType === 'titled' || regexType === 'comparison') {
+        screenshotsStr = `[b]${teams.join(' | ')}[/b]`
+        if (!thumbs) {
+          urls = await comparison2UrlImg(urls.join(' '), teams.length)
+        }
+        urls.forEach((url, i) => {
+          screenshotsStr += (i % teams.length === 0
+            ? '\n' + url
+            : ' ' + url)
+        })
+        screenshotsStr = `[center]${screenshotsStr}[/center]\n`
+        removePlainScreenshots = true
+      } else if (regexType === 'simple') {
+        if (removePlainScreenshots) {
+          screenshotsStr = ''
+        } else {
+          screenshotsStr = textToConsume.substring(starts, ends)
+        }
+      } else {
+        screenshotsStr = ''
+      }
+      textToConsume = textToConsume.substring(0, starts) +
+        screenshotsStr +
+        textToConsume.substring(ends)
+    }
+    return textToConsume
+  } else if (siteInfo[site].construct === GAZELLE && site === GPW) {
+    let teamEncode = ''
+    let description = ''
+    let screenshots = ''
+    let currentScreenshots = 0
+    // 如果没有选中种子文件，使用mediainfo来判断team名
+    if (!torTitle && mediainfo && mediainfo.General) {
+      let movieName = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
+      if (movieName) {
+        movieName = formatTorrentName(movieName)
+        const teamArray = movieName.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
+        if (teamArray) {
+          teamEncode = teamArray[0]
+        }
+      }
+    }
+    const comparisons = collectComparisons(textToConsume)
+      .sort((a, b) => b.starts - a.starts)
+    for (let { starts, ends, teams, urls, regexType, thumbs } of comparisons) {
+      let screenshotsStr = ''
+      if (regexType === 'comparison') {
+        screenshotsStr = textToConsume.substring(starts, ends)
+      } else if (regexType === 'boxed' || regexType === 'titled') {
+        if (thumbs) {
+          urls = urlImg2Comparison(urls.join(' '))
+        }
+        screenshotsStr = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
+      } else if (regexType === 'simple') {
+        screenshotsStr = ''
+      } else {
+        screenshotsStr = ''
+      }
+      description += screenshotsStr
+      if (urls.length > 0 && urls.length % teams.length === 0) {
+        if (!screenshots && urls.length / teams.length >= 3) {
+          urls.forEach((image, i) => {
+            const teamCurrent = teams[i % teams.length]
+            if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === teamEncode.toLowerCase())) {
+              screenshots += `[img]${image}[/img]`
+              currentScreenshots += 1
+            }
+          })
+        }
+      }
+      textToConsume = textToConsume.substring(0, starts) +
+        screenshotsStr +
+        textToConsume.substring(ends)
+    }
+    if (screenshots) {
+      description += `[b]Screenshots[/b]\n${screenshots}`
+    }
+    const regexQuote = RegExp('\\[(quote|' + siteInfo[site].targetBoxTag + ')(=(.*?))?\\]([^]+)\\[\\/\\1\\]', 'gim')
+    const matchQuote = textToConsume.match(regexQuote)
+    let quotes = ''
+    if (matchQuote) {
+      matchQuote.forEach(quote => {
+        quotes += quote.replace(/\[quote=(.*?)\]/gi, '[b]$1[/b][quote]')
+      })
+    }
+    description = quotes + description
+    return description
   }
 }
 (function () {
@@ -1383,99 +1525,8 @@ function collectComparisons (text) {
         }
         //= ========================================================================================================
         // checking screenshots
-        if (construct === NEXUSPHP) {
-          let removePlainScreenshots = false
-          const comparisons = collectComparisons(textToConsume)
-            .sort((a, b) => b.starts - a.starts)
-          for (let { starts, ends, teams, urls, regexType, thumbs } of comparisons) {
-            let screenshotsStr = ''
-            if (regexType === 'boxed' || regexType === 'titled' || regexType === 'comparison') {
-              screenshotsStr = `[b]${teams.join(' | ')}[/b]`
-              if (!thumbs) {
-                urls = await comparison2UrlImg(urls.join(' '), teams.length)
-              }
-              urls.forEach((url, i) => {
-                screenshotsStr += (i % teams.length === 0
-                  ? '\n' + url
-                  : ' ' + url)
-              })
-              screenshotsStr = `[center]${screenshotsStr}[/center]\n`
-              removePlainScreenshots = true
-            } else if (regexType === 'simple') {
-              if (removePlainScreenshots) {
-                screenshotsStr = ''
-              } else {
-                screenshotsStr = textToConsume.substring(starts, ends)
-              }
-            } else {
-              screenshotsStr = ''
-            }
-            textToConsume = textToConsume.substring(0, starts) +
-              screenshotsStr +
-              textToConsume.substring(ends)
-          }
-          descrBox.val(textToConsume)
-        } else if (construct === GAZELLE && site === GPW) {
-          let description = ''
-          let screenshots = ''
-          let currentScreenshots = 0
-          // 如果没有选中种子文件，使用mediainfo来判断team名
-          if (!torTitle && mediainfo && mediainfo.General) {
-            let movieName = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
-            if (movieName) {
-              movieName = formatTorrentName(movieName)
-              const teamArray = movieName.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
-              if (teamArray) {
-                team = teamArray[0]
-              }
-            }
-          }
-          const comparisons = collectComparisons(textToConsume)
-            .sort((a, b) => b.starts - a.starts)
-          for (let { starts, ends, teams, urls, regexType, thumbs } of comparisons) {
-            let screenshotsStr = ''
-            if (regexType === 'comparison') {
-              screenshotsStr = textToConsume.substring(starts, ends)
-            } else if (regexType === 'boxed' || regexType === 'titled') {
-              if (thumbs) {
-                urls = urlImg2Comparison(urls.join(' '))
-              }
-              screenshotsStr = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
-            } else if (regexType === 'simple') {
-              screenshotsStr = ''
-            } else {
-              screenshotsStr = ''
-            }
-            description += screenshotsStr
-            if (urls.length > 0 && urls.length % teams.length === 0) {
-              if (!screenshots && urls.length / teams.length >= 3) {
-                urls.forEach((image, i) => {
-                  const teamCurrent = teams[i % teams.length]
-                  if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === team.toLowerCase())) {
-                    screenshots += `[img]${image}[/img]`
-                    currentScreenshots += 1
-                  }
-                })
-              }
-            }
-            textToConsume = textToConsume.substring(0, starts) +
-              screenshotsStr +
-              textToConsume.substring(ends)
-          }
-          if (screenshots) {
-            description += `[b]Screenshots[/b]\n${screenshots}`
-          }
-          const regexQuote = RegExp('\\[(quote|' + targetTagBox + ')(=(.*?))?\\]([^]+)\\[\\/\\1\\]', 'gim')
-          const matchQuote = textToConsume.match(regexQuote)
-          let quotes = ''
-          if (matchQuote) {
-            matchQuote.forEach(quote => {
-              quotes += quote.replace(/\[quote=(.*?)\]/gi, '[b]$1[/b][quote]')
-            })
-          }
-          description = quotes + description
-          descrBox.val(description)
-        }
+        const description = await generateComparison(site, textToConsume, torTitle, mediainfo, maxScreenshots)
+        descrBox.val(description)
         // category selection
         if (categorySel) {
           if (site === PUTAO) {
@@ -1675,6 +1726,8 @@ if (typeof module !== 'undefined' && module.exports) {
     regexNormalUrl,
     regexScreenshotsComparison,
     regexScreenshotsThumbsBoxed,
-    regexScreenshotsThumbsCombined
+    regexScreenshotsThumbsCombined,
+    generateComparison,
+    siteInfo
   }
 }

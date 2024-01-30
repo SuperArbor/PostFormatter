@@ -1,5 +1,19 @@
-const { collectComparisons } = require('./PostFormatter')
-const tests = [{
+// module imports
+const {
+  collectComparisons,
+  generateComparison
+} = require('./PostFormatter')
+const fs = require('fs')
+const path = require('path')
+const {
+  glob,
+  globSync,
+  globStream,
+  globStreamSync,
+  Glob,
+} = require('glob')
+
+const testsSimple = [{
   text: `.org/details.php?id=148204&source=details-related[/quote][quote=Source, EbP, NTb (different source)][url=https://pixhost.to/show/320/411481872_999906.png][img]https://t91.pixhost.to/thumbs/320/411481872_999906.png[/img][/url] [url=https://pixhost.to/show/320/411481874_46oz77.png][img]https://t91.pixhost.to/thumbs/320/411481874_46oz77.png[/img][/url] [url=https://pixhost.to/show/320/411481876_u4061m.png][img]https://t91.pixhost.to/thumbs/320/411481876_u4061m.png[/img][/url] 
   [url=https://pixhost.to/show/320/411481878_oea9as.png][img]https://t91.pixhost.to/thumbs/320/411481878_oea9as.png[/img][/url] [url=https://pixhost.to/show/320/411481883_297v98.png][img]https://t91.pixhost.to/thumbs/320/411481883_297v98.png[/img][/url] [url=https://pixhost.to/show/320/411481888_d12398.png][img]https://t91.pixhost.to/thumbs/320/411481888_d12398.png[/img][/url] 
   [url=https://pixhost.to/show/320/411481893_m50sc6.png][img]https://t91.pixhost.to/thumbs/320/411481893_m50sc6.png[/img][/url] [url=https://pixhost.to/show/320/411481896_t02dhl.png][img]https://t91.pixhost.to/thumbs/320/411481896_t02dhl.png[/img][/url] [url=https://pixhost.to/show/320/411481899_tq032o.png][img]https://t91.pixhost.to/thumbs/320/411481899_tq032o.png[/img][/url] 
@@ -163,8 +177,8 @@ const tests = [{
     length: 2814
   }]
 }]
-test('test screenshots boxed', () => {
-  tests.forEach(test => {
+test('test simple screenshots conversion', () => {
+  testsSimple.forEach(test => {
     const result = collectComparisons(test.text)
     expect(result.length).toBe(test.result.length)
     if (result.length === test.result.length) {
@@ -180,3 +194,22 @@ test('test screenshots boxed', () => {
     }
   })
 })
+test('test whole screenshots conversion', async () => {
+  const inputs = await glob('./test files/input/*.bbcode')
+  const targetSites = ['NHD', 'GPW']
+  for (const input of inputs) {
+    const movieName = path.basename(input).split('.')[0]
+    try {
+      const data = fs.readFileSync(input, 'utf8')
+      for (const targetSite of targetSites) {
+        const description = await generateComparison(targetSite, data, '', {}, 10)
+        const output = `./test files/output/${movieName}.${targetSite}.bbcode`
+        if (description) {
+          fs.writeFileSync(output, description)
+        }
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+}, 30000)
