@@ -114,6 +114,14 @@ const siteInfo = {
     unsupportedTags: ['align'].join('|'),
     decodingMediainfo: true
   },
+  TTG: {
+    construct: NEXUSPHP,
+    targetTagBox: '',
+    boxSupportDescr: false,
+    otherTagBoxes: ['box', 'hide', 'spoiler', 'expand'].join('|'),
+    unsupportedTags: ['align'].join('|'),
+    decodeMediaInfo: true
+  },
   GPW: {
     construct: GAZELLE,
     targetTagBox: 'hide',
@@ -274,7 +282,6 @@ async function comparison2UrlImg (imagesComparison, numTeams) {
   } else {
     regex = /(https?:[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\.(png|jpg))/gi
     const matches = imagesComparison.match(regex)
-    const urlsToSend = matches || []
     const size = numTeams === 2
       ? 350
       : numTeams === 3
@@ -284,8 +291,9 @@ async function comparison2UrlImg (imagesComparison, numTeams) {
           : numTeams === 5
             ? 150
             : 150
-    const urls = await sendImagesToPixhost(urlsToSend, size)
-    return urls
+    return matches
+      ? await sendImagesToPixhost(matches, size)
+      : []
   }
 }
 function decodeMediaInfo (mediainfoStr) {
