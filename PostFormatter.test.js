@@ -6,13 +6,7 @@ const {
 } = require('./PostFormatter')
 const fs = require('fs')
 const path = require('path')
-const {
-  glob,
-  globSync,
-  globStream,
-  globStreamSync,
-  Glob,
-} = require('glob')
+const glob = require('glob')
 
 const testsSimple = [{
   text: `.org/details.php?id=148204&source=details-related[/quote][quote=Source, EbP, NTb (different source)][url=https://pixhost.to/show/320/411481872_999906.png][img]https://t91.pixhost.to/thumbs/320/411481872_999906.png[/img][/url] [url=https://pixhost.to/show/320/411481874_46oz77.png][img]https://t91.pixhost.to/thumbs/320/411481874_46oz77.png[/img][/url] [url=https://pixhost.to/show/320/411481876_u4061m.png][img]https://t91.pixhost.to/thumbs/320/411481876_u4061m.png[/img][/url] 
@@ -196,7 +190,7 @@ test('test simple screenshots conversion', () => {
   })
 })
 test('test whole screenshots conversion', async () => {
-  const inputs = await glob('./test files/input/*.bbcode')
+  const inputs = await glob.glob('./test files/input/*.bbcode')
   const targetSites = ['NHD', 'GPW']
   for (const input of inputs) {
     const [movieName, originalSite] = path.basename(input).split('.')
