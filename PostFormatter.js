@@ -793,26 +793,18 @@ function processDescription (siteName, description) {
         value: 'BINGO',
         style: 'font-size: 11px; font-weight: bold; color: blue; margin-right: 3px'
       })
-      const td1 = $('<td>')
-      td1.attr({
-        class: 'embedded'
-      })
-      const tr1 = $('<tr>')
-      tr1.attr({
-        id: 'multi_function'
-      })
-      const tbody1 = $('<tbody>')
-      const table1 = $('<table>')
-      table1.attr({
-        cellspaceing: '1',
+      const table1 = $('<table>').attr({
+        cellspacing: '1',
         cellpadding: '2',
         border: '0',
         style: 'margin-top:3px'
-      })
-      td1.append(btnBingo)
-      tr1.append(td1)
-      tbody1.append(tr1)
-      table1.append(tbody1)
+      }).append(
+        $('<tbody>').append(
+          $('<tr>').attr({ id: 'multi_function' }).append(
+            $('<td>').attr({ class: 'embedded' }).append(btnBingo)
+          )
+        )
+      )
       if (siteName === MTEAM || siteName === NHD || siteName === PTER || siteName === PUTAO) {
         $('#compose input[name="quote"]').closest('table').after(table1)
       } else if (siteName === TTG) {
