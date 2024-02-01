@@ -1136,10 +1136,11 @@ function processDescription (siteName, description) {
         // fill the page
         // common controls
         // source
+        torrentInfo.infoInSite = { site: siteName }
         if (site.sourceSel && torrentInfo.sourceInfo) {
-          torrentInfo.sourceInfo.sourceInSite = site.sourceDefault || 0
+          torrentInfo.infoInSite.source = site.sourceDefault || 0
           if (siteName === PTER || siteName === MTEAM) {
-            torrentInfo.sourceInfo.sourceInSite = torrentInfo.sourceInfo.remux
+            torrentInfo.infoInSite.source = torrentInfo.sourceInfo.remux
               ? site.sourceRemux// remux
               : torrentInfo.sourceInfo.encode
                 ? site.sourceEncode// encode
@@ -1147,9 +1148,9 @@ function processDescription (siteName, description) {
                   ? site.sourceHdtv// hdtv
                   : torrentInfo.sourceInfo.webDl
                     ? site.sourceWebDl// web-dl
-                    : torrentInfo.sourceInfo.sourceInSite// other
+                    : torrentInfo.infoInSite.source// other
           } else if (siteName === NHD) {
-            torrentInfo.sourceInfo.sourceInSite = torrentInfo.sourceInfo.bluray
+            torrentInfo.infoInSite.source = torrentInfo.sourceInfo.bluray
               ? site.sourceBluray
               : torrentInfo.sourceInfo.hddvd
                 ? site.sourceHddvd
@@ -1159,9 +1160,9 @@ function processDescription (siteName, description) {
                     ? site.sourceWebDl
                     : torrentInfo.sourceInfo.webrip
                       ? site.sourceWebrip
-                      : torrentInfo.sourceInfo.sourceInSite
+                      : torrentInfo.infoInSite.source
           } else if (siteName === GPW) {
-            torrentInfo.sourceInfo.sourceInSite = torrentInfo.sourceInfo.bluray
+            torrentInfo.infoInSite.source = torrentInfo.sourceInfo.bluray
               ? site.sourceBluray
               : torrentInfo.sourceInfo.hddvd
                 ? site.sourceHddvd
@@ -1169,15 +1170,15 @@ function processDescription (siteName, description) {
                   ? site.sourceDvd
                   : torrentInfo.sourceInfo.web
                     ? site.sourceWeb
-                    : torrentInfo.sourceInfo.sourceInSite
+                    : torrentInfo.infoInSite.source
           }
-          site.sourceSel.val(torrentInfo.sourceInfo.sourceInSite)
+          site.sourceSel.val(torrentInfo.infoInSite.source)
         }
         // standard
         if (site.standardSel && torrentInfo.standardInfo) {
-          torrentInfo.standardInfo.standardInSite = site.standardDefault || 0
+          torrentInfo.infoInSite.standard = site.standardDefault || 0
           if (siteName === NHD || siteName === PUTAO || siteName === MTEAM || siteName === TTG || siteName === GPW) {
-            torrentInfo.standardInfo.standardInSite = torrentInfo.standardInfo.res1080p
+            torrentInfo.infoInSite.standard = torrentInfo.standardInfo.res1080p
               ? site.standard1080p
               : torrentInfo.standardInfo.res1080i
                 ? site.standard1080i
@@ -1185,30 +1186,30 @@ function processDescription (siteName, description) {
                   ? site.standard720p
                   : torrentInfo.standardInfo.res2160p
                     ? site.standard2160p
-                    : torrentInfo.standardInfo.standardInSite
-            site.standardSel.val(torrentInfo.standardInfo.standardInSite)
+                    : torrentInfo.infoInSite.standard
+            site.standardSel.val(torrentInfo.infoInSite.standard)
           }
         }
         // processing
         if (site.processingSel && torrentInfo.processingInfo) {
-          torrentInfo.processingInfo.processingInSite = site.processDefault || 0
+          torrentInfo.infoInSite.processing = site.processDefault || 0
           if (siteName === NHD) {
-            torrentInfo.processingInfo.processingInSite = torrentInfo.processingInfo.raw
+            torrentInfo.infoInSite.processing = torrentInfo.processingInfo.raw
               ? site.processRaw
               : site.processEncode
           } else if (siteName === GPW) {
             site.processingSel.closest('tr.hidden').removeClass('hidden')
-            torrentInfo.processingInfo.processingInSite = torrentInfo.processingInfo.remux
+            torrentInfo.infoInSite.processing = torrentInfo.processingInfo.remux
               ? site.processRemux
               : site.processEncode
           }
-          site.processingSel.val(torrentInfo.processingInfo.processingInSite)
+          site.processingSel.val(torrentInfo.infoInSite.processing)
         }
         // codec
         if (site.codecSel && torrentInfo.codecInfo) {
-          torrentInfo.codecInfo.codecInSite = site.codecDefault || 0
+          torrentInfo.infoInSite.codec = site.codecDefault || 0
           if (siteName === NHD || siteName === PUTAO || siteName === MTEAM) {
-            torrentInfo.codecInfo.codecInSite = torrentInfo.codecInfo.x264 || torrentInfo.codecInfo.h264
+            torrentInfo.infoInSite.codec = torrentInfo.codecInfo.x264 || torrentInfo.codecInfo.h264
               ? site.codecH264
               : torrentInfo.codecInfo.x265 || torrentInfo.codecInfo.h265
                 ? site.codecH265
@@ -1222,9 +1223,9 @@ function processDescription (siteName, description) {
                         ? site.codecFlac
                         : torrentInfo.codecInfo.ape
                           ? site.codecApe
-                          : torrentInfo.codecInfo.codecInSite
+                          : torrentInfo.infoInSite.codec
           } else if (siteName === GPW) {
-            torrentInfo.codecInfo.codecInSite = torrentInfo.codecInfo.h264
+            torrentInfo.infoInSite.codec = torrentInfo.codecInfo.h264
               ? site.codecH264
               : torrentInfo.codecInfo.h265
                 ? site.codecH265
@@ -1236,16 +1237,17 @@ function processDescription (siteName, description) {
                       ? site.codecXvid
                       : torrentInfo.codecInfo.divX
                         ? site.codecDivX
-                        : torrentInfo.codecInfo.codecInSite
+                        : torrentInfo.infoInSite.codec
           }
-          site.codecSel.val(torrentInfo.codecInfo.codecInSite)
+          site.codecSel.val(torrentInfo.infoInSite.codec)
         }
         // team
         if (site.teamSel) {
           if (siteName === MTEAM) {
             site.teamSel.find('option').each((_, element) => {
               if (element.text.toLowerCase() === torrentInfo.team.toLowerCase()) {
-                site.teamSel.val(element.value)
+                torrentInfo.infoInSite.team = element.value
+                site.teamSel.val(torrentInfo.infoInSite.team)
               }
             })
           }
@@ -1295,7 +1297,8 @@ function processDescription (siteName, description) {
             smallDescrArray.push(torrentInfo.movieInfo.director)
           }
           // complete small_descr
-          site.smallDescBox.val(smallDescrArray.join(' | '))
+          torrentInfo.infoInSite.smallDescr = smallDescrArray.join(' | ')
+          site.smallDescBox.val(torrentInfo.infoInSite.smallDescr)
         }
         // douban link
         if (site.doubanLinkBox && torrentInfo.movieInfo && torrentInfo.movieInfo.doubanLink) {
@@ -1315,9 +1318,9 @@ function processDescription (siteName, description) {
         }
         // area selection
         if (site.areaSel && torrentInfo.movieInfo && torrentInfo.movieInfo.areaInfo) {
-          torrentInfo.movieInfo.areaInfo.areaInSite = site.areaDefault || 0
+          torrentInfo.infoInSite.area = site.areaDefault || 0
           if (siteName === PTER) {
-            torrentInfo.movieInfo.areaInfo.areaInSite = torrentInfo.movieInfo.areaInfo.cnMl
+            torrentInfo.infoInSite.area = torrentInfo.movieInfo.areaInfo.cnMl
               ? site.areaCnMl
               : torrentInfo.movieInfo.areaInfo.hk
                 ? site.areaHk
@@ -1333,7 +1336,7 @@ function processDescription (siteName, description) {
                           ? site.areaInd
                           : site.areaOther
           } else if (siteName === MTEAM) {
-            torrentInfo.movieInfo.areaInfo.areaInSite = torrentInfo.movieInfo.areaInfo.cnMl
+            torrentInfo.infoInSite.area = torrentInfo.movieInfo.areaInfo.cnMl
               ? site.areaCnMl
               : torrentInfo.movieInfo.areaInfo.euAme
                 ? site.areaEuAme
@@ -1345,13 +1348,13 @@ function processDescription (siteName, description) {
                       ? site.areaKor
                       : site.areaOther
           }
-          site.areaSel.val(torrentInfo.movieInfo.areaInfo.areaInSite)
+          site.areaSel.val(torrentInfo.infoInSite.area)
         }
         // category selection
         if (site.categorySel) {
-          torrentInfo.categoryInSite = site.catDefault || 0
+          torrentInfo.infoInSite.category = site.catDefault || 0
           if ((siteName === NHD || siteName === PTER) && torrentInfo.movieInfo) {
-            torrentInfo.categoryInSite = catGeneral === catGeneralMovie
+            torrentInfo.infoInSite.category = catGeneral === catGeneralMovie
               ? site.catMovie
               : catGeneral === catGeneralTvSeries
                 ? site.catTvSeries
@@ -1364,7 +1367,7 @@ function processDescription (siteName, description) {
                       : site.catDefault
           } else if (siteName === PUTAO && torrentInfo.movieInfo && torrentInfo.movieInfo.areaInfo) {
             if (catGeneral === catGeneralMovie) {
-              torrentInfo.categoryInSite = torrentInfo.movieInfo.areaInfo.cnMl
+              torrentInfo.infoInSite.category = torrentInfo.movieInfo.areaInfo.cnMl
                 ? site.catMovieCnMl
                 : torrentInfo.movieInfo.areaInfo.euAme
                   ? site.catMovieEuAme
@@ -1373,12 +1376,12 @@ function processDescription (siteName, description) {
                     : site.catMovieEuAme
             } else if (catGeneral === catGeneralDocumentary) {
               // for clarification
-              torrentInfo.categoryInSite = site.catDocumentary
+              torrentInfo.infoInSite.category = site.catDocumentary
             } else if (catGeneral === catGeneralAnimation) {
               // for clarification
-              torrentInfo.categoryInSite = site.catAnimation
+              torrentInfo.infoInSite.category = site.catAnimation
             } else if (catGeneral === catGeneralTvSeries) {
-              torrentInfo.categoryInSite = torrentInfo.movieInfo.areaInfo.hk || torrentInfo.movieInfo.areaInfo.tw
+              torrentInfo.infoInSite.category = torrentInfo.movieInfo.areaInfo.hk || torrentInfo.movieInfo.areaInfo.tw
                 ? site.catTvSeriesHkTw
                 : torrentInfo.movieInfo.areaInfo.asia
                   ? site.catTvSeriesAsia
@@ -1388,7 +1391,7 @@ function processDescription (siteName, description) {
                       ? site.catTvSeriesEuAme
                       : site.catTvSeriesEuAme
             } else if (catGeneral === catGeneralTvShow) {
-              torrentInfo.categoryInSite = torrentInfo.movieInfo.areaInfo.cnMl
+              torrentInfo.infoInSite.category = torrentInfo.movieInfo.areaInfo.cnMl
                 ? site.catTvShowCnMl
                 : torrentInfo.movieInfo.areaInfo.hk || torrentInfo.movieInfo.areaInfo.tw
                   ? site.catTvShowHkTw
@@ -1400,25 +1403,25 @@ function processDescription (siteName, description) {
             }
           } else if (siteName === MTEAM && torrentInfo.sourceInfo) {
             if (catGeneral === catGeneralMovie) {
-              torrentInfo.categoryInSite = torrentInfo.sourceRemux
+              torrentInfo.infoInSite.category = torrentInfo.sourceRemux
                 ? site.catMovieRemux
                 : torrentInfo.sourceInfo.encode || torrentInfo.sourceInfo.hdtv || torrentInfo.sourceInfo.hddvd || torrentInfo.sourceInfo.web
                   ? site.catMovieHd
                   : site.catDefault
             } else if (catGeneral === catGeneralTvSeries || catGeneral === catGeneralTvShow) {
-              torrentInfo.categoryInSite = torrentInfo.sourceInfo.encode || torrentInfo.sourceInfo.hdtv || torrentInfo.sourceInfo.hddvd || torrentInfo.sourceInfo.web
+              torrentInfo.infoInSite.category = torrentInfo.sourceInfo.encode || torrentInfo.sourceInfo.hdtv || torrentInfo.sourceInfo.hddvd || torrentInfo.sourceInfo.web
                 ? site.catTvSeriesHd
                 : site.catDefault
             } else if (catGeneral === catGeneralDocumentary) {
-              torrentInfo.categoryInSite = site.catDocumentary
+              torrentInfo.infoInSite.category = site.catDocumentary
             } else if (catGeneral === catGeneralAnimation) {
-              torrentInfo.categoryInSite = site.catAnimation
+              torrentInfo.infoInSite.category = site.catAnimation
             } else {
-              torrentInfo.categoryInSite = site.catDefault
+              torrentInfo.infoInSite.category = site.catDefault
             }
           } else if (siteName === TTG && torrentInfo.standardInfo && torrentInfo.movieInfo && torrentInfo.movieInfo.areaInfo) {
             if (catGeneral === catGeneralMovie) {
-              torrentInfo.categoryInSite = torrentInfo.standardInfo.res720p
+              torrentInfo.infoInSite.category = torrentInfo.standardInfo.res720p
                 ? site.catMovie720p
                 : torrentInfo.standardInfo.res1080i || torrentInfo.standardInfo.res1080p
                   ? site.catMovie1080ip
@@ -1426,15 +1429,15 @@ function processDescription (siteName, description) {
                     ? site.catMovie2160p
                     : site.catDefault
             } else if (catGeneral === catGeneralDocumentary) {
-              torrentInfo.categoryInSite = torrentInfo.standardInfo.res720p
+              torrentInfo.infoInSite.category = torrentInfo.standardInfo.res720p
                 ? site.catDocumentary720p
                 : torrentInfo.standardInfo.res1080i || torrentInfo.standardInfo.res1080p
                   ? site.catDocumentary1080ip
                   : site.catDefault
             } else if (catGeneral === catGeneralAnimation) {
-              torrentInfo.categoryInSite = site.catAnimation
+              torrentInfo.infoInSite.category = site.catAnimation
             } else if (catGeneral === catGeneralTvSeries) {
-              torrentInfo.categoryInSite = torrentInfo.movieInfo.areaInfo.jap
+              torrentInfo.infoInSite.category = torrentInfo.movieInfo.areaInfo.jap
                 ? site.catTvSeriesJap
                 : torrentInfo.movieInfo.areaInfo.kor
                   ? site.catTvSeriesKor
@@ -1444,14 +1447,14 @@ function processDescription (siteName, description) {
                       ? site.catTvSeriesCnMl
                       : site.catDefault
             } else if (catGeneral === catGeneralTvShow) {
-              torrentInfo.categoryInSite = torrentInfo.movieInfo.areaInfo.kor
+              torrentInfo.infoInSite.category = torrentInfo.movieInfo.areaInfo.kor
                 ? site.catTvShowKor
                 : torrentInfo.movieInfo.areaInfo.jap
                   ? site.catTvShowJap
                   : site.catTvShow
             }
           }
-          site.categorySel.val(torrentInfo.categoryInSite)
+          site.categorySel.val(torrentInfo.infoInSite.category)
         }
         // site-specific
         if (siteName === PTER && torrentInfo.subtitleInfo && torrentInfo.audioInfo) {
