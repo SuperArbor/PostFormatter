@@ -199,6 +199,10 @@ const siteInfoMap = {
       hdr10plus: $('input[type="checkbox"][id="hdr10plus"]')[0],
       dovi: $('input[type="checkbox"][id="dolby_vision"]')[0]
     },
+    audioInfo: {
+      dtsX: $('input[type="checkbox"][id="dts_x"]')[0],
+      atmos: $('input[type="checkbox"][id="dolby_atmos"]')[0],
+    },
     movieEditionCheck: $('input[type="checkbox"][id="movie_edition_information"]')[0],
     movieEditionInfo: {
       commentaryAudio: $("a:contains('评论音轨')")[0],
@@ -937,7 +941,7 @@ function processDescription (siteName, description) {
         //= ========================================================================================================
         // info from mediainfo
         torrentInfo.audioInfo = {
-          chineseDub: false, cantoneseDub: false, commentary: false
+          dtsX: false, atmos: false, chineseDub: false, cantoneseDub: false, commentary: false
         }
         torrentInfo.videoInfo = {
           bit10: false, hdr10: false, hdr10plus: false, dovi: false, container: ''
@@ -1013,6 +1017,16 @@ function processDescription (siteName, description) {
                 console.log('Chinese Mandarin dub')
               } else {
                 console.log('Other dub')
+              }
+              const commecialName = infoValue['Commercial name']
+              if (commecialName) {
+                if (commecialName.match(/Dolby Atmos/i)) {
+                  torrentInfo.audioInfo.atmos = true
+                  console.log('Dolby Atmos')
+                } else if (commecialName.match(/DTS-HD Master Audio/i)) {
+                  torrentInfo.audioInfo.dtsX = true
+                  console.log('DTS:X')
+                }
               }
             } else if (infoKey.match(/video/i)) {
               // video
@@ -1502,8 +1516,12 @@ function processDescription (siteName, description) {
             })
           }
           site.chdubCheck.checked = torrentInfo.audioInfo.chineseDub
+          site.videoInfo.bit10.checked = torrentInfo.videoInfo.bit10
           site.videoInfo.hdr10.checked = torrentInfo.videoInfo.hdr10
+          site.videoInfo.hdr10plus.checked = torrentInfo.videoInfo.hdr10plus
           site.videoInfo.dovi.checked = torrentInfo.videoInfo.dovi
+          site.audioInfo.dtsX.checked = torrentInfo.audioInfo.dtsX
+          site.audioInfo.atmos.checked = torrentInfo.audioInfo.atmos
           if (Object.values(site.containerInfo).includes(torrentInfo.videoInfo.container)) {
             site.containerSel.val(torrentInfo.videoInfo.container)
           }
