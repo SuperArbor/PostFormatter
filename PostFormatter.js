@@ -87,7 +87,6 @@ const siteInfoMap = {
     targetBoxTag: 'box',
     boxSupportDescr: true,
     unsupportedTags: ['align'],
-    decodingMediainfo: false,
 
     inputFile: $('input[type="file"][name="file"]'),
     nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"), anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
@@ -107,7 +106,6 @@ const siteInfoMap = {
     targetBoxTag: 'hide',
     boxSupportDescr: true,
     unsupportedTags: ['align'],
-    decodingMediainfo: true,
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
     anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
@@ -126,7 +124,6 @@ const siteInfoMap = {
     targetBoxTag: '',
     boxSupportDescr: true,
     unsupportedTags: ['align', 'center'],
-    decodingMediainfo: false,
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
     anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
@@ -148,7 +145,6 @@ const siteInfoMap = {
     targetBoxTag: 'expand',
     boxSupportDescr: false,
     unsupportedTags: ['align'],
-    decodingMediainfo: true,
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
     anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
@@ -168,7 +164,6 @@ const siteInfoMap = {
     targetBoxTag: '',
     boxSupportDescr: false,
     unsupportedTags: ['align'],
-    decodeMediaInfo: true,
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $("input[type='text'][name='name']"), nameBoxEdit: $("input[type='text'][name='name']"),
     descrBox: $('textarea[name="descr"]'), smallDescBox: $("input[type='text'][name='subtitle']"), subtitleBox: $("input[type='text'][name='highlight']"),
@@ -186,7 +181,6 @@ const siteInfoMap = {
     targetBoxTag: 'hide',
     boxSupportDescr: true,
     unsupportedTags: ['align'],
-    decodingMediainfo: true,
 
     inputFile: $('#file'),
     mediainfoBox: $('textarea[name="mediainfo[]"]'), descrBox: $('#release_desc'),
@@ -869,118 +863,116 @@ function processDescription (siteName, description) {
         })
         torrentInfo.mediainfo = {}
         torrentInfo.mediainfoStr = ''
-        if (site.decodingMediainfo) {
-          // 优先从简介中获取mediainfo
-          const tagForMediainfo = site.targetBoxTag || 'quote'
-          const regexMIStr = site.boxSupportDescr
-            ? '\\[' + tagForMediainfo + '\\s*=\\s*mediainfo\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
-            : '\\[' + tagForMediainfo + '\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
-          const regexMI = RegExp(regexMIStr, 'im')
-          const mediainfoArray = textToConsume.match(regexMI)
-          if (mediainfoArray) {
-            torrentInfo.mediainfoStr = mediainfoArray[1]
-              .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
-              .replace(/\s*\[\/\w+\]\s*$/g, '')
-            torrentInfo.mediainfo = decodeMediaInfo(torrentInfo.mediainfoStr)
-            // if the site has a place to fill out the mediainfo, remove it in the description box
-            if (site.mediainfoBox) {
-              textToConsume = textToConsume.substring(0, mediainfoArray.index) + 
-                textToConsume.substring(mediainfoArray.index + mediainfoArray[0].length)
-            }
+        // 优先从简介中获取mediainfo
+        const tagForMediainfo = site.targetBoxTag || 'quote'
+        const regexMIStr = site.boxSupportDescr
+          ? '\\[' + tagForMediainfo + '\\s*=\\s*mediainfo\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
+          : '\\[' + tagForMediainfo + '\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
+        const regexMI = RegExp(regexMIStr, 'im')
+        const mediainfoArray = textToConsume.match(regexMI)
+        if (mediainfoArray) {
+          torrentInfo.mediainfoStr = mediainfoArray[1]
+            .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
+            .replace(/\s*\[\/\w+\]\s*$/g, '')
+          torrentInfo.mediainfo = decodeMediaInfo(torrentInfo.mediainfoStr)
+          // if the site has a place to fill out the mediainfo, remove it in the description box
+          if (site.mediainfoBox) {
+            textToConsume = textToConsume.substring(0, mediainfoArray.index) + 
+              textToConsume.substring(mediainfoArray.index + mediainfoArray[0].length)
           }
-          if (Object.keys(torrentInfo.mediainfo).length === 0 && site.mediainfoBox) {
-            // 如果简介中没有有效的mediainfo，读取mediainfobox
-            torrentInfo.mediainfoStr = site.mediainfoBox.val()
-            torrentInfo.mediainfo = decodeMediaInfo(torrentInfo.mediainfoStr)
-          }
-          Object.entries(torrentInfo.mediainfo).forEach(([infoKey, infoValue]) => {
-            if (infoKey.match(/text( #\d+)?/i)) {
-              // subtitle
-              let matchLang = false
-              const language = infoValue.Language || infoValue.Title
-              if (language.match(/chinese|chs|cht/i)) {
-                if (language.match(/cht|(chinese( |_)traditional)/i)) {
-                  torrentInfo.subtitleInfo.chinese_traditional = true
-                } else {
-                  torrentInfo.subtitleInfo.chinese_simplified = true
-                }
-                matchLang = true
-              } else {
-                Object.keys(torrentInfo.subtitleInfo).forEach(lang => {
-                  if (language.match(RegExp(escapeRegExp(lang), 'i')) || language.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
-                    torrentInfo.subtitleInfo[lang] = true
-                    matchLang = true
-                  }
-                })
-              }
-              if (matchLang) {
-                console.log(`Match sub ${language}`)
-              } else {
-                console.log(`Other sub ${language}`)
-              }
-            } else if (infoKey.match(/audio( #\d+)?/i)) {
-              // audio
-              const title = infoValue.Title || ''
-              const language = infoValue.Language || ''
-              if (title.match(/commentary/i)) {
-                torrentInfo.audioInfo.commentary = true
-              }
-              if (title.match(/cantonese/i) || language.match(/cantonese/i)) {
-                torrentInfo.audioInfo.cantoneseDub = true
-                console.log('Cantonese dub')
-              } else if (title.match(/chinese|mandarin/i) || language.match(/chinese|mandarin/i)) {
-                torrentInfo.audioInfo.chineseDub = true
-                console.log('Chinese Mandarin dub')
-              } else {
-                console.log('Other dub')
-              }
-              const commecialName = infoValue['Commercial name']
-              if (commecialName) {
-                if (commecialName.match(/Dolby Atmos/i)) {
-                  torrentInfo.audioInfo.atmos = true
-                  console.log('Dolby Atmos')
-                } else if (commecialName.match(/DTS-HD Master Audio/i)) {
-                  torrentInfo.audioInfo.dtsX = true
-                  console.log('DTS:X')
-                }
-              }
-            } else if (infoKey.match(/video/i)) {
-              // video
-              const hdrFormat = infoValue['HDR format']
-              const bitDepth = infoValue['Bit depth']
-              if (hdrFormat) {
-                if (hdrFormat.match(/HDR10\+/i)) {
-                  torrentInfo.videoInfo.hdr10plus = true
-                  console.log('HDR10+')
-                } else if (hdrFormat.match(/HDR10/i)) {
-                  torrentInfo.videoInfo.hdr10 = true
-                  console.log('HDR10')
-                }
-                if (hdrFormat.match(/Dolby Vision/i)) {
-                  torrentInfo.videoInfo.dovi = true
-                  console.log('Dolby Vision')
-                }
-              } else if (bitDepth.match(/10 bits/i)) {
-                torrentInfo.videoInfo.bit10 = true
-                console.log('10 bits')
-              }
-            } else if (infoKey.match(/general/i)) {
-              // general
-              if (infoValue.Format === 'Matroska') {
-                torrentInfo.videoInfo.container = 'MKV'
-              } else if (infoValue.Format === 'MPEG-4') {
-                torrentInfo.videoInfo.container = 'MP4'
-              } else if (infoValue.Format === 'AVI') {
-                torrentInfo.videoInfo.container = 'AVI'
-              } else {
-                torrentInfo.videoInfo.container = infoValue.Format.trim()
-              }
-              console.log(torrentInfo.videoInfo.container)
-              // 如果 torrentInfo.torrentTitle 尚未被赋值，直接使用mediainfo 中的值
-              torrentInfo.torrentTitle = torrentInfo.torrentTitle || infoValue['Complete name'] || infoValue['Movie name']
-            }
-          })
         }
+        if (Object.keys(torrentInfo.mediainfo).length === 0 && site.mediainfoBox) {
+          // 如果简介中没有有效的mediainfo，读取mediainfobox
+          torrentInfo.mediainfoStr = site.mediainfoBox.val()
+          torrentInfo.mediainfo = decodeMediaInfo(torrentInfo.mediainfoStr)
+        }
+        Object.entries(torrentInfo.mediainfo).forEach(([infoKey, infoValue]) => {
+          if (infoKey.match(/text( #\d+)?/i)) {
+            // subtitle
+            let matchLang = false
+            const language = infoValue.Language || infoValue.Title
+            if (language.match(/chinese|chs|cht/i)) {
+              if (language.match(/cht|(chinese( |_)traditional)/i)) {
+                torrentInfo.subtitleInfo.chinese_traditional = true
+              } else {
+                torrentInfo.subtitleInfo.chinese_simplified = true
+              }
+              matchLang = true
+            } else {
+              Object.keys(torrentInfo.subtitleInfo).forEach(lang => {
+                if (language.match(RegExp(escapeRegExp(lang), 'i')) || language.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
+                  torrentInfo.subtitleInfo[lang] = true
+                  matchLang = true
+                }
+              })
+            }
+            if (matchLang) {
+              console.log(`Match sub ${language}`)
+            } else {
+              console.log(`Other sub ${language}`)
+            }
+          } else if (infoKey.match(/audio( #\d+)?/i)) {
+            // audio
+            const title = infoValue.Title || ''
+            const language = infoValue.Language || ''
+            if (title.match(/commentary/i)) {
+              torrentInfo.audioInfo.commentary = true
+            }
+            if (title.match(/cantonese/i) || language.match(/cantonese/i)) {
+              torrentInfo.audioInfo.cantoneseDub = true
+              console.log('Cantonese dub')
+            } else if (title.match(/chinese|mandarin/i) || language.match(/chinese|mandarin/i)) {
+              torrentInfo.audioInfo.chineseDub = true
+              console.log('Chinese Mandarin dub')
+            } else {
+              console.log('Other dub')
+            }
+            const commecialName = infoValue['Commercial name']
+            if (commecialName) {
+              if (commecialName.match(/Dolby Atmos/i)) {
+                torrentInfo.audioInfo.atmos = true
+                console.log('Dolby Atmos')
+              } else if (commecialName.match(/DTS-HD Master Audio/i)) {
+                torrentInfo.audioInfo.dtsX = true
+                console.log('DTS:X')
+              }
+            }
+          } else if (infoKey.match(/video/i)) {
+            // video
+            const hdrFormat = infoValue['HDR format']
+            const bitDepth = infoValue['Bit depth']
+            if (hdrFormat) {
+              if (hdrFormat.match(/HDR10\+/i)) {
+                torrentInfo.videoInfo.hdr10plus = true
+                console.log('HDR10+')
+              } else if (hdrFormat.match(/HDR10/i)) {
+                torrentInfo.videoInfo.hdr10 = true
+                console.log('HDR10')
+              }
+              if (hdrFormat.match(/Dolby Vision/i)) {
+                torrentInfo.videoInfo.dovi = true
+                console.log('Dolby Vision')
+              }
+            } else if (bitDepth.match(/10 bits/i)) {
+              torrentInfo.videoInfo.bit10 = true
+              console.log('10 bits')
+            }
+          } else if (infoKey.match(/general/i)) {
+            // general
+            if (infoValue.Format === 'Matroska') {
+              torrentInfo.videoInfo.container = 'MKV'
+            } else if (infoValue.Format === 'MPEG-4') {
+              torrentInfo.videoInfo.container = 'MP4'
+            } else if (infoValue.Format === 'AVI') {
+              torrentInfo.videoInfo.container = 'AVI'
+            } else {
+              torrentInfo.videoInfo.container = infoValue.Format.trim()
+            }
+            console.log(torrentInfo.videoInfo.container)
+            // 如果 torrentInfo.torrentTitle 尚未被赋值，直接使用mediainfo 中的值
+            torrentInfo.torrentTitle = torrentInfo.torrentTitle || infoValue['Complete name'] || infoValue['Movie name']
+          }
+        })
         //= ========================================================================================================
         // info from title
         torrentInfo.editionInfo = {}
