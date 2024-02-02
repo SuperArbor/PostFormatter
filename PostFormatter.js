@@ -28,8 +28,8 @@ const PIXHOST = 'pixhost'; const IMGBOX = 'imghost'; const IMG4K = 'img4k'
 const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'
 const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
 // compare with comparison (GPW style)
-const regexTeam = /\b(?:(?:\w[\w()-. ]+)|(?:D-Z0N3)|(?:de\[42\]))/i
-const regexTeamsSplitter = /\||,|\/|-|>?\s*vs\.?\s*<?/i
+const regexTeam = /\b(?:(?:\w[\w-. ]+(?:\([\w. ]+\)|<[\w. ]+>|\[[\w. ]+\])?)|(?:D-Z0N3)|(?:de\[42\]))/i
+const regexTeamsSplitter = /\||,|\/|-|vs\.?|>\s*vs\.?\s*</i
 const regexNormalUrl = /[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
 const regexImageUrl = RegExp(
   'https?:' + regexNormalUrl.source + '?\\.(?:png|jpg)',
@@ -63,13 +63,13 @@ const regexImageUrlsSeparated = RegExp(
 const regexScreenshotsThumbsBoxed = RegExp(
   '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*(' +
   regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
-  ')+)\\]' +
+  ')+)\\s*\\]' +
   regexScreenshotsThumbsCombined.source +
   '\\s*\\[\\/\\1\\]',
   'mig')
 // 第二种不包含[box|hide|expand|spoiler|quote=]标签，要求Source, Encode与截图之间至少有一个换行符
 const regexScreenshotsThumbsTitled = RegExp(
-  '^\\W*(' +
+  '\\b(' +
   regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
   ')+)[\\W]*\\n+\\s*' +
   regexScreenshotsThumbsCombined.source,
@@ -501,51 +501,6 @@ async function sendImagesToPixhost (urls, size) {
     })
   })
 }
-// 提取单个对比图信息
-// eslint-disable-next-line no-unused-vars
-function getOneComparison (text, index = 0, preferedRegex = '') {
-  const regexArray = Object.keys(regexInfo)
-  if (preferedRegex) {
-    const currentPos = regexArray.findIndex(x => x === preferedRegex)
-    if (currentPos > 0) {
-      const temp = regexArray[0]
-      regexArray[currentPos] = temp
-      regexArray[0] = preferedRegex
-    }
-  }
-  const result = { teams: [], urls: [], regexType: '', thumbs: false, slice: [0, 0] }
-  for (const key of regexArray) {
-    const regex = regexInfo[key].regex
-    regex.lastIndex = index
-    const match = regex.exec(text)
-    if (match) {
-      result.regexType = key
-      if (regexInfo[key].groupForTeams >= 0) {
-        result.teams = match[regexInfo[key].groupForTeams]
-          .split(regexTeamsSplitter)
-          .map(ele => { return ele.trim() })
-      }
-      if (regexInfo[key].groupForUrls >= 0) {
-        const urls = match[regexInfo[key].groupForUrls]
-        if (key === 'comparison') {
-          result.urls = urls.match(regexImageUrlsSeparated)
-        } else {
-          result.urls = urls.match(regexScreenshotsThumbsSeparated)
-        }
-      }
-      if (regexInfo[key].groupForThumbs >= 0) {
-        result.thumbs = !!match[regexInfo[key].groupForThumbs]
-      } else if (key === 'comparison') {
-        result.thumbs = false
-      } else if (key === 'simple') {
-        result.thumbs = false
-      }
-      result.slice = [match.index, match.index + match[0].length]
-      return result
-    }
-  }
-  return result
-}
 // 提取全部对比图信息
 function collectComparisons (text) {
   const replacements = []
@@ -634,9 +589,9 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
     let screenshots = ''
     let currentScreenshots = 0
     if (!torrentTitle && mediainfo && mediainfo.General) {
-      let movieName = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
-      if (movieName) {
-        movieName = formatTorrentName(movieName)
+      torrentTitle = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
+      if (torrentTitle) {
+        torrentTitle = formatTorrentName(torrentTitle)
       }
     }
     const teamArray = torrentTitle.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
@@ -661,6 +616,10 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
       }
       description += screenshotsStr
       if (urls.length > 0 && urls.length % teams.length === 0) {
+        if (!teams.find(team => team === teamEncode)) {
+          // 截图对比描述中可能会多一些内容，如 Source vs TayTO<Shout Factory> vs CRiSC<MGM>
+          teamEncode = teams.find(team => team.includes(teamEncode))
+        }
         if (!screenshots && urls.length / teams.length >= 3) {
           for (let i = 0; i < urls.length; i++) {
             let image = urls[i]

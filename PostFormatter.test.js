@@ -48,60 +48,6 @@ const testsSimple = [{
   }]
 }, {
   text: `
-  Source: Lawless 2012 1080p CAN Blu-ray AVC DTS-HD MA 5.1-EbP (41.87 GiB)[/quote][quote=Encoder's Notes]See the differences between the two cuts in the blu-ray upload.
-  In terms of quality between this encode and Sabooo's, in light/non-action scenes there's not much difference at all.
-  However, in action, and dark/grainy scenes this encode holds up better... probably due to different settings. Also,
-  only about 1 Mbps difference in video bitrate.[/quote][quote=Notes on CAN Blu-ray]Most Canadian discs are simply US/UK ports, the odd time we get different colours and audio features; however, for Lawless we got a completely different cut of the film.
-  
-  Differences between Starz/Anchor (US) and Alliance (CAN) disc in some scenes
-  
-  • overcropped and stretched US Cut
-  • colours are different
-  • missing sequences
-  
-  That was simply a summary of the differences; the most important to us are the missing sequences on the US Cut, the CAN missing sequences were negligible
-  
-  [size=5]Missing Sequences (SPOILER ADVISORY)[/size]
-  
-  Rather than going through all the missing sequences I found, i'll go through a few; what I found was the US Cut took out the more grotesque and intense sequences
-  
-  F1:1 - Swine shooting[box][img]https://ptpimg.me/rfm647.png[/img][img]https://ptpimg.me/ryp0ku.png[/img][/box]US Cut - All we see is the muzzle flash of a gun
-  CAN Cut - We see a pig receiving a headshot, twitch and die
-  
-  The US Cut doesn't have the CAN sequence, this could be PETA-related where animal-rights activists lobbied against it.
-  
-  F1:2 - Extra child[box][img]https://ptpimg.me/bg4la3.png[/img][img]https://ptpimg.me/h9t1p4.png[/img][/box]US Cut - Extra kid on the screen: the one wearing the trapper-hat
-  CAN Cut - the last frame 6982 in that sequence, you see the trapper kid on the left side about to get facetime... but he doesn't
-  
-  One of two additional sequences that the US Cut has over CAN; this extra kid bears no significance, and is not seen later in the film; you'll also notice a colour difference here, but we'll discuss that later
-  
-  F1:3 - Close-up punch[box][img]https://ptpimg.me/1j5c3e.png[/img][img]https://ptpimg.me/3acfol.png[/img][img]https://ptpimg.me/94f73o.png[/img][img]https://ptpimg.me/o73724.png[/img][img]https://ptpimg.me/v7j7u6.png[/img][/box]US Cut - Frame 43437 you see LaBeouf head, the next frame pans out out to him getting punched
-  CAN Cut - Frame 44034 you see the same frame with his head, however the next frame shows the beginning of a closeup sequence of him getting punched and then panned out, where the US frame is continued on 44048
-  
-  Here we have a missing close-up sequence of LaBeouf getting his head bashed in
-  
-  F1:4 - Behind you[box][img]https://ptpimg.me/8l0cy5.png[/img][img]https://ptpimg.me/n3uyt9.png[/img][img]https://ptpimg.me/r0oys8.png[/img][img]https://ptpimg.me/57bwo9.png[/img][/box]US Cut - After frame 62442, Hardy looks behind
-  CAN Cut - Frame 63052 is the same as the US Cut, however CAN continues with that same sequences for a few more frames
-  
-  CAN is missing the sequence where Hardy turns around, this and and F1:2 were the only two sequences that I found missing in the CAN Cut.
-  
-  F1:5 - Worm's-eye view[box][img]https://ptpimg.me/eqzn46.png[/img][img]https://ptpimg.me/elgm13.png[/img][img]https://ptpimg.me/8e29j5.png[/img][img]https://ptpimg.me/7vp1ja.png[/img][img]https://ptpimg.me/m03r83.png[/img][/box]US Cut - Following frame 65770, we have a bird's eye view of Hardy getting his throat sliced
-  CAN Cut - Identical frame 66271, is followed by a worm's eye view and later in 66308 we have the US's bird's eye view
-  
-  US is missing the worm's eye view of the slashing, it is a much more intense and revealing scene than the bird's eye view. This scene also includes three more sequences which are missing in the US Cut.
-  
-  F1:6 - Bloody body[box][img]https://ptpimg.me/u6o51c.png[/img][img]https://ptpimg.me/w02u85.png[/img][img]https://ptpimg.me/g7s837.png[/img][img]https://ptpimg.me/4qpejd.png[/img][img]https://ptpimg.me/3uaav4.png[/img][img]https://ptpimg.me/lxq5bk.png[/img][/box]US Cut - After frame 96004, the following frame jumps to a shot of man's dresspants
-  CAN Cut - After that same frame 96595 we go to a bloody body body on the floor, a better look at 96611 and then 96626 back to the man's dresspants
-  
-  US Cut completely misses out the body, there is also another scene where this body was partially removed from the cut; they went through great lengths to make sure Americans didn't see it
-  
-  F1:7 - Blood Spatter[box][img]https://ptpimg.me/7zs07q.png[/img][img]https://ptpimg.me/416z7v.png[/img][img]https://ptpimg.me/435rq7.png[/img][img]https://ptpimg.me/bjj93z.png[/img][img]https://ptpimg.me/t4tr0x.png[/img][img]https://ptpimg.me/26r63y.png[/img][/box]US Cut - Following frame 143911 we go outside and look through the shattered glass
-  CAN Cut - Same frame 144532, the following frame stays inside the car and a better shot of why the US has this sequence missing is found in 144541; outside sequence is found later in 144542
-  
-  Yet another example of the US cut having missing sequences related to bloody, gory and intense scenes. There are much more missing US sequences, but I didn't want to completely spoil the film.
-  
-  [size=5]Overcropped & Stretched[/size]
-  
   Both cuts maintain a constant aspect ratio of 2.4:1, overall the US Cut overcrops on all sides and stretches the picture; the CAN has much more picture in that regard, however it also sports a black bar on the right side. Scenes toward the end which LaBeouf and Wasikowska share, share the same aspect ratio and crop across both cuts
   
   F2:1 - November, 1940[box][img]https://ptpimg.me/3psjbv.png[/img][img]https://ptpimg.me/sd10kv.png[/img][/box]F2:2 - Bootlegger[box][img]https://ptpimg.me/d13p3w.png[/img][img]https://ptpimg.me/lc33si.png[/img][/box]F2:3 - Swamp[box][img]https://ptpimg.me/75c4fz.png[/img][img]https://ptpimg.me/356xm9.png[/img][/box]F2:4 - Chastain[box][img]https://ptpimg.me/gwr5o8.png[/img][img]https://ptpimg.me/3r5o0t.png[/img][/box]F2:5 - Ride[box][img]https://ptpimg.me/ok283p.png[/img][img]https://ptpimg.me/q7o6ri.png[/img][/box][size=5]Colours[/size]
@@ -171,6 +117,17 @@ const testsSimple = [{
     type: 'titled',
     length: 2814
   }]
+}, {
+  text: `Zoned Dark and Red Scenes[/quote]Source, iFT, SOIGNEUR, NTG
+
+  [url=https://imgbox.com/k4OSkBQA][img]https://thumbs2.imgbox.com/fb/6d/k4OSkBQA_t.png[/img][/url][url=https://imgbox.com/k4OSkBQA][img]https://thumbs2.imgbox.com/fb/6d/k4OSkBQA_t.png[/img][/url]`,
+  result: [{
+    teams: ['Source', 'iFT', 'SOIGNEUR', 'NTG'],
+    numUrls: 2,
+    thumbs: true,
+    type: 'titled',
+    length: 224
+  }]
 }]
 test('test simple screenshots conversion', () => {
   testsSimple.forEach(test => {
@@ -184,12 +141,23 @@ test('test simple screenshots conversion', () => {
         expect(output.regexType).toBe(input.type)
         expect(output.thumbs).toBe(input.thumbs)
         expect(JSON.stringify(output.teams)).toBe(JSON.stringify(input.teams))
-        expect(output.text.trim().length).toBe(input.length)
+        let outputLength = output.text.trim().length
+        expect(outputLength).toBe(input.length)
       }
     }
   })
 })
 test('test whole screenshots conversion', async () => {
+  const dirOutput = './test files/output'
+  // remove existing outputs
+  fs.readdir(dirOutput, (err, files) => {
+    if (err) throw err;
+    for (const file of files) {
+      fs.unlink(path.join(dirOutput, file), (err) => {
+        if (err) throw err;
+      });
+    }
+  });
   const inputs = await glob.glob('./test files/input/*.bbcode')
   const targetSites = ['NHD', 'GPW']
   for (const input of inputs) {
@@ -199,7 +167,7 @@ test('test whole screenshots conversion', async () => {
       for (const targetSite of targetSites) {
         data = processDescription(targetSite, data)
         const description = await generateComparison(targetSite, data, '', {}, 10)
-        const output = `./test files/output/${movieName}.${targetSite} from ${originalSite}.bbcode`
+        const output = `${dirOutput}/${movieName}.${targetSite} from ${originalSite}.bbcode`
         if (description) {
           fs.writeFileSync(output, description)
         }
