@@ -27,14 +27,13 @@ const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
 const PIXHOST = 'pixhost'; const IMGBOX = 'imghost'; const IMG4K = 'img4k'
 const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'
 const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
-// compare with comparison (GPW style)
-const regexTeam = /\b(?:(?:\w[\w-. ]+(?:\([\w. ]+\)|<[\w. ]+>|\[[\w. ]+\])?)|(?:D-Z0N3)|(?:de\[42\]))/i
+const regexTeam = /\b(?:(?:\w[\w-.]+)|(?:de\[42\])) ?(?:\([\w. ]+\)|<[\w. ]+>|\[[\w. ]+\])?/i
 const regexTeamsSplitter = /\||,|\/|-|vs\.?|>\s*vs\.?\s*</i
 const regexNormalUrl = /[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
 const regexImageUrl = RegExp(
   'https?:' + regexNormalUrl.source + '?\\.(?:png|jpg)',
   'i')
-// const regexScreenshotsComparison = /\[comparison=(\b\w[\w()-.[\] ]+\s*(,\s*\b\w[\w()-.[\] ]+?)+)\](\s*([^, [\]]+(\s+|\s*,)\s*)+[^, [\]]+)\[\/comparison\]/mi
+// compare with comparison (GPW style)
 const regexScreenshotsComparison = RegExp(
   '\\[comparison=(' +
   regexTeam.source + '\\s*(?:,\\s*' + regexTeam.source +
@@ -43,7 +42,6 @@ const regexScreenshotsComparison = RegExp(
   ')\\s*\\[\\/comparison\\]',
   'mig')
 // compare with thumbs
-// const regexScreenshotsThumbs = /(\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+/mi
 const regexScreenshotsThumbsCombined = RegExp(
   '((?:\\s*(\\[url=' +
   regexNormalUrl.source + '?\\])?\\s*\\[img\\]' +
@@ -59,7 +57,6 @@ const regexImageUrlsSeparated = RegExp(
   'mig')
 // 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
 // possible splitters for teams: '|',',','/','-','vs'
-// const regexScreenshotsThumbsBoxed = /\[(box|hide|expand|spoiler|quote)\s*=\s*(\b\w[\w()-.[\] ]+(\s*(\||,|\/|-|>?\s*vs\.?\s*<?)\s*\b\w[\w()-.[\] ]+)+)\]((\s*(\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\])?\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\](\[\/url\])?\s*)+)\[\/\1\]/mi
 const regexScreenshotsThumbsBoxed = RegExp(
   '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*(' +
   regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
