@@ -26,6 +26,7 @@ const GPW = 'GPW'; const UHD = 'UHD'
 const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
 const PIXHOST = 'pixhost'; const IMGBOX = 'imghost'; const IMG4K = 'img4k'
 const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'
+const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
 // compare with comparison (GPW style)
 const regexTeam = /\b(?:(?:\w[\w()-. ]+)|(?:D-Z0N3)|(?:de\[42\]))/i
 const regexTeamsSplitter = /\||,|\/|-|>?\s*vs\.?\s*<?/i
@@ -85,9 +86,8 @@ const regexInfo = {
 const siteInfoMap = {
   NHD: {
     construct: NEXUSPHP,
-    targetTagBox: 'box',
+    targetBoxTag: 'box',
     boxSupportDescr: true,
-    otherTagBoxes: ['hide', 'spoiler', 'expand'].join('|'),
     unsupportedTags: ['align'].join('|'),
     decodingMediainfo: false,
 
@@ -126,9 +126,8 @@ const siteInfoMap = {
   },
   PUTAO: {
     construct: NEXUSPHP,
-    targetTagBox: '',
+    targetBoxTag: '',
     boxSupportDescr: true,
-    otherTagBoxes: ['box', 'hide', 'spoiler', 'expand'].join('|'),
     unsupportedTags: ['align', 'center'].join('|'),
     decodingMediainfo: false,
 
@@ -149,9 +148,8 @@ const siteInfoMap = {
   },
   MTEAM: {
     construct: NEXUSPHP,
-    targetTagBox: 'expand',
+    targetBoxTag: 'expand',
     boxSupportDescr: false,
-    otherTagBoxes: ['box', 'hide', 'spoiler'].join('|'),
     unsupportedTags: ['align'].join('|'),
     decodingMediainfo: true,
 
@@ -170,9 +168,8 @@ const siteInfoMap = {
   },
   TTG: {
     construct: NEXUSPHP,
-    targetTagBox: '',
+    targetBoxTag: '',
     boxSupportDescr: false,
-    otherTagBoxes: ['box', 'hide', 'spoiler', 'expand'].join('|'),
     unsupportedTags: ['align'].join('|'),
     decodeMediaInfo: true,
 
@@ -189,9 +186,8 @@ const siteInfoMap = {
   },
   GPW: {
     construct: GAZELLE,
-    targetTagBox: 'hide',
+    targetBoxTag: 'hide',
     boxSupportDescr: true,
-    otherTagBoxes: ['box', 'spoiler', 'expand'].join('|'),
     unsupportedTags: ['align'].join('|'),
     decodingMediainfo: true,
 
@@ -694,15 +690,15 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
 }
 function processDescription (siteName, description) {
   const construct = siteInfoMap[siteName].construct
-  const targetTagBox = siteInfoMap[siteName].targetTagBox
+  const targetBoxTag = siteInfoMap[siteName].targetBoxTag
   const boxSupportDescr = siteInfoMap[siteName].boxSupportDescr
-  const otherTagBoxes = siteInfoMap[siteName].otherTagBoxes
+  const otherTagBoxes = allTagBoxes.filter(tag => tag !== siteInfoMap[siteName].targetBoxTag).join('|')
   const unsupportedTags = siteInfoMap[siteName].unsupportedTags
   // 对于不支持box标签的站，统一替换为'quote'标签
-  const replaceTag = targetTagBox || 'quote'
-  if (targetTagBox) {
-    description = nestExplode(description, targetTagBox)
-    description = compactContent(description, targetTagBox)
+  const replaceTag = targetBoxTag || 'quote'
+  if (targetBoxTag) {
+    description = nestExplode(description, targetBoxTag)
+    description = compactContent(description, targetBoxTag)
   }
   if (construct === NEXUSPHP) {
     description = description
@@ -960,7 +956,7 @@ function processDescription (siteName, description) {
         torrentInfo.mediainfoStr = ''
         if (site.decodingMediainfo) {
           // 优先从简介中获取mediainfo
-          const tagForMediainfo = site.targetTagBox || 'quote'
+          const tagForMediainfo = site.targetBoxTag || 'quote'
           const regexMIStr = site.boxSupportDescr
             ? '\\[' + tagForMediainfo + '\\s*=\\s*mediainfo\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
             : '\\[' + tagForMediainfo + '\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
