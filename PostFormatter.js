@@ -198,14 +198,24 @@ const siteInfoMap = {
     inputFile: $('#file'),
     mediainfoBox: $('textarea[name="mediainfo[]"]'), descrBox: $('#release_desc'),
     sourceSel: $('select[id="source"]'), codecSel: $('select[id="codec"]'), standardSel: $('select[id="resolution"]'), processingSel: $('select[id="processing"]'), containerSel: $('select[id="container"]'),
-    hdr10Check: $('input[type="checkbox"][id="hdr10"]')[0], doviCheck: $('input[type="checkbox"][id="dolby_vision"]')[0],
-    movieEditionCheck: $('input[type="checkbox"][id="movie_edition_information"]')[0], commentAudioClick: $("a:contains('评论音轨')")[0],
-    dcClick: $("a:contains('导演剪辑版')")[0], ccClick: $("a:contains('标准收藏')")[0], theatricClick: $("a:contains('影院版')")[0],
-    uncutClick: $("a:contains('未删减版')")[0], unratedClick: $("a:contains('未分级版')")[0], extendedClick: $("a:contains('加长版')")[0],
-
-    mixedSubCheck: $('input[type="radio"][id="mixed_subtitles"]')[0], noSubCheck: $('input[type="radio"][id="no_subtitles"]')[0],
-    otherSubtitlesDiv: $('div[id="other_subtitles"]'),
+    videoInfo: {
+      hdr10: $('input[type="checkbox"][id="hdr10"]')[0],
+      dovi: $('input[type="checkbox"][id="dolby_vision"]')[0]
+    },
+    movieEditionCheck: $('input[type="checkbox"][id="movie_edition_information"]')[0],
+    movieEditionInfo: {
+      commentaryAudio: $("a:contains('评论音轨')")[0],
+      directorCut: $("a:contains('导演剪辑版')")[0],
+      criterionCollection: $("a:contains('标准收藏')")[0],
+      theatrical: $("a:contains('影院版')")[0],
+      uncut: $("a:contains('未删减版')")[0],
+      unrated: $("a:contains('未分级版')")[0],
+      extended: $("a:contains('加长版')")[0]
+    },
     chdubCheck: $('input[type="checkbox"][id="chinese_dubbed"]')[0],
+    mixedSubCheck: $('input[type="radio"][id="mixed_subtitles"]')[0],
+    noSubCheck: $('input[type="radio"][id="no_subtitles"]')[0],
+    otherSubtitlesDiv: $('div[id="other_subtitles"]'),
     subtitleInfo: {
       chinese_simplified: $('input[type="checkbox"][id="chinese_simplified"]')[0],
       chinese_traditional: $('input[type="checkbox"][id="chinese_traditional"]')[0],
@@ -885,7 +895,7 @@ function processDescription (siteName, description) {
           torrentInfo.editionInfo.directorCut = torrentInfo.torrentTitle.match(/\bdc\b/i)
           torrentInfo.editionInfo.unrated = torrentInfo.torrentTitle.match(/\bunrated\b/i)
           torrentInfo.editionInfo.uncut = torrentInfo.torrentTitle.match(/\buncut\b/i)
-          torrentInfo.editionInfo.theatric = torrentInfo.torrentTitle.match(/\btheatrical\b/i)
+          torrentInfo.editionInfo.theatrical = torrentInfo.torrentTitle.match(/\btheatrical\b/i)
           torrentInfo.editionInfo.extended = torrentInfo.torrentTitle.match(/\bextended\b/i)
           // source
           torrentInfo.sourceInfo = {}
@@ -931,6 +941,9 @@ function processDescription (siteName, description) {
         torrentInfo.audioInfo = {
           chineseDub: false, cantoneseDub: false, commentary: false
         }
+        torrentInfo.videoInfo = {
+          hdr10: false, dovi: false, container: ''
+        }
         const subtitleLanguages = ['chinese_simplified', 'chinese_traditional', 'japanese', 'korean', 'english', 'french',
           'german', 'italian', 'polish', 'romanian', 'russian', 'spanish', 'thai', 'turkish', 'vietnamese', 'hindi',
           'greek', 'swedish', 'azerbaijani', 'bulgarian', 'danish', 'estonian', 'finnish', 'hebrew', 'croatian', 'hungarian',
@@ -941,9 +954,6 @@ function processDescription (siteName, description) {
         subtitleLanguages.forEach(lang => {
           torrentInfo.subtitleInfo[lang] = false
         })
-        torrentInfo.videoInfo = {
-          hdr10: false, dovi: false, container: ''
-        }
         torrentInfo.mediainfo = {}
         torrentInfo.mediainfoStr = ''
         if (site.decodingMediainfo) {
@@ -1467,12 +1477,30 @@ function processDescription (siteName, description) {
         } else if (siteName === GPW) {
           if (torrentInfo.editionInfo) {
             site.movieEditionCheck.click()
-            if (torrentInfo.editionInfo.criterionCollection) { site.ccClick.click() }
-            if (torrentInfo.editionInfo.directorCut) { site.dcClick.click() }
-            if (torrentInfo.editionInfo.unrated) { site.unratedClick.click() }
-            if (torrentInfo.editionInfo.uncut) { site.uncutClick.click() }
-            if (torrentInfo.editionInfo.theatric) { site.theatricClick.click() }
-            if (torrentInfo.editionInfo.extended) { site.extendedClick.click() }
+            if (torrentInfo.editionInfo.criterionCollection) { site.movieEditionInfo.criterionCollection.click() }
+            if (torrentInfo.editionInfo.directorCut) { site.movieEditionInfo.directorCut.click() }
+            if (torrentInfo.editionInfo.unrated) { site.movieEditionInfo.unrated.click() }
+            if (torrentInfo.editionInfo.uncut) { site.movieEditionInfo.uncut.click() }
+            if (torrentInfo.editionInfo.theatrical) { site.movieEditionInfo.theatrical.click() }
+            if (torrentInfo.editionInfo.extended) { site.movieEditionInfo.extended.click() }
+            if (torrentInfo.audioInfo.commentary) { site.movieEditionInfo.commentaryAudio.click() }
+          }
+          const subbed = Object.values(torrentInfo.subtitleInfo).some(x => x)
+          site.noSubCheck.checked = !subbed
+          site.mixedSubCheck.checked = subbed
+          if (subbed) {
+            site.otherSubtitlesDiv.removeClass('hidden')
+            Object.keys(torrentInfo.subtitleInfo).forEach(lang => {
+              if (site.subtitleInfo[lang]) {
+                site.subtitleInfo[lang].checked = torrentInfo.subtitleInfo[lang]
+              }
+            })
+          }
+          site.chdubCheck.checked = torrentInfo.audioInfo.chineseDub
+          site.videoInfo.hdr10.checked = torrentInfo.videoInfo.hdr10
+          site.videoInfo.dovi.checked = torrentInfo.videoInfo.dovi
+          if (Object.values(site.containerInfo).includes(torrentInfo.videoInfo.container)) {
+            site.containerSel.val(torrentInfo.videoInfo.container)
           }
           if (Object.keys(torrentInfo.mediainfo).length > 0) {
             let mediainfoNew = torrentInfo.mediainfoStr
@@ -1486,26 +1514,6 @@ function processDescription (siteName, description) {
               }
             }
             site.mediainfoBox.val(mediainfoNew)
-            const subbed = Object.values(torrentInfo.subtitleInfo).some(x => x)
-            site.noSubCheck.checked = !subbed
-            site.mixedSubCheck.checked = subbed
-            if (subbed) {
-              site.otherSubtitlesDiv.removeClass('hidden')
-              Object.keys(torrentInfo.subtitleInfo).forEach(lang => {
-                if (site.subtitleInfo[lang]) {
-                  site.subtitleInfo[lang].checked = torrentInfo.subtitleInfo[lang]
-                }
-              })
-            }
-            site.chdubCheck.checked = torrentInfo.audioInfo.chineseDub
-            site.hdr10Check.checked = torrentInfo.videoInfo.hdr10
-            site.doviCheck.checked = torrentInfo.videoInfo.dovi
-            if (torrentInfo.audioInfo.commentary) {
-              site.commentAudioClick.click()
-            }
-            if (Object.values(site.containerInfo).includes(torrentInfo.videoInfo.container)) {
-              site.containerSel.val(torrentInfo.videoInfo.container)
-            }
           }
         }
         //= ========================================================================================================
