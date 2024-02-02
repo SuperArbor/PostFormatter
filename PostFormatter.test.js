@@ -1,9 +1,7 @@
 // module imports
 const {
-  collectComparisons,
-  generateComparison,
-  processDescription
-} = require('./PostFormatter')
+  collectComparisons, generateComparison, processDescription,
+  NHD, GPW} = require('./PostFormatter')
 const fs = require('fs')
 const path = require('path')
 const glob = require('glob')
@@ -159,7 +157,7 @@ test('test whole screenshots conversion', async () => {
     }
   });
   const inputs = await glob.glob('./test files/input/*.bbcode')
-  const targetSites = ['NHD', 'GPW']
+  const targetSites = [NHD, GPW]
   for (const input of inputs) {
     const [movieName, originalSite] = path.basename(input).split('.')
     try {

@@ -22,7 +22,7 @@
 // constants
 const $ = window.jQuery
 const NHD = 'nexushd'; const PUTAO = 'pt.sjtu'; const MTEAM = 'm-team'; const TTG = 'totheglory'; const GPW = 'greatposterwall'; const UHD = 'uhdbits'
-const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'; const KSHARE = 'kshare.club'; const PIXHOST = 'pixhost'; const IMGBOX = 'imghost'; const IMG4K = 'img4k'; const ILIKESHOTS = 'yes.ilikeshots.club'
+const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'; const KSHARE = 'kshare.club'; const PIXHOST = 'pixhost'; const IMGBOX = 'imgbox'; const IMG4K = 'img4k'; const ILIKESHOTS = 'yes.ilikeshots.club'
 const allSites = [NHD, PUTAO, MTEAM, TTG, GPW, UHD, PTERCLUB]
 const allImageHosts = [ PIXHOST, IMGBOX, IMG4K, ILIKESHOTS, PTERCLUB, IMGPILE, PTPIMG, KSHARE ]
 const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
@@ -563,13 +563,15 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
         if (!thumbs) {
           urls = await images2ThumbUrls(urls.join(' '), teams.length, siteName)
         }
-        urls.forEach((url, i) => {
-          screenshotsStr += (i % teams.length === 0
-            ? '\n' + url
-            : ' ' + url)
-        })
-        screenshotsStr = `[center]${screenshotsStr}[/center]\n`
-        removePlainScreenshots = true
+        if (urls.length > 0) {
+          urls.forEach((url, i) => {
+            screenshotsStr += (i % teams.length === 0
+              ? '\n' + url
+              : ' ' + url)
+          })
+          screenshotsStr = `[center]${screenshotsStr}[/center]\n`
+          removePlainScreenshots = true
+        }
       } else if (regexType === 'simple') {
         if (removePlainScreenshots) {
           screenshotsStr = ''
@@ -609,7 +611,9 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
         if (thumbs) {
           urls = await thumbs2ImageUrls(urls.join(' '), teams.length, siteName)
         }
-        screenshotsStr = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
+        if (urls.length > 0) {
+          screenshotsStr = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
+        }
       } else if (regexType === 'simple') {
         screenshotsStr = ''
       } else {
@@ -1601,15 +1605,7 @@ function processDescription (siteName, description) {
 // Conditionally export for unit testing
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    collectComparisons,
-    regexTeam,
-    regexTeamsSplitter,
-    regexImageUrl,
-    regexNormalUrl,
-    regexScreenshotsComparison,
-    regexScreenshotsThumbsBoxed,
-    regexScreenshotsThumbsCombined,
-    generateComparison,
-    processDescription
+    collectComparisons, generateComparison, processDescription,
+    NHD, PTERCLUB, GPW, MTEAM, TTG, PUTAO
   }
 }
