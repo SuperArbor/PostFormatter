@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info and smilies
-// @version      1.3.2.2
+// @version      1.3.2.3
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -58,7 +58,7 @@ const regexImageUrlsSeparated = RegExp(
 // 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
 // possible splitters for teams: '|',',','/','-','vs'
 const regexScreenshotsThumbsBoxed = RegExp(
-  '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*(' +
+  '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*\\s*(' +
   regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
   ')+)\\s*\\]' +
   regexScreenshotsThumbsCombined.source +
@@ -204,13 +204,18 @@ const siteInfoMap = {
     },
     movieEditionCheck: $('input[type="checkbox"][id="movie_edition_information"]')[0],
     movieEditionInfo: {
-      commentaryAudio: $("a:contains('评论音轨')")[0],
-      directorCut: $("a:contains('导演剪辑版')")[0],
-      criterionCollection: $("a:contains('标准收藏')")[0],
-      theatrical: $("a:contains('影院版')")[0],
-      uncut: $("a:contains('未删减版')")[0],
-      unrated: $("a:contains('未分级版')")[0],
-      extended: $("a:contains('加长版')")[0]
+      criterionCollection: $("a[onclick*='the_criterion_collection']")[0],
+      mastersOfCinema: $("a[onclick*='masters_of_cinema']")[0],
+      withCommentary: $("a[onclick*='with_commentary']")[0],
+      directorCut: $("a[onclick*='director_cut']")[0],
+      theatrical: $("a[onclick*='theatrical_cut']")[0],
+      uncut: $("a[onclick*='uncut']")[0],
+      unrated: $("a[onclick*='unrated']")[0],
+      extended: $("a[onclick*='extended_edition']")[0],
+      remaster4k: $("a[onclick*='4k_remaster']")[0],
+      remaster: $("a[onclick*='remaster']")[0],
+      restoration4k: $("a[onclick*='4k_restoration']")[0],
+      twoInOne: $("a[onclick*='2_in_1']")[0]
     },
     mixedSubCheck: $('input[type="radio"][id="mixed_subtitles"]')[0],
     noSubCheck: $('input[type="radio"][id="no_subtitles"]')[0],
@@ -840,58 +845,8 @@ function processDescription (siteName, description) {
             textToConsume = descriptionAll
           }
         }
-        //= ========================================================================================================
-        // info from title
+        // 为了在未选择种子文件的情况下也能获取torrentTitle，将torrentTitle中信息的识别放到mediainfo之后
         torrentInfo.torrentTitle = site.inputFile.val()
-        torrentInfo.editionInfo = {}
-        torrentInfo.sourceInfo = {}
-        torrentInfo.standardInfo = {}
-        torrentInfo.processingInfo = {}
-        torrentInfo.codecInfo = {}
-        if (torrentInfo.torrentTitle) {
-          torrentInfo.torrentTitle = /([^\\]+)$/.exec(torrentInfo.torrentTitle)[1]
-          torrentInfo.torrentTitle = formatTorrentName(torrentInfo.torrentTitle)
-          torrentInfo.editionInfo.criterionCollection = torrentInfo.torrentTitle.match(/\bcc|criterion\b/i)
-          torrentInfo.editionInfo.directorCut = torrentInfo.torrentTitle.match(/\bdc\b/i)
-          torrentInfo.editionInfo.unrated = torrentInfo.torrentTitle.match(/\bunrated\b/i)
-          torrentInfo.editionInfo.uncut = torrentInfo.torrentTitle.match(/\buncut\b/i)
-          torrentInfo.editionInfo.theatrical = torrentInfo.torrentTitle.match(/\btheatrical\b/i)
-          torrentInfo.editionInfo.extended = torrentInfo.torrentTitle.match(/\bextended\b/i)
-          // source
-          torrentInfo.sourceInfo.remux = torrentInfo.torrentTitle.match(/\b(remux)\b/i)
-          torrentInfo.sourceInfo.encode = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip|dvdrip|webrip)\b/i)
-          torrentInfo.sourceInfo.bluray = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip)\b/i)
-          torrentInfo.sourceInfo.hdtv = torrentInfo.torrentTitle.match(/\bhdtv\b/i)
-          torrentInfo.sourceInfo.webdl = torrentInfo.torrentTitle.match(/\bweb-?dl\b/i)
-          torrentInfo.sourceInfo.webrip = torrentInfo.torrentTitle.match(/\bwebrip\b/i)
-          torrentInfo.sourceInfo.web = torrentInfo.sourceInfo.webdl || torrentInfo.sourceInfo.webrip
-          torrentInfo.sourceInfo.dvd = torrentInfo.torrentTitle.match(/\bdvd(rip)?/i)
-          torrentInfo.sourceInfo.hddvd = torrentInfo.torrentTitle.match(/\bhddvd\b/i)
-          // resolution
-          torrentInfo.standardInfo.res1080p = torrentInfo.torrentTitle.match(/\b1080p\b/i)
-          torrentInfo.standardInfo.res1080i = torrentInfo.torrentTitle.match(/\b1080i\b/i)
-          torrentInfo.standardInfo.res720p = torrentInfo.torrentTitle.match(/\b720p\b/i)
-          torrentInfo.standardInfo.res2160p = torrentInfo.torrentTitle.match(/\b2160p|4k\b/i)
-          torrentInfo.standardInfo.sd = torrentInfo.torrentTitle.match(/\b480p\b/i) || torrentInfo.sourceInfo.dvd
-          // processing
-          torrentInfo.processingInfo.raw = torrentInfo.torrentTitle.match(/\b(remux|web-?dl|(bd|dvd)?iso)\b/i)
-          torrentInfo.processingInfo.encode = !torrentInfo.processingInfo.raw
-          torrentInfo.processingInfo.remux = torrentInfo.torrentTitle.match(/\bremux\b/i)
-          // codec
-          torrentInfo.codecInfo.h264 = torrentInfo.torrentTitle.match(/\bh\.?264\b/i)
-          torrentInfo.codecInfo.x264 = torrentInfo.torrentTitle.match(/\bavc|x264\b/i)
-          torrentInfo.codecInfo.h265 = torrentInfo.torrentTitle.match(/\bh\.?265\b/i)
-          torrentInfo.codecInfo.x265 = torrentInfo.torrentTitle.match(/\bhevc|x265\b/i)
-          torrentInfo.codecInfo.vc1 = torrentInfo.torrentTitle.match(/\bvc-1\b/i)
-          torrentInfo.codecInfo.mpeg2 = torrentInfo.torrentTitle.match(/\bmpeg-2\b/i)
-          torrentInfo.codecInfo.xvid = torrentInfo.torrentTitle.match(/\bxvid\b/i)
-          torrentInfo.codecInfo.divx = torrentInfo.torrentTitle.match(/\bdivx\b/i)
-          torrentInfo.codecInfo.flac = torrentInfo.torrentTitle.match(/\bflac\b/i)
-          torrentInfo.codecInfo.ape = torrentInfo.torrentTitle.match(/\bape\b/i)
-          // team
-          const teamArray = torrentInfo.torrentTitle.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
-          torrentInfo.team = teamArray ? teamArray[0] : ''
-        }
         //= ========================================================================================================
         // info from mediainfo
         torrentInfo.audioInfo = {
@@ -1019,8 +974,66 @@ function processDescription (siteName, description) {
                 torrentInfo.videoInfo.container = infoValue.Format.trim()
               }
               console.log(torrentInfo.videoInfo.container)
+              // 如果 torrentInfo.torrentTitle 尚未被赋值，直接使用mediainfo 中的值
+              torrentInfo.torrentTitle = torrentInfo.torrentTitle || infoValue['Complete name'] || infoValue['Movie name']
             }
           })
+        }
+        //= ========================================================================================================
+        // info from title
+        torrentInfo.editionInfo = {}
+        torrentInfo.sourceInfo = {}
+        torrentInfo.standardInfo = {}
+        torrentInfo.processingInfo = {}
+        torrentInfo.codecInfo = {}
+        if (torrentInfo.torrentTitle) {
+          torrentInfo.torrentTitle = /([^\\]+)$/.exec(torrentInfo.torrentTitle)[1]
+          torrentInfo.torrentTitle = formatTorrentName(torrentInfo.torrentTitle)
+          torrentInfo.editionInfo.criterionCollection = torrentInfo.torrentTitle.match(/\bcc|criterion\b/i)
+          torrentInfo.editionInfo.mastersOfCinema = torrentInfo.torrentTitle.match(/\bmoc\b/i)
+          torrentInfo.editionInfo.directorCut = torrentInfo.torrentTitle.match(/\bdc\b/i)
+          torrentInfo.editionInfo.unrated = torrentInfo.torrentTitle.match(/\bunrated\b/i)
+          torrentInfo.editionInfo.uncut = torrentInfo.torrentTitle.match(/\buncut\b/i)
+          torrentInfo.editionInfo.theatrical = torrentInfo.torrentTitle.match(/\btheatrical\b/i)
+          torrentInfo.editionInfo.extended = torrentInfo.torrentTitle.match(/\bextended\b/i)
+          torrentInfo.editionInfo.remaster4k = torrentInfo.torrentTitle.match(/\b4k remaster\b/i)
+          torrentInfo.editionInfo.remaster = !torrentInfo.editionInfo.remaster4k && torrentInfo.torrentTitle.match(/\bremaster\b/i)
+          torrentInfo.editionInfo.restoration4k = torrentInfo.torrentTitle.match(/\b4k restoration\b/i)
+          torrentInfo.editionInfo.twoInOne = torrentInfo.torrentTitle.match(/\b2in1\b/i)
+          // source
+          torrentInfo.sourceInfo.remux = torrentInfo.torrentTitle.match(/\b(remux)\b/i)
+          torrentInfo.sourceInfo.encode = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip|dvdrip|webrip)\b/i)
+          torrentInfo.sourceInfo.bluray = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip)\b/i)
+          torrentInfo.sourceInfo.hdtv = torrentInfo.torrentTitle.match(/\bhdtv\b/i)
+          torrentInfo.sourceInfo.webdl = torrentInfo.torrentTitle.match(/\bweb-?dl\b/i)
+          torrentInfo.sourceInfo.webrip = torrentInfo.torrentTitle.match(/\bwebrip\b/i)
+          torrentInfo.sourceInfo.web = torrentInfo.sourceInfo.webdl || torrentInfo.sourceInfo.webrip
+          torrentInfo.sourceInfo.dvd = torrentInfo.torrentTitle.match(/\bdvd(rip)?/i)
+          torrentInfo.sourceInfo.hddvd = torrentInfo.torrentTitle.match(/\bhddvd\b/i)
+          // resolution
+          torrentInfo.standardInfo.res1080p = torrentInfo.torrentTitle.match(/\b1080p\b/i)
+          torrentInfo.standardInfo.res1080i = torrentInfo.torrentTitle.match(/\b1080i\b/i)
+          torrentInfo.standardInfo.res720p = torrentInfo.torrentTitle.match(/\b720p\b/i)
+          torrentInfo.standardInfo.res2160p = torrentInfo.torrentTitle.match(/\b2160p|4k\b/i)
+          torrentInfo.standardInfo.sd = torrentInfo.torrentTitle.match(/\b480p\b/i) || torrentInfo.sourceInfo.dvd
+          // processing
+          torrentInfo.processingInfo.raw = torrentInfo.torrentTitle.match(/\b(remux|web-?dl|(bd|dvd)?iso)\b/i)
+          torrentInfo.processingInfo.encode = !torrentInfo.processingInfo.raw
+          torrentInfo.processingInfo.remux = torrentInfo.torrentTitle.match(/\bremux\b/i)
+          // codec
+          torrentInfo.codecInfo.h264 = torrentInfo.torrentTitle.match(/\bh\.?264\b/i)
+          torrentInfo.codecInfo.x264 = torrentInfo.torrentTitle.match(/\bavc|x264\b/i)
+          torrentInfo.codecInfo.h265 = torrentInfo.torrentTitle.match(/\bh\.?265\b/i)
+          torrentInfo.codecInfo.x265 = torrentInfo.torrentTitle.match(/\bhevc|x265\b/i)
+          torrentInfo.codecInfo.vc1 = torrentInfo.torrentTitle.match(/\bvc-1\b/i)
+          torrentInfo.codecInfo.mpeg2 = torrentInfo.torrentTitle.match(/\bmpeg-2\b/i)
+          torrentInfo.codecInfo.xvid = torrentInfo.torrentTitle.match(/\bxvid\b/i)
+          torrentInfo.codecInfo.divx = torrentInfo.torrentTitle.match(/\bdivx\b/i)
+          torrentInfo.codecInfo.flac = torrentInfo.torrentTitle.match(/\bflac\b/i)
+          torrentInfo.codecInfo.ape = torrentInfo.torrentTitle.match(/\bape\b/i)
+          // team
+          const teamArray = torrentInfo.torrentTitle.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
+          torrentInfo.team = teamArray ? teamArray[0] : ''
         }
         //= ========================================================================================================
         // info from douban / imdb
@@ -1457,12 +1470,17 @@ function processDescription (siteName, description) {
           if (torrentInfo.editionInfo) {
             site.movieEditionCheck.click()
             if (torrentInfo.editionInfo.criterionCollection) { site.movieEditionInfo.criterionCollection.click() }
+            if (torrentInfo.editionInfo.mastersOfCinema) { site.movieEditionInfo.mastersOfCinema.click() }
             if (torrentInfo.editionInfo.directorCut) { site.movieEditionInfo.directorCut.click() }
             if (torrentInfo.editionInfo.unrated) { site.movieEditionInfo.unrated.click() }
             if (torrentInfo.editionInfo.uncut) { site.movieEditionInfo.uncut.click() }
             if (torrentInfo.editionInfo.theatrical) { site.movieEditionInfo.theatrical.click() }
             if (torrentInfo.editionInfo.extended) { site.movieEditionInfo.extended.click() }
-            if (torrentInfo.audioInfo.commentary) { site.movieEditionInfo.commentaryAudio.click() }
+            if (torrentInfo.editionInfo.remaster4k) { site.movieEditionInfo.remaster4k.click() }
+            if (torrentInfo.editionInfo.remaster) { site.movieEditionInfo.remaster.click() }
+            if (torrentInfo.editionInfo.restoration4k) { site.movieEditionInfo.restoration4k.click() }
+            if (torrentInfo.editionInfo.twoInOne) { site.movieEditionInfo.twoInOne.click() }
+            if (torrentInfo.audioInfo && torrentInfo.audioInfo.commentary) { site.movieEditionInfo.withCommentary.click() }
           }
           // subtitles
           const subbed = Object.values(torrentInfo.subtitleInfo).some(x => x)
@@ -1477,14 +1495,18 @@ function processDescription (siteName, description) {
             })
           }
           // video info
-          site.videoInfo.bit10.checked = torrentInfo.videoInfo.bit10
-          site.videoInfo.hdr10.checked = torrentInfo.videoInfo.hdr10
-          site.videoInfo.hdr10plus.checked = torrentInfo.videoInfo.hdr10plus
-          site.videoInfo.dovi.checked = torrentInfo.videoInfo.dovi
+          if (torrentInfo.videoInfo) {
+            site.videoInfo.bit10.checked = torrentInfo.videoInfo.bit10
+            site.videoInfo.hdr10.checked = torrentInfo.videoInfo.hdr10
+            site.videoInfo.hdr10plus.checked = torrentInfo.videoInfo.hdr10plus
+            site.videoInfo.dovi.checked = torrentInfo.videoInfo.dovi
+          }
           // audio info
-          site.audioInfo.dtsX.checked = torrentInfo.audioInfo.dtsX
-          site.audioInfo.atmos.checked = torrentInfo.audioInfo.atmos
-          site.audioInfo.chineseDub.checked = torrentInfo.audioInfo.chineseDub
+          if (torrentInfo.audioInfo) {
+            site.audioInfo.dtsX.checked = torrentInfo.audioInfo.dtsX
+            site.audioInfo.atmos.checked = torrentInfo.audioInfo.atmos
+            site.audioInfo.chineseDub.checked = torrentInfo.audioInfo.chineseDub
+          }
           // repair the mediainfo in case 'Complete name' is missing
           if (Object.values(site.containerInfo).includes(torrentInfo.videoInfo.container)) {
             site.containerSel.val(torrentInfo.videoInfo.container)
