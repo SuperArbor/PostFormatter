@@ -202,6 +202,7 @@ const siteInfoMap = {
     audioInfo: {
       dtsX: $('input[type="checkbox"][id="dts_x"]')[0],
       atmos: $('input[type="checkbox"][id="dolby_atmos"]')[0],
+      chineseDub: $('input[type="checkbox"][id="chinese_dubbed"]')[0]
     },
     movieEditionCheck: $('input[type="checkbox"][id="movie_edition_information"]')[0],
     movieEditionInfo: {
@@ -213,7 +214,6 @@ const siteInfoMap = {
       unrated: $("a:contains('未分级版')")[0],
       extended: $("a:contains('加长版')")[0]
     },
-    chdubCheck: $('input[type="checkbox"][id="chinese_dubbed"]')[0],
     mixedSubCheck: $('input[type="radio"][id="mixed_subtitles"]')[0],
     noSubCheck: $('input[type="radio"][id="no_subtitles"]')[0],
     otherSubtitlesDiv: $('div[id="other_subtitles"]'),
@@ -1503,6 +1503,7 @@ function processDescription (siteName, description) {
             site.subtitleBox.val('* 内封繁体字幕')
           }
         } else if (siteName === GPW) {
+          // movie edition
           if (torrentInfo.editionInfo) {
             site.movieEditionCheck.click()
             if (torrentInfo.editionInfo.criterionCollection) { site.movieEditionInfo.criterionCollection.click() }
@@ -1513,6 +1514,7 @@ function processDescription (siteName, description) {
             if (torrentInfo.editionInfo.extended) { site.movieEditionInfo.extended.click() }
             if (torrentInfo.audioInfo.commentary) { site.movieEditionInfo.commentaryAudio.click() }
           }
+          // subtitles
           const subbed = Object.values(torrentInfo.subtitleInfo).some(x => x)
           site.noSubCheck.checked = !subbed
           site.mixedSubCheck.checked = subbed
@@ -1524,13 +1526,16 @@ function processDescription (siteName, description) {
               }
             })
           }
-          site.chdubCheck.checked = torrentInfo.audioInfo.chineseDub
+          // video info
           site.videoInfo.bit10.checked = torrentInfo.videoInfo.bit10
           site.videoInfo.hdr10.checked = torrentInfo.videoInfo.hdr10
           site.videoInfo.hdr10plus.checked = torrentInfo.videoInfo.hdr10plus
           site.videoInfo.dovi.checked = torrentInfo.videoInfo.dovi
+          // audio info
           site.audioInfo.dtsX.checked = torrentInfo.audioInfo.dtsX
           site.audioInfo.atmos.checked = torrentInfo.audioInfo.atmos
+          site.audioInfo.chineseDub.checked = torrentInfo.audioInfo.chineseDub
+          // repair the mediainfo in case 'Complete name' is missing
           if (Object.values(site.containerInfo).includes(torrentInfo.videoInfo.container)) {
             site.containerSel.val(torrentInfo.videoInfo.container)
           }
