@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info and smilies
-// @version      1.3.2.1
+// @version      1.3.2.2
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -613,15 +613,15 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
       }
       description += screenshotsStr
       if (urls.length > 0 && urls.length % teams.length === 0) {
-        if (!teams.find(team => team === teamEncode)) {
+        if (!teams.find(team => team === teamEncode) && !teams.find(team => team === 'Encode')) {
           // 截图对比描述中可能会多一些内容，如 Source vs TayTO<Shout Factory> vs CRiSC<MGM>
-          teamEncode = teams.find(team => team.includes(teamEncode))
+          teamEncode = teams.find(team => team.includes(teamEncode) || team.includes('Encode'))
         }
         if (!screenshots && urls.length / teams.length >= 3) {
           for (let i = 0; i < urls.length; i++) {
             let image = urls[i]
             const teamCurrent = teams[i % teams.length]
-            if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === teamEncode.toLowerCase())) {
+            if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent === teamEncode)) {
               if (image.match(/\[img\].*?\[\/img\]/)) {
                 screenshots += image
               } else {
