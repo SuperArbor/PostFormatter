@@ -199,7 +199,9 @@ const siteInfoMap = {
     mediainfoBox: $('textarea[name="mediainfo[]"]'), descrBox: $('#release_desc'),
     sourceSel: $('select[id="source"]'), codecSel: $('select[id="codec"]'), standardSel: $('select[id="resolution"]'), processingSel: $('select[id="processing"]'), containerSel: $('select[id="container"]'),
     videoInfo: {
+      bit10: $('input[type="checkbox"][id="10_bit"]')[0],
       hdr10: $('input[type="checkbox"][id="hdr10"]')[0],
+      hdr10plus: $('input[type="checkbox"][id="hdr10plus"]')[0],
       dovi: $('input[type="checkbox"][id="dolby_vision"]')[0]
     },
     movieEditionCheck: $('input[type="checkbox"][id="movie_edition_information"]')[0],
@@ -942,7 +944,7 @@ function processDescription (siteName, description) {
           chineseDub: false, cantoneseDub: false, commentary: false
         }
         torrentInfo.videoInfo = {
-          hdr10: false, dovi: false, container: ''
+          bit10: false, hdr10: false, hdr10plus: false, dovi: false, container: ''
         }
         const subtitleLanguages = ['chinese_simplified', 'chinese_traditional', 'japanese', 'korean', 'english', 'french',
           'german', 'italian', 'polish', 'romanian', 'russian', 'spanish', 'thai', 'turkish', 'vietnamese', 'hindi',
@@ -1019,8 +1021,12 @@ function processDescription (siteName, description) {
             } else if (infoKey.match(/video/i)) {
               // video
               const hdrFormat = infoValue['HDR format']
+              const bitDepth = infoValue['Bit depth']
               if (hdrFormat) {
-                if (hdrFormat.match(/HDR10/i)) {
+                if (hdrFormat.match(/HDR10\+/i)) {
+                  torrentInfo.videoInfo.hdr10plus = true
+                  console.log('HDR10+')
+                } else if (hdrFormat.match(/HDR10/i)) {
                   torrentInfo.videoInfo.hdr10 = true
                   console.log('HDR10')
                 }
@@ -1028,6 +1034,9 @@ function processDescription (siteName, description) {
                   torrentInfo.videoInfo.dovi = true
                   console.log('Dolby Vision')
                 }
+              } else if (bitDepth.match(/10 bits/i)) {
+                torrentInfo.videoInfo.bit10 = true
+                console.log('10 bits')
               }
             } else if (infoKey.match(/general/i)) {
               // general
