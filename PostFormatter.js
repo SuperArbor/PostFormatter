@@ -551,6 +551,7 @@ function getOneComparison (text, index = 0, preferedRegex = '') {
 function collectComparisons (text) {
   const replacements = []
   let lastIndex = 0
+  // eslint-disable-next-line no-constant-condition
   while (true) {
     const currentIndex = lastIndex
     for (const key in regexInfo) {
@@ -662,13 +663,14 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
       description += screenshotsStr
       if (urls.length > 0 && urls.length % teams.length === 0) {
         if (!screenshots && urls.length / teams.length >= 3) {
-          urls.forEach((image, i) => {
+          for (let i = 0; i < urls.length; i++) {
+            let image = urls[i]
             const teamCurrent = teams[i % teams.length]
             if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === teamEncode.toLowerCase())) {
               screenshots += `[img]${image}[/img]`
               currentScreenshots += 1
             }
-          })
+          }
         }
       }
       textToConsume = textToConsume.substring(0, starts) +
@@ -725,8 +727,8 @@ function processDescription (siteName, description) {
       // 注意otherTagBoxes不需要escape
       .replace(RegExp('\\[(?:' + otherTagBoxes + ')((=([^\\]]+))?)\\]', 'g'),
         boxSupportDescr
-          ? `[${replaceTag}` + '$1]'
-          : '[b]$1[/b]\n[' + `${replaceTag}]`)
+          ? `[${replaceTag}$1]`
+          : `[b]$1[/b]\n[${replaceTag}]`)
       .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'), `[/${replaceTag}]`)
       .replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, matches => {
         return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
@@ -751,10 +753,8 @@ function processDescription (siteName, description) {
         .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
           return p1 + p2.toLowerCase() + p3
         })
-        .replace(RegExp('\\[(?:' + otherTagBoxes + ')((=([^\\]]+))?)\\]', 'g'),
-        `[${replaceTag}` + '$1]')
-        .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'),
-        `[/${replaceTag}]`)
+        .replace(RegExp('\\[(?:' + otherTagBoxes + ')((=([^\\]]+))?)\\]', 'g'), `[${replaceTag}$1]`)
+        .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'), `[/${replaceTag}]`)
         .replace(/\[(size|color|font|b|i|pre)(=[^\]]+)?\]/g, '')
         .replace(/\[\/(size|color|font|b|i|pre)\]/g, '')
         .replace(/\[center\]/g, '\n')
@@ -1519,7 +1519,7 @@ function processDescription (siteName, description) {
               if (movieNameArray) {
                 const completeName = torrentInfo.mediainfo.General['Movie name'] + `.${torrentInfo.videoInfo.container.toLowerCase()}`
                 mediainfoNew = torrentInfo.mediainfoStr.replace(/(General\s+Unique ID.+$)\s+(Format\s+.+$)/mi,
-                  '$1\n' + `Complete name                            : ${completeName}` + '\n$2')
+                  `$1\nComplete name                            : ${completeName}\n$2`)
               }
             }
             site.mediainfoBox.val(mediainfoNew)
