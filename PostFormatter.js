@@ -88,7 +88,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: 'box',
     boxSupportDescr: true,
-    unsupportedTags: ['align'].join('|'),
+    unsupportedTags: ['align'],
     decodingMediainfo: false,
 
     inputFile: $('input[type="file"][name="file"]'),
@@ -108,7 +108,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: 'hide',
     boxSupportDescr: true,
-    unsupportedTags: ['align'].join('|'),
+    unsupportedTags: ['align'],
     decodingMediainfo: true,
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
@@ -127,7 +127,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: '',
     boxSupportDescr: true,
-    unsupportedTags: ['align', 'center'].join('|'),
+    unsupportedTags: ['align', 'center'],
     decodingMediainfo: false,
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
@@ -149,7 +149,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: 'expand',
     boxSupportDescr: false,
-    unsupportedTags: ['align'].join('|'),
+    unsupportedTags: ['align'],
     decodingMediainfo: true,
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
@@ -169,7 +169,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: '',
     boxSupportDescr: false,
-    unsupportedTags: ['align'].join('|'),
+    unsupportedTags: ['align'],
     decodeMediaInfo: true,
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $("input[type='text'][name='name']"), nameBoxEdit: $("input[type='text'][name='name']"),
@@ -187,7 +187,7 @@ const siteInfoMap = {
     construct: GAZELLE,
     targetBoxTag: 'hide',
     boxSupportDescr: true,
-    unsupportedTags: ['align'].join('|'),
+    unsupportedTags: ['align'],
     decodingMediainfo: true,
 
     inputFile: $('#file'),
@@ -688,11 +688,12 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
   }
 }
 function processDescription (siteName, description) {
-  const construct = siteInfoMap[siteName].construct
-  const targetBoxTag = siteInfoMap[siteName].targetBoxTag
-  const boxSupportDescr = siteInfoMap[siteName].boxSupportDescr
-  const otherTagBoxes = allTagBoxes.filter(tag => tag !== siteInfoMap[siteName].targetBoxTag).join('|')
-  const unsupportedTags = siteInfoMap[siteName].unsupportedTags
+  const site = siteInfoMap[siteName]
+  const construct = site.construct
+  const targetBoxTag = site.targetBoxTag
+  const boxSupportDescr = site.boxSupportDescr
+  const otherTagBoxes = allTagBoxes.filter(tag => tag !== site.targetBoxTag).join('|')
+  const unsupportedTags = site.unsupportedTags.join('|')
   // 对于不支持box标签的站，统一替换为'quote'标签
   const replaceTag = targetBoxTag || 'quote'
   if (targetBoxTag) {
