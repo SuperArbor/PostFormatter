@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info and smilies
-// @version      1.3.2.0
+// @version      1.3.2.1
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -97,6 +97,7 @@ const siteInfoMap = {
     imdbLinkBox: $("input[name='url'][type='text']"), doubanLinkBox: $("input[name='douban_url']"),
     categorySel: $('#browsecat'), sourceSel: $("select[name='source_sel']"), standardSel: $("select[name='standard_sel']"), processingSel: $("select[name='processing_sel']"), codecSel: $("select[name='codec_sel']"),
 
+    pullMovieScore: false, translatedChineseNameInTitle: false, doubanIdInsteadofLink: false,
     catDefault: 0, catMovie: 101, catTvSeries: 102, catTvShow: 103, catDocumentary: 104, catAnimation: 105,
     sourceDefault: 0, sourceBluray: 1, sourceHddvd: 2, sourceDvd: 3, sourceHdtv: 4, sourceWebDl: 7, sourceWebrip: 9,
     standardDefault: 0, standard1080p: 1, standard1080i: 2, standard720p: 3, standard2160p: 6, standardSd: 4,
@@ -118,6 +119,7 @@ const siteInfoMap = {
     categorySel: $('#browsecat'), sourceSel: $("select[name='source_sel']"), areaSel: $("select[name='team_sel']"),
     chsubCheck: $('#zhongzi')[0], englishSubCheck: $('#ensub')[0], chdubCheck: $('#guoyu')[0], cantodubCheck: $('#yueyu')[0],
 
+    pullMovieScore: true, translatedChineseNameInTitle: false, doubanIdInsteadofLink: false,
     catDefault: 0, catMovie: 401, catTvSeries: 404, catTvShow: 405, catDocumentary: 402, catAnimation: 403,
     sourceDefault: 0, sourceBluray: 2, sourceRemux: 3, sourceEncode: 6, sourceHdtv: 4, sourceWebDl: 5, sourceDvd: 7,
     areaDefault: 0, areaCnMl: 1, areaHk: 2, areaTw: 3, areaEuAme: 4, areaKor: 5, areaJap: 6, areaInd: 7, areaOther: 8
@@ -136,7 +138,8 @@ const siteInfoMap = {
     imdbLinkBox: $("input[name='url'][type='text']"), doubanLinkBox: $("input[name='douban_url']"),
     categorySel: $('#browsecat'), standardSel: $("select[name='standard_sel']"), codecSel: $("select[name='codec_sel']"),
 
-    catDefault: 0, catDocumentary: 406, catAnimation: 431, catMovieCnMl: 401, catMovieEuAme: 402,
+    pullMovieScore: false, translatedChineseNameInTitle: true, doubanIdInsteadofLink: false,
+    catDefault: 0, catDocumentary: 406, catAnimation: 431, catMovieCn: 401, catMovieEuAme: 402,
     catMovieAsia: 403, catTvSeriesHkTw: 407, catTvSeriesAsia: 408, catTvSeriesCnMl: 409, catTvSeriesEuAme: 410,
     catTvShowCnMl: 411, catTvShowHkTw: 412, catTvShowEuAme: 413, catTvShowJpKor: 414,
     standardDefault: 0, standard1080p: 1, standard1080i: 2, standard720p: 3, standard2160p: 6, standardSd: 4,
@@ -157,8 +160,9 @@ const siteInfoMap = {
     categorySel: $('#browsecat'), teamSel: $("select[name='team_sel']"), standardSel: $("select[name='standard_sel']"), areaSel: $("select[name='processing_sel']"), codecSel: $("select[name='codec_sel']"),
     chsubCheck: $("input[type='checkbox'][name='l_sub']")[0], chdubCheck: $("input[type='checkbox'][name='l_dub']")[0],
 
+    pullMovieScore: true, translatedChineseNameInTitle: false, doubanIdInsteadofLink: false,
     catDefault: 0, catMovieHd: 419, catMovieRemux: 439, catTvSeriesHd: 402, catDocumentary: 404, catAnimation: 405,
-    areaCnMl: 1, areaEuAme: 2, areaHk: 3, areaTw: 3, areaJap: 4, areaKor: 5, areaOther: 6,
+    areaCnMl: 1, areaEuAme: 2, areaHkTw: 3, areaJap: 4, areaKor: 5, areaOther: 6,
     standardDefault: 0, standard1080p: 1, standard1080i: 2, standard720p: 3, standard2160p: 6, standardSd: 5,
     codecDefault: 0, codecH264: 1, codecVc1: 2, codecH265: 16, codecXvid: 3, codecMpeg2: 4, codecFlac: 5, codecApe: 10
   },
@@ -175,9 +179,10 @@ const siteInfoMap = {
     imdbLinkBox: $("input[name='imdb_c'][type='text']"), doubanLinkBox: $("input[name='douban_id'][type='text']"),
     categorySel: $('select[name="type"]'), anonymousControl: $('select[name="anonymity"]'),
 
+    pullMovieScore: true, translatedChineseNameInTitle: false, doubanIdInsteadofLink: true,
     catDefault: 0, catMovie720p: 52, catMovie1080ip: 53, catMovie2160p: 108,
     catDocumentary720p: 62, catDocumentary1080ip: 63,
-    catTvSeriesEuAme: 87, catTvSeriesJap: 88, catTvSeriesKor: 99, catTvSeriesCnMl: 90, catTvSeriesHkTw: 90,
+    catTvSeriesEuAme: 87, catTvSeriesJap: 88, catTvSeriesKor: 99, catTvSeriesCn: 90,
     catTvShowJap: 101, catTvShowKor: 103, catTvShow: 60
   },
   GPW: {
@@ -242,6 +247,7 @@ const siteInfoMap = {
     serbianSubCheck: $('input[type="checkbox"][id="serbian"]')[0],
     chdubCheck: $('input[type="checkbox"][id="chinese_dubbed"]')[0],
 
+    pullMovieScore: true, translatedChineseNameInTitle: false,
     maxScreenshots: 10,
     sourceDefault: '---', sourceBluray: 'Blu-ray', sourceWeb: 'WEB', sourceHdtv: 'HDTV', sourceDvd: 'DVD',
     codecDefault: '---', codecH264: 'H.264', codecH265: 'H.265', codecXvid: 'Xvid', codecDivX: 'DivX', codecX264: 'x264', codecX265: 'x265',
@@ -313,6 +319,7 @@ function formatTorrentName (torrentName) {
       .replace(/\bx\.?(26[45])\b/gi, 'x$1')
       .replace(/\./g, ' ')
       .replace(/\//g, '.')
+      .trim()
   )
 }
 // decode [url=...][img]...[/img][/url] -> [comparison=...]...[/comparison]
@@ -782,9 +789,13 @@ function processDescription (siteName, description) {
   // 匿名发布开关
   const anonymous = true
   console.log(`running in site ${siteName} and page ${page}`)
+  let nameBox = null
   if (page === 'upload' || page === 'edit') {
     //= ========================================================================================================
     // 上传和编辑种子页面
+    nameBox = page === 'upload'
+      ? site.nameBoxUpload
+      : site.nameBoxEdit
     const btnBingo = $('<input>')
     if (site.construct === NEXUSPHP) {
       btnBingo.attr({
@@ -983,7 +994,7 @@ function processDescription (siteName, description) {
             torrentInfo.mediainfo = decodeMediaInfo(torrentInfo.mediainfoStr)
           }
           if (Object.keys(torrentInfo.mediainfo).length === 0 && site.mediainfoBox) {
-          // 如果简介中没有有效的mediainfo，读取mediainfobox
+            // 如果简介中没有有效的mediainfo，读取mediainfobox
             torrentInfo.mediainfoStr = site.mediainfoBox.val()
             torrentInfo.mediainfo = decodeMediaInfo(torrentInfo.mediainfoStr)
           }
@@ -1013,7 +1024,7 @@ function processDescription (siteName, description) {
                 console.log(`Other sub ${language}`)
               }
             } else if (infoKey.match(/audio( #\d+)?/i)) {
-            // audio
+              // audio
               const title = infoValue.Title || ''
               const language = infoValue.Language || ''
               if (title.match(/commentary/i)) {
@@ -1029,7 +1040,7 @@ function processDescription (siteName, description) {
                 console.log('Other dub')
               }
             } else if (infoKey.match(/video/i)) {
-            // video
+              // video
               const hdrFormat = infoValue['HDR format']
               if (hdrFormat) {
                 if (hdrFormat.match(/HDR10/i)) {
@@ -1042,7 +1053,7 @@ function processDescription (siteName, description) {
                 }
               }
             } else if (infoKey.match(/general/i)) {
-            // general
+              // general
               if (infoValue.Format === 'Matroska') {
                 torrentInfo.videoInfo.container = site.containerMkv
                 console.log('MKV')
@@ -1060,13 +1071,10 @@ function processDescription (siteName, description) {
         }
         //= ========================================================================================================
         // info from douban / imdb
-        let catGeneral = 0; const catGeneralMovie = 1; const catGeneralTvSeries = 2; const catGeneralAnimation = 3
-        const catGeneralDocumentary = 4; const catGeneralTvShow = 5
+        const categoryMovie = 'Movie'; const categoryTvSeries = 'TV Series'; const categoryAnimation = 'Animation'
+        const categoryDocumentary = 'Documentary'; const categoryTvShow = 'TV Show'
         if (site.construct === NEXUSPHP) {
           torrentInfo.movieInfo = { areaInfo: {} }
-          // name
-          const translatedTitleArray = textToConsume.match(/译\s*名\s*([^/\n]+)(?:\/|\n)/)
-          const originalTitleArray = textToConsume.match(/片\s*名\s*([^/\n]+)(?:\/|\n)/)
           // area
           const areaArray = textToConsume.match(/产\s*地\s*(.*)\s*/)
           const area = areaArray ? areaArray[1] : ''
@@ -1088,27 +1096,30 @@ function processDescription (siteName, description) {
               torrentInfo.movieInfo.areaInfo.ind = true
             }
           }
+          // title
+          const translatedTitleArray = textToConsume.match(/译\s*名\s*([^/\n]+)(?:\/|\n)/)
+          const originalTitleArray = textToConsume.match(/片\s*名\s*([^/\n]+)(?:\/|\n)/)
           if (translatedTitleArray && originalTitleArray) {
-            torrentInfo.movieInfo.translatedTitle = translatedTitleArray[1]
-            torrentInfo.movieInfo.originalTitle = originalTitleArray[1]
+            torrentInfo.movieInfo.translatedTitle = translatedTitleArray[1].trim()
+            torrentInfo.movieInfo.originalTitle = originalTitleArray[1].trim()
           }
           // festival
           const festivalArray = textToConsume.match(/(\d{4})-\d{2}-\d{2}\((\S+电影节)\)/)
-          torrentInfo.movieInfo.festival = festivalArray ? festivalArray[1] + festivalArray[2] : ''
+          torrentInfo.movieInfo.festival = festivalArray ? (festivalArray[1] + festivalArray[2]).trim() : ''
           // category
-          const categoryArray = textToConsume.match(/类\s*别\s+([^\n]*)\s*\n/)
-          torrentInfo.movieInfo.categoryInInfo = categoryArray
-            ? categoryArray[1].replace(/([^ ])\/([^ ])/g, '$1 / $2')
+          const genresArray = textToConsume.match(/类\s*别\s+([^\n]*)\s*\n/)
+          torrentInfo.movieInfo.genres = genresArray
+            ? genresArray[1].replace(/([^ ])\/([^ ])/g, '$1 / $2')
             : ''
-          catGeneral = torrentInfo.movieInfo.categoryInInfo.match('纪录')
-            ? catGeneralDocumentary
-            : torrentInfo.movieInfo.categoryInInfo.match('动画')
-              ? catGeneralAnimation
+          torrentInfo.movieInfo.category = torrentInfo.movieInfo.genres.match('纪录')
+            ? categoryDocumentary
+            : torrentInfo.movieInfo.genres.match('动画')
+              ? categoryAnimation
               : textToConsume.match(/集\s*数\s+/g)
-                ? catGeneralTvSeries
-                : torrentInfo.movieInfo.categoryInInfo.match('秀')
-                  ? catGeneralTvShow
-                  : catGeneralMovie
+                ? categoryTvSeries
+                : torrentInfo.movieInfo.genres.match('秀')
+                  ? categoryTvShow
+                  : categoryMovie
           // douban and imdb score in small_desc
           const doubanScoreArray = textToConsume.match(/豆\s*瓣\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/)
           if (doubanScoreArray) {
@@ -1135,8 +1146,79 @@ function processDescription (siteName, description) {
         //= ========================================================================================================
         // fill the page
         // common controls
-        // source
+        // 用于记录种子在站点的匹配信息
         torrentInfo.infoInSite = { site: siteName }
+        // namebox
+        if (nameBox && torrentInfo.torrentTitle) {
+          torrentInfo.infoInSite.torrentTitle = torrentInfo.torrentTitle
+          if (site.translatedChineseNameInTitle) {
+            if (torrentInfo.movieInfo.areaInfo.cnMl) {
+              torrentInfo.infoInSite.torrentTitle = torrentInfo.torrentTitle.match(torrentInfo.movieInfo.originalTitle)
+                ? torrentInfo.torrentTitle
+                : `[${torrentInfo.movieInfo.originalTitle}] ${torrentInfo.torrentTitle}`
+            } else {
+              torrentInfo.infoInSite.torrentTitle = torrentInfo.torrentTitle.match(torrentInfo.movieInfo.translatedTitle)
+                ? torrentInfo.torrentTitle
+                : `[${torrentInfo.movieInfo.translatedTitle}] ${torrentInfo.torrentTitle}`
+            }
+          } else {
+            torrentInfo.infoInSite.torrentTitle = torrentInfo.torrentTitle
+          }
+          nameBox.val(torrentInfo.infoInSite.torrentTitle)
+        }
+        // small description
+        if (site.smallDescBox && torrentInfo.movieInfo && (torrentInfo.movieInfo.doubanLink || torrentInfo.movieInfo.imdbLink)) {
+          // container for small_desc(副标题) fields
+          const smallDescrArray = []
+          if (torrentInfo.movieInfo.originalTitle && torrentInfo.movieInfo.translatedTitle) {
+            if (!site.translatedChineseNameInTitle) {
+              if (torrentInfo.movieInfo.areaInfo.cnMl) {
+                smallDescrArray.push(torrentInfo.torrentTitle.match(torrentInfo.movieInfo.originalTitle)
+                  ? torrentInfo.movieInfo.translatedTitle
+                  : torrentInfo.movieInfo.originalTitle)
+              } else {
+                smallDescrArray.push(torrentInfo.movieInfo.translatedTitle)
+              }
+            }
+          }
+          if (torrentInfo.movieInfo.festival) {
+            smallDescrArray.push(torrentInfo.movieInfo.festival)
+          }
+          if (torrentInfo.movieInfo.genres) {
+            smallDescrArray.push(torrentInfo.movieInfo.genres)
+          }
+          if (!site.pullMovieScore) {
+            if (torrentInfo.movieInfo.doubanScore) {
+              smallDescrArray.push('豆瓣 ' + torrentInfo.movieInfo.doubanScore + '（' + torrentInfo.movieInfo.doubanScoreRatingNumber + '）')
+            }
+            if (torrentInfo.movieInfo.imdbScore) {
+              smallDescrArray.push('IMDb ' + torrentInfo.movieInfo.imdbScore + '（' + torrentInfo.movieInfo.imdbRatingNumber + '）')
+            }
+          }
+          if (torrentInfo.movieInfo.director) {
+            smallDescrArray.push(torrentInfo.movieInfo.director)
+          }
+          // complete small_descr
+          torrentInfo.infoInSite.smallDescr = smallDescrArray.join(' | ')
+          site.smallDescBox.val(torrentInfo.infoInSite.smallDescr)
+        }
+        // douban link
+        if (site.doubanLinkBox && torrentInfo.movieInfo && torrentInfo.movieInfo.doubanLink) {
+          if (!site.doubanIdInsteadofLink) {
+            site.doubanLinkBox.val(torrentInfo.movieInfo.doubanLink)
+          } else {
+            site.doubanLinkBox.val(torrentInfo.movieInfo.doubanId)
+          }
+        }
+        // imdb link
+        if (site.imdbLinkBox && torrentInfo.movieInfo && torrentInfo.movieInfo.imdbLink) {
+          if (!site.doubanIdInsteadofLink) {
+            site.imdbLinkBox.val(torrentInfo.movieInfo.imdbLink)
+          } else {
+            site.imdbLinkBox.val(torrentInfo.movieInfo.imdbId)
+          }
+        }
+        // source
         if (site.sourceSel && torrentInfo.sourceInfo) {
           torrentInfo.infoInSite.source = site.sourceDefault || 0
           if (siteName === PTER || siteName === MTEAM) {
@@ -1252,70 +1334,6 @@ function processDescription (siteName, description) {
             })
           }
         }
-        // small description
-        if (site.smallDescBox && torrentInfo.movieInfo && (torrentInfo.movieInfo.doubanLink || torrentInfo.movieInfo.imdbLink)) {
-          // container for small_desc (副标题)
-          const smallDescrArray = []
-          if (torrentInfo.movieInfo.originalTitle && torrentInfo.movieInfo.translatedTitle) {
-            if (siteName === NHD || siteName === PTER || siteName === MTEAM || siteName === TTG) {
-              if (torrentInfo.movieInfo.areaInfo.cnMl) {
-                smallDescrArray.push(torrentInfo.torrentTitle.match(torrentInfo.movieInfo.originalTitle)
-                  ? torrentInfo.movieInfo.translatedTitle
-                  : torrentInfo.movieInfo.originalTitle)
-              } else {
-                smallDescrArray.push(torrentInfo.movieInfo.translatedTitle)
-              }
-            } else if (siteName === PUTAO) {
-              if (torrentInfo.movieInfo.areaInfo.cnMl) {
-                torrentInfo.torrentTitle = torrentInfo.torrentTitle.match(torrentInfo.movieInfo.originalTitle)
-                  ? torrentInfo.torrentTitle
-                  : `[${torrentInfo.movieInfo.originalTitle}] ${torrentInfo.torrentTitle}`
-                site.nameBox.val(torrentInfo.torrentTitle)
-              } else {
-                torrentInfo.torrentTitle = torrentInfo.torrentTitle.match(torrentInfo.movieInfo.translatedTitle)
-                  ? torrentInfo.torrentTitle
-                  : `[${torrentInfo.movieInfo.translatedTitle}] ${torrentInfo.torrentTitle}`
-                site.nameBox.val(torrentInfo.torrentTitle)
-              }
-            }
-          }
-          if (torrentInfo.movieInfo.festival) {
-            smallDescrArray.push(torrentInfo.movieInfo.festival)
-          }
-          if (torrentInfo.movieInfo.categoryInInfo) {
-            smallDescrArray.push(torrentInfo.movieInfo.categoryInInfo)
-          }
-          if (siteName === NHD || siteName === PUTAO) {
-            if (torrentInfo.movieInfo.doubanScore) {
-              smallDescrArray.push('豆瓣 ' + torrentInfo.movieInfo.doubanScore + '（' + torrentInfo.movieInfo.doubanScoreRatingNumber + '）')
-            }
-            if (torrentInfo.movieInfo.imdbScore) {
-              smallDescrArray.push('IMDb ' + torrentInfo.movieInfo.imdbScore + '（' + torrentInfo.movieInfo.imdbRatingNumber + '）')
-            }
-          }
-          if (torrentInfo.movieInfo.director) {
-            smallDescrArray.push(torrentInfo.movieInfo.director)
-          }
-          // complete small_descr
-          torrentInfo.infoInSite.smallDescr = smallDescrArray.join(' | ')
-          site.smallDescBox.val(torrentInfo.infoInSite.smallDescr)
-        }
-        // douban link
-        if (site.doubanLinkBox && torrentInfo.movieInfo && torrentInfo.movieInfo.doubanLink) {
-          if (siteName === NHD || siteName === PTER || siteName === PUTAO) {
-            site.doubanLinkBox.val(torrentInfo.movieInfo.doubanLink)
-          } else if (siteName === TTG) {
-            site.doubanLinkBox.val(torrentInfo.movieInfo.doubanId)
-          }
-        }
-        // imdb link
-        if (site.imdbLinkBox && torrentInfo.movieInfo && torrentInfo.movieInfo.imdbLink) {
-          if (siteName === NHD || siteName === PTER || siteName === PUTAO || siteName === MTEAM) {
-            site.imdbLinkBox.val(torrentInfo.movieInfo.imdbLink)
-          } else if (siteName === TTG) {
-            site.imdbLinkBox.val(torrentInfo.movieInfo.imdbId)
-          }
-        }
         // area selection
         if (site.areaSel && torrentInfo.movieInfo && torrentInfo.movieInfo.areaInfo) {
           torrentInfo.infoInSite.area = site.areaDefault || 0
@@ -1341,7 +1359,7 @@ function processDescription (siteName, description) {
               : torrentInfo.movieInfo.areaInfo.euAme
                 ? site.areaEuAme
                 : torrentInfo.movieInfo.areaInfo.hk || torrentInfo.movieInfo.areaInfo.tw
-                  ? site.areaHk
+                  ? site.areaHkTw
                   : torrentInfo.movieInfo.areaInfo.jap
                     ? site.areaJap
                     : torrentInfo.movieInfo.areaInfo.kor
@@ -1354,43 +1372,44 @@ function processDescription (siteName, description) {
         if (site.categorySel) {
           torrentInfo.infoInSite.category = site.catDefault || 0
           if ((siteName === NHD || siteName === PTER) && torrentInfo.movieInfo) {
-            torrentInfo.infoInSite.category = catGeneral === catGeneralMovie
+            torrentInfo.infoInSite.category = torrentInfo.movieInfo.category === categoryMovie
               ? site.catMovie
-              : catGeneral === catGeneralTvSeries
+              : torrentInfo.movieInfo.category === categoryTvSeries
                 ? site.catTvSeries
-                : catGeneral === catGeneralAnimation
+                : torrentInfo.movieInfo.category === categoryAnimation
                   ? site.catAnimation
-                  : catGeneral === catGeneralDocumentary
+                  : torrentInfo.movieInfo.category === categoryDocumentary
                     ? site.catDocumentary
-                    : catGeneral === catGeneralTvShow
+                    : torrentInfo.movieInfo.category === categoryTvShow
                       ? site.catTvShow
                       : site.catDefault
           } else if (siteName === PUTAO && torrentInfo.movieInfo && torrentInfo.movieInfo.areaInfo) {
-            if (catGeneral === catGeneralMovie) {
-              torrentInfo.infoInSite.category = torrentInfo.movieInfo.areaInfo.cnMl
-                ? site.catMovieCnMl
+            if (torrentInfo.movieInfo.category === categoryMovie) {
+              torrentInfo.infoInSite.category = torrentInfo.movieInfo.areaInfo.cnMl ||
+                torrentInfo.movieInfo.areaInfo.hk || torrentInfo.movieInfo.areaInfo.tw
+                ? site.catMovieCn
                 : torrentInfo.movieInfo.areaInfo.euAme
                   ? site.catMovieEuAme
                   : torrentInfo.movieInfo.areaInfo.asia
                     ? site.catMovieAsia
                     : site.catMovieEuAme
-            } else if (catGeneral === catGeneralDocumentary) {
+            } else if (torrentInfo.movieInfo.category === categoryDocumentary) {
               // for clarification
               torrentInfo.infoInSite.category = site.catDocumentary
-            } else if (catGeneral === catGeneralAnimation) {
+            } else if (torrentInfo.movieInfo.category === categoryAnimation) {
               // for clarification
               torrentInfo.infoInSite.category = site.catAnimation
-            } else if (catGeneral === catGeneralTvSeries) {
+            } else if (torrentInfo.movieInfo.category === categoryTvSeries) {
               torrentInfo.infoInSite.category = torrentInfo.movieInfo.areaInfo.hk || torrentInfo.movieInfo.areaInfo.tw
                 ? site.catTvSeriesHkTw
-                : torrentInfo.movieInfo.areaInfo.asia
-                  ? site.catTvSeriesAsia
-                  : torrentInfo.movieInfo.areaInfo.cnMl
-                    ? site.catTvSeriesCnMl
+                : torrentInfo.movieInfo.areaInfo.cnMl
+                  ? site.catTvSeriesCnMl
+                  : torrentInfo.movieInfo.areaInfo.asia
+                    ? site.catTvSeriesAsia
                     : torrentInfo.movieInfo.areaInfo.euAme
                       ? site.catTvSeriesEuAme
                       : site.catTvSeriesEuAme
-            } else if (catGeneral === catGeneralTvShow) {
+            } else if (torrentInfo.movieInfo.category === categoryTvShow) {
               torrentInfo.infoInSite.category = torrentInfo.movieInfo.areaInfo.cnMl
                 ? site.catTvShowCnMl
                 : torrentInfo.movieInfo.areaInfo.hk || torrentInfo.movieInfo.areaInfo.tw
@@ -1402,25 +1421,25 @@ function processDescription (siteName, description) {
                       : site.catDefault
             }
           } else if (siteName === MTEAM && torrentInfo.sourceInfo) {
-            if (catGeneral === catGeneralMovie) {
+            if (torrentInfo.movieInfo.category === categoryMovie) {
               torrentInfo.infoInSite.category = torrentInfo.sourceRemux
                 ? site.catMovieRemux
                 : torrentInfo.sourceInfo.encode || torrentInfo.sourceInfo.hdtv || torrentInfo.sourceInfo.hddvd || torrentInfo.sourceInfo.web
                   ? site.catMovieHd
                   : site.catDefault
-            } else if (catGeneral === catGeneralTvSeries || catGeneral === catGeneralTvShow) {
+            } else if (torrentInfo.movieInfo.category === categoryTvSeries || torrentInfo.movieInfo.category === categoryTvShow) {
               torrentInfo.infoInSite.category = torrentInfo.sourceInfo.encode || torrentInfo.sourceInfo.hdtv || torrentInfo.sourceInfo.hddvd || torrentInfo.sourceInfo.web
                 ? site.catTvSeriesHd
                 : site.catDefault
-            } else if (catGeneral === catGeneralDocumentary) {
+            } else if (torrentInfo.movieInfo.category === categoryDocumentary) {
               torrentInfo.infoInSite.category = site.catDocumentary
-            } else if (catGeneral === catGeneralAnimation) {
+            } else if (torrentInfo.movieInfo.category === categoryAnimation) {
               torrentInfo.infoInSite.category = site.catAnimation
             } else {
               torrentInfo.infoInSite.category = site.catDefault
             }
           } else if (siteName === TTG && torrentInfo.standardInfo && torrentInfo.movieInfo && torrentInfo.movieInfo.areaInfo) {
-            if (catGeneral === catGeneralMovie) {
+            if (torrentInfo.movieInfo.category === categoryMovie) {
               torrentInfo.infoInSite.category = torrentInfo.standardInfo.res720p
                 ? site.catMovie720p
                 : torrentInfo.standardInfo.res1080i || torrentInfo.standardInfo.res1080p
@@ -1428,15 +1447,15 @@ function processDescription (siteName, description) {
                   : torrentInfo.standardInfo.res2160p
                     ? site.catMovie2160p
                     : site.catDefault
-            } else if (catGeneral === catGeneralDocumentary) {
+            } else if (torrentInfo.movieInfo.category === categoryDocumentary) {
               torrentInfo.infoInSite.category = torrentInfo.standardInfo.res720p
                 ? site.catDocumentary720p
                 : torrentInfo.standardInfo.res1080i || torrentInfo.standardInfo.res1080p
                   ? site.catDocumentary1080ip
                   : site.catDefault
-            } else if (catGeneral === catGeneralAnimation) {
+            } else if (torrentInfo.movieInfo.category === categoryAnimation) {
               torrentInfo.infoInSite.category = site.catAnimation
-            } else if (catGeneral === catGeneralTvSeries) {
+            } else if (torrentInfo.movieInfo.category === categoryTvSeries) {
               torrentInfo.infoInSite.category = torrentInfo.movieInfo.areaInfo.jap
                 ? site.catTvSeriesJap
                 : torrentInfo.movieInfo.areaInfo.kor
@@ -1444,9 +1463,9 @@ function processDescription (siteName, description) {
                   : torrentInfo.euAme
                     ? site.catTvSeriesEuAme
                     : torrentInfo.movieInfo.areaInfo.cnMl || torrentInfo.movieInfo.areaInfo.hk || torrentInfo.movieInfo.areaInfo.tw
-                      ? site.catTvSeriesCnMl
+                      ? site.catTvSeriesCn
                       : site.catDefault
-            } else if (catGeneral === catGeneralTvShow) {
+            } else if (torrentInfo.movieInfo.category === categoryTvShow) {
               torrentInfo.infoInSite.category = torrentInfo.movieInfo.areaInfo.kor
                 ? site.catTvShowKor
                 : torrentInfo.movieInfo.areaInfo.jap
