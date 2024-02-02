@@ -261,7 +261,7 @@ const siteInfoMap = {
     },
 
     pullMovieScore: true, translatedChineseNameInTitle: false,
-    maxScreenshots: 10, supportedImageHost: [KSHARE, PIXHOST, PTPIMG, PTERCLUB, ILIKESHOTS, IMGBOX],
+    maxScreenshots: 10, supportedImageHosts: [KSHARE, PIXHOST, PTPIMG, PTERCLUB, ILIKESHOTS, IMGBOX],
     sourceInfo: { default: '---', bluray: 'Blu-ray', web: 'WEB', hdtv: 'HDTV', dvd: 'DVD' },
     codecInfo: { default: '---', h264: 'H.264', h265: 'H.265', xvid: 'XviD', divx: 'DivX', x264: 'x264', x265: 'x265' },
     standardInfo: { default: '---', res1080i: '1080i', res1080p: '1080p', res2160p: '2160p', res720p: '720p', sd: '480p' },
@@ -336,7 +336,7 @@ function formatTorrentName (torrentName) {
   )
 }
 // eslint-disable-next-line no-unused-vars
-function teamNumber2ThumbSize(numTeams, siteName) {
+function getThumbSize(numTeams, siteName) {
   const size = numTeams === 2
       ? 350
       : numTeams === 3
@@ -349,64 +349,58 @@ function teamNumber2ThumbSize(numTeams, siteName) {
   return size
 }
 // decode [url=...][img]...[/img][/url] -> [comparison=...]...[/comparison]
-async function urlImg2Comparison (imagesWithUrl, numTeams, siteName) {
-  imagesWithUrl = imagesWithUrl.trim()
-  const imageHost = allImageHosts.find(ih => imagesWithUrl.match(RegExp(escapeRegExp(ih), 'i')))
+async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
+  thumbUrls = thumbUrls.trim()
+  const imageHost = allImageHosts.find(ih => thumbUrls.match(RegExp(escapeRegExp(ih), 'i')))
   if (!imageHost) {
     return []
   }
-  const site = siteInfoMap[siteName]
-  const supportedImageHost = site.supportedImageHost ? site.supportedImageHost.includes(imageHost) : true
-  if (!imageHost) {
-    return []
+  let regex = ''
+  let replacement = ''
+  if (imageHost === PIXHOST) {
+    regex = /\[url=https:\/\/pixhost\.to\/show\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+.png)\]\s*\[img\]https:\/\/t([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.pixhost[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\]\s*\[\/url\]/gi
+    replacement = 'https://img$2.pixhost.to/images/$1'
+  } else if (imageHost === IMGBOX) {
+    regex = /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]https:\/\/thumbs([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)_t\.png\[\/img\]\s*\[\/url\]/gi
+    replacement = 'https://images$1_o.png'
+  } else if (imageHost === IMG4K) {
+    regex = /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.md\.png\[\/img\]\s*\[\/url\]/gi
+    replacement = '$1.png'
+  } else if (imageHost === PTERCLUB) {
+    regex = /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.th\.png\[\/img\]\s*\[\/url\]/gi
+    replacement = '$1.png'
+  } else if (imageHost === IMGPILE) {
+    regex = /\[url=https:\/\/imgpile\.com\/i\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\]\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\.png\[\/img\]\s*\[\/url\]/gi
+    replacement = 'https://imgpile.com/images/$1.png'
   }
-  const regex = imageHost === PIXHOST
-    ? /\[url=https:\/\/pixhost\.to\/show\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+.png)\]\s*\[img\]https:\/\/t([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.pixhost[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\]\s*\[\/url\]/gi
-    : imageHost === IMGBOX
-      ? /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]https:\/\/thumbs([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)_t\.png\[\/img\]\s*\[\/url\]/gi
-      : imageHost === IMG4K
-        ? /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.md\.png\[\/img\]\s*\[\/url\]/gi
-        : imageHost === PTERCLUB
-          ? /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.th\.png\[\/img\]\s*\[\/url\]/gi
-          : imageHost === IMGPILE
-            ? /\[url=https:\/\/imgpile\.com\/i\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\]\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\.png\[\/img\]\s*\[\/url\]/gi
-            : ''
-  const replacement = imageHost === PIXHOST
-    ? 'https://img$2.pixhost.to/images/$1 '
-    : imageHost === IMGBOX
-      ? 'https://images$1_o.png '
-      : imageHost === IMG4K
-        ? '$1.png '
-        : imageHost === PTERCLUB
-          ? '$1.png '
-          : imageHost === IMGPILE
-            ? 'https://imgpile.com/images/$1.png '
-            : ''
-  const matches = imagesWithUrl.match(regex)
-  if (matches) {
-    let imgUrls = imagesWithUrl
-      .replace(regex, replacement)
-      .split(/\s+/)
-      .filter(ele => { return ele })
-    if (!supportedImageHost) {
-      const size = teamNumber2ThumbSize(numTeams, siteName)
-      imgUrls = await sendImagesToPixhost(imgUrls, size)
-      imgUrls = await urlImg2Comparison(imgUrls.join(' '), numTeams, siteName)
+  let imageUrls = []
+  if (regex) {
+    const matches = thumbUrls.match(regex)
+    const site = siteInfoMap[siteName]
+    const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHost) : true
+    const supportPixhost = site.supportedImageHosts ? site.supportedImageHosts.includes(PIXHOST) : true
+    let imageUrlsTest = matches
+      ? matches.map(matched => {
+        return matched.replace(regex, replacement)
+      })
+      : []
+    if (supportCurrentImageHost) {
+      imageUrls = imageUrlsTest
+    } else if (supportPixhost) {
+      const size = getThumbSize(numTeams, siteName)
+      thumbUrls = await sendImagesToPixhost(imageUrlsTest, size)
+      imageUrls = await thumbs2ImageUrls(thumbUrls.join(' '), numTeams, siteName)
     }
-    return imgUrls
-  } else {
-    return []
   }
+  return imageUrls
 }
 // [comparison=...]...[/comparison] -> decode [url=...][img]...[/img][/url]
-async function comparison2UrlImg (imagesComparison, numTeams, siteName) {
-  imagesComparison = imagesComparison.trim()
-  const imageHost = allImageHosts.find(ih => imagesComparison.match(RegExp(escapeRegExp(ih), 'i')))
+async function images2ThumbUrls (imageUrls, numTeams, siteName) {
+  imageUrls = imageUrls.trim()
+  const imageHost = allImageHosts.find(ih => imageUrls.match(RegExp(escapeRegExp(ih), 'i')))
   if (!imageHost) {
     return []
   }
-  const site = siteInfoMap[siteName]
-  const supportedImageHost = site.supportedImageHost ? site.supportedImageHost.includes(imageHost) : true
   let regex = ''
   let replacement = ''
   if (imageHost === PIXHOST) {
@@ -416,21 +410,33 @@ async function comparison2UrlImg (imagesComparison, numTeams, siteName) {
     regex = /https:\/\/images(\d+)\.imgbox\.com\/(\w+\/\w+)\/(\w+)_o\.png/gi
     replacement = '[url=https://imgbox.com/$3][img]https://thumbs$1.imgbox.com/$2/$3_t.png[/img][/url]'
   }
-  if (regex && replacement && supportedImageHost) {
-    const matches = imagesComparison.match(regex)
-    return matches
-      ? matches.map(matched => {
-        return matched.replace(regex, replacement)
-      })
-      : []
+  const site = siteInfoMap[siteName]
+  const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHost) : true
+  const supportPixhost = site.supportedImageHosts ? site.supportedImageHosts.includes(PIXHOST) : true
+  const size = getThumbSize(numTeams, siteName)
+  let thumbUrls = []
+  if (regex) {
+    const matches = imageUrls.match(regex)
+    if (supportCurrentImageHost) {
+      thumbUrls = matches
+        ? matches.map(matched => {
+          return matched.replace(regex, replacement)
+        })
+        : []
+    } else {
+      thumbUrls = matches && supportPixhost
+        ? await sendImagesToPixhost(matches, size)
+        : []
+    }
   } else {
+    // 不可从图片链接解析缩略图的图床（如PTPIMG），发送至Pixhost
     regex = /(https?:[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\.(png|jpg))/gi
-    const matches = imagesComparison.match(regex)
-    const size = teamNumber2ThumbSize(numTeams, siteName)
-    return matches
+    const matches = imageUrls.match(regex)
+    thumbUrls = matches && supportPixhost
       ? await sendImagesToPixhost(matches, size)
       : []
   }
+  return thumbUrls
 }
 function decodeMediaInfo (mediainfoStr) {
   if (!mediainfoStr) {
@@ -555,7 +561,7 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
       if (regexType === 'boxed' || regexType === 'titled' || regexType === 'comparison') {
         screenshotsStr = `[b]${teams.join(' | ')}[/b]`
         if (!thumbs) {
-          urls = await comparison2UrlImg(urls.join(' '), teams.length, siteName)
+          urls = await images2ThumbUrls(urls.join(' '), teams.length, siteName)
         }
         urls.forEach((url, i) => {
           screenshotsStr += (i % teams.length === 0
@@ -601,7 +607,7 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
         screenshotsStr = textToConsume.substring(starts, ends)
       } else if (regexType === 'boxed' || regexType === 'titled') {
         if (thumbs) {
-          urls = await urlImg2Comparison(urls.join(' '), teams.length, siteName)
+          urls = await thumbs2ImageUrls(urls.join(' '), teams.length, siteName)
         }
         screenshotsStr = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
       } else if (regexType === 'simple') {
@@ -833,8 +839,12 @@ function processDescription (siteName, description) {
         //= ========================================================================================================
         // info from title
         torrentInfo.torrentTitle = site.inputFile.val()
+        torrentInfo.editionInfo = {}
+        torrentInfo.sourceInfo = {}
+        torrentInfo.standardInfo = {}
+        torrentInfo.processingInfo = {}
+        torrentInfo.codecInfo = {}
         if (torrentInfo.torrentTitle) {
-          torrentInfo.editionInfo = {}
           torrentInfo.torrentTitle = /([^\\]+)$/.exec(torrentInfo.torrentTitle)[1]
           torrentInfo.torrentTitle = formatTorrentName(torrentInfo.torrentTitle)
           torrentInfo.editionInfo.criterionCollection = torrentInfo.torrentTitle.match(/\bcc|criterion\b/i)
@@ -844,7 +854,6 @@ function processDescription (siteName, description) {
           torrentInfo.editionInfo.theatrical = torrentInfo.torrentTitle.match(/\btheatrical\b/i)
           torrentInfo.editionInfo.extended = torrentInfo.torrentTitle.match(/\bextended\b/i)
           // source
-          torrentInfo.sourceInfo = {}
           torrentInfo.sourceInfo.remux = torrentInfo.torrentTitle.match(/\b(remux)\b/i)
           torrentInfo.sourceInfo.encode = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip|dvdrip|webrip)\b/i)
           torrentInfo.sourceInfo.bluray = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip)\b/i)
@@ -855,19 +864,16 @@ function processDescription (siteName, description) {
           torrentInfo.sourceInfo.dvd = torrentInfo.torrentTitle.match(/\bdvd(rip)?/i)
           torrentInfo.sourceInfo.hddvd = torrentInfo.torrentTitle.match(/\bhddvd\b/i)
           // resolution
-          torrentInfo.standardInfo = {}
           torrentInfo.standardInfo.res1080p = torrentInfo.torrentTitle.match(/\b1080p\b/i)
           torrentInfo.standardInfo.res1080i = torrentInfo.torrentTitle.match(/\b1080i\b/i)
           torrentInfo.standardInfo.res720p = torrentInfo.torrentTitle.match(/\b720p\b/i)
           torrentInfo.standardInfo.res2160p = torrentInfo.torrentTitle.match(/\b2160p|4k\b/i)
           torrentInfo.standardInfo.sd = torrentInfo.torrentTitle.match(/\b480p\b/i) || torrentInfo.sourceInfo.dvd
           // processing
-          torrentInfo.processingInfo = {}
           torrentInfo.processingInfo.raw = torrentInfo.torrentTitle.match(/\b(remux|web-?dl|(bd|dvd)?iso)\b/i)
           torrentInfo.processingInfo.encode = !torrentInfo.processingInfo.raw
           torrentInfo.processingInfo.remux = torrentInfo.torrentTitle.match(/\bremux\b/i)
           // codec
-          torrentInfo.codecInfo = {}
           torrentInfo.codecInfo.h264 = torrentInfo.torrentTitle.match(/\bh\.?264\b/i)
           torrentInfo.codecInfo.x264 = torrentInfo.torrentTitle.match(/\bavc|x264\b/i)
           torrentInfo.codecInfo.h265 = torrentInfo.torrentTitle.match(/\bh\.?265\b/i)
