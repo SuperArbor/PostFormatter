@@ -108,7 +108,6 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: 'hide',
     boxSupportDescr: true,
-    otherTagBoxes: ['box', 'spoiler', 'expand'].join('|'),
     unsupportedTags: ['align'].join('|'),
     decodingMediainfo: true,
 
