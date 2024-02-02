@@ -1457,7 +1457,7 @@ function processDescription (siteName, description) {
             site.chdubCheck.checked = torrentInfo.audioInfo.chineseDub
           }
         } else if (siteName === TTG && torrentInfo.subtitleInfo) {
-          if (torrentInfo.subtitleInfo.chinese_simplified || torrentInfo.subtitleInfo.chinese_traditional) {
+          if (torrentInfo.subtitleInfo.chinese_simplified && torrentInfo.subtitleInfo.chinese_traditional) {
             site.subtitleBox.val('* 内封简繁字幕')
           } else if (torrentInfo.subtitleInfo.chinese_simplified) {
             site.subtitleBox.val('* 内封简体字幕')
