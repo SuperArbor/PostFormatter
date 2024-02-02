@@ -666,7 +666,11 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
             let image = urls[i]
             const teamCurrent = teams[i % teams.length]
             if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent.toLowerCase() === teamEncode.toLowerCase())) {
-              screenshots += `[img]${image}[/img]`
+              if (image.match(/\[img\].*?\[\/img\]/)) {
+                screenshots += image
+              } else {
+                screenshots += `[img]${image}[/img]`
+              }
               currentScreenshots += 1
             }
           }
@@ -971,6 +975,11 @@ function processDescription (siteName, description) {
               .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
               .replace(/\s*\[\/\w+\]\s*$/g, '')
             torrentInfo.mediainfo = decodeMediaInfo(torrentInfo.mediainfoStr)
+            // if the site has a place to fill out the mediainfo, remove it in the description box
+            if (site.mediainfoBox) {
+              textToConsume = textToConsume.substring(0, mediainfoArray.index) + 
+                textToConsume.substring(mediainfoArray.index + mediainfoArray[0].length)
+            }
           }
           if (Object.keys(torrentInfo.mediainfo).length === 0 && site.mediainfoBox) {
             // 如果简介中没有有效的mediainfo，读取mediainfobox
