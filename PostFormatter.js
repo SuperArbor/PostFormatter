@@ -21,8 +21,10 @@
 //= ========================================================================================================
 // constants
 const $ = window.jQuery
-const NHD = 'NHD'; const PTER = 'PTER'; const PUTAO = 'PUTAO'; const MTEAM = 'MTEAM'; const TTG = 'TTG'
-const GPW = 'GPW'; const UHD = 'UHD'
+const NHD = 'nexushd'; const PUTAO = 'pt.sjtu'; const MTEAM = 'm-team'; const TTG = 'totheglory'; const GPW = 'greatposterwall'; const UHD = 'uhdbits'
+const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'; const KSHARE = 'kshare.club'; const PIXHOST = 'pixhost'; const IMGBOX = 'imghost'; const IMG4K = 'img4k'; const ILIKESHOTS = 'yes.ilikeshots.club'
+const allSites = [NHD, PUTAO, MTEAM, TTG, GPW, UHD, PTERCLUB]
+const allImageHosts = [ PIXHOST, IMGBOX, IMG4K, ILIKESHOTS, PTERCLUB, IMGPILE, PTPIMG, KSHARE ]
 const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
 const PIXHOST = 'pixhost'; const IMGBOX = 'imghost'; const IMG4K = 'img4k'
 const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'
@@ -81,7 +83,8 @@ const regexInfo = {
   simple: { regex: regexScreenshotsSimple, groupForTeams: -1, groupForUrls: 1, groupForThumbs: -1 }
 }
 const siteInfoMap = {
-  NHD: {
+  // bracket makes the value of the string 'nexushd' the true key or instead the string 'NHD' will be used as key
+  [NHD]: {
     construct: NEXUSPHP,
     targetBoxTag: 'box',
     boxSupportDescr: true,
@@ -101,7 +104,7 @@ const siteInfoMap = {
     processingInfo: { default: 0, raw: 1, encode: 2 },
     codecInfo: { default: 0, h264: 1, h265: 2, vc1: 3, xvid: 4, mpeg2: 5, flac: 10, ape: 11 }
   },
-  PTER: {
+  [PTERCLUB]: {
     construct: NEXUSPHP,
     targetBoxTag: 'hide',
     boxSupportDescr: true,
@@ -120,7 +123,7 @@ const siteInfoMap = {
     sourceInfo: { default: 0, bluray: 2, remux: 3, encode: 6, hdtv: 4, webdl: 5, dvd: 7 },
     areaInfo: { default: 0, cnMl: 1, hk: 2, tw: 3, euAme: 4, kor: 5, jap: 6, ind: 7, other: 8 }
   },
-  PUTAO: {
+  [PUTAO]: {
     construct: NEXUSPHP,
     targetBoxTag: '',
     boxSupportDescr: true,
@@ -142,7 +145,7 @@ const siteInfoMap = {
     standardInfo: { default: 0, res1080p: 1, res1080i: 2, res720p: 3, res2160p: 6, sd: 4 },
     codecInfo: { default: 0, h264: 1, vc1: 2, xvid: 3, mpeg2: 4, flac: 5, ape: 6, h265: 10 }
   },
-  MTEAM: {
+  [MTEAM]: {
     construct: NEXUSPHP,
     targetBoxTag: 'expand',
     boxSupportDescr: false,
@@ -162,7 +165,7 @@ const siteInfoMap = {
     standardInfo: { default: 0, res1080p: 1, res1080i: 2, res720p: 3, res2160p: 6, sd: 5 },
     codecInfo: { default: 0, h264: 1, vc1: 2, h265: 16, xvid: 3, mpeg2: 4, flac: 5, ape: 10 }
   },
-  TTG: {
+  [TTG]: {
     construct: NEXUSPHP,
     targetBoxTag: '',
     boxSupportDescr: false,
@@ -180,7 +183,7 @@ const siteInfoMap = {
       tvSeriesEuAme: 87, tvSeriesJap: 88, tvSeriesKor: 99, tvSeriesCn: 90, tvShowJap: 101, tvShowKor: 103, tvShow: 60
     }
   },
-  GPW: {
+  [GPW]: {
     construct: GAZELLE,
     targetBoxTag: 'hide',
     boxSupportDescr: true,
@@ -260,7 +263,7 @@ const siteInfoMap = {
     },
 
     pullMovieScore: true, translatedChineseNameInTitle: false,
-    maxScreenshots: 10,
+    maxScreenshots: 10, supportedImageHost: [KSHARE, PIXHOST, PTPIMG, PTERCLUB, ILIKESHOTS, IMGBOX],
     sourceInfo: { default: '---', bluray: 'Blu-ray', web: 'WEB', hdtv: 'HDTV', dvd: 'DVD' },
     codecInfo: { default: '---', h264: 'H.264', h265: 'H.265', xvid: 'XviD', divx: 'DivX', x264: 'x264', x265: 'x265' },
     standardInfo: { default: '---', res1080i: '1080i', res1080p: '1080p', res2160p: '2160p', res720p: '720p', sd: '480p' },
@@ -337,17 +340,12 @@ function formatTorrentName (torrentName) {
 // decode [url=...][img]...[/img][/url] -> [comparison=...]...[/comparison]
 function urlImg2Comparison (imagesWithUrl) {
   imagesWithUrl = imagesWithUrl.trim()
-  const imageHost = imagesWithUrl.match(/pixhost/i)
-    ? PIXHOST
-    : imagesWithUrl.match(/imgbox/i)
-      ? IMGBOX
-      : imagesWithUrl.match(/img4k/i)
-        ? IMG4K
-        : imagesWithUrl.match(/pterclub/i)
-          ? PTERCLUB
-          : imagesWithUrl.match(/imgpile/i)
-            ? IMGPILE
-            : ''
+  const imageHost = allImageHosts.find(ih => imagesWithUrl.match(RegExp(escapeRegExp(ih), 'i')))
+  if (!imageHost) {
+    return []
+  }
+  const site = siteInfoMap[siteName]
+  const supportedImageHost = site.supportedImageHost ? site.supportedImageHost.includes(imageHost) : true
   if (!imageHost) {
     return []
   }
@@ -384,23 +382,13 @@ function urlImg2Comparison (imagesWithUrl) {
   }
 }
 // [comparison=...]...[/comparison] -> decode [url=...][img]...[/img][/url]
-async function comparison2UrlImg (imagesComparison, numTeams) {
-  const imageHost = imagesComparison.match(/pixhost/i)
-    ? PIXHOST
-    : imagesComparison.match(/imgbox/i)
-      ? IMGBOX
-      : imagesComparison.match(/img4k/i)
-        ? IMG4K
-        : imagesComparison.match(/pterclub/i)
-          ? PTERCLUB
-          : imagesComparison.match(/imgpile/i)
-            ? IMGPILE
-            : imagesComparison.match(/ptpimg/i)
-              ? PTPIMG
-              : ''
+  imagesComparison = imagesComparison.trim()
+  const imageHost = allImageHosts.find(ih => imagesComparison.match(RegExp(escapeRegExp(ih), 'i')))
   if (!imageHost) {
     return []
   }
+  const site = siteInfoMap[siteName]
+  const supportedImageHost = site.supportedImageHost ? site.supportedImageHost.includes(imageHost) : true
   let regex = ''
   let replacement = ''
   if (imageHost === PIXHOST) {
@@ -737,21 +725,7 @@ function processDescription (siteName, description) {
   if (!domainMatchArray) {
     return
   }
-  const siteName = domainMatchArray[1].match(/nexushd/i)
-    ? NHD
-    : domainMatchArray[1].match(/pterclub/i)
-      ? PTER
-      : domainMatchArray[1].match(/pt\.sjtu/i)
-        ? PUTAO
-        : domainMatchArray[1].match(/m-team/i)
-          ? MTEAM
-          : domainMatchArray[1].match(/totheglory/i)
-            ? TTG
-            : domainMatchArray[1].match(/greatposterwall/i)
-              ? GPW
-              : domainMatchArray[1].match(/uhdbits/i)
-                ? UHD
-                : ''
+  const siteName = allSites.find(sn => domainMatchArray[1].match(RegExp(escapeRegExp(sn)), 'i'))
   let page = domainMatchArray[2]
   if (siteName === TTG) {
     if (page === 'dox') {
@@ -792,7 +766,7 @@ function processDescription (siteName, description) {
           )
         )
       )
-      if (siteName === MTEAM || siteName === NHD || siteName === PTER || siteName === PUTAO) {
+      if (siteName === MTEAM || siteName === NHD || siteName === PTERCLUB || siteName === PUTAO) {
         $('#compose input[name="quote"]').closest('table').after(table1)
       } else if (siteName === TTG) {
         $('#upload input[name="quote"]').closest('table').after(table1)
@@ -819,7 +793,7 @@ function processDescription (siteName, description) {
         let textToConsume = ''
         if (site.construct === NEXUSPHP) {
           if (site.anonymousControl) {
-            if (siteName === NHD || siteName === PTER || siteName === PUTAO || siteName === MTEAM) {
+            if (siteName === NHD || siteName === PTERCLUB || siteName === PUTAO || siteName === MTEAM) {
               site.anonymousControl.checked = anonymous
             } else if (siteName === TTG) {
               site.anonymousControl.val(anonymous ? 'yes' : 'no')
@@ -827,7 +801,7 @@ function processDescription (siteName, description) {
           }
           const oldText = site.descrBox.val()
           let readClipboard = false
-          if (siteName === NHD || siteName === PTER || siteName === PUTAO || siteName === MTEAM) {
+          if (siteName === NHD || siteName === PTERCLUB || siteName === PUTAO || siteName === MTEAM) {
             readClipboard = !oldText
           } else if (siteName === TTG) {
             readClipboard = !oldText ? true : oldText.length < 125
@@ -1180,7 +1154,7 @@ function processDescription (siteName, description) {
         // source
         if (site.sourceSel && torrentInfo.sourceInfo) {
           torrentInfo.infoInSite.source = site.sourceInfo.default || 0
-          if (siteName === PTER) {
+          if (siteName === PTERCLUB) {
             torrentInfo.infoInSite.source = torrentInfo.sourceInfo.remux
               ? site.sourceInfo.remux// remux
               : torrentInfo.sourceInfo.encode
@@ -1301,7 +1275,7 @@ function processDescription (siteName, description) {
         // area selection
         if (site.areaSel && torrentInfo.movieInfo && torrentInfo.movieInfo.areaInfo) {
           torrentInfo.infoInSite.area = site.areaInfo.default || 0
-          if (siteName === PTER) {
+          if (siteName === PTERCLUB) {
             torrentInfo.infoInSite.area = torrentInfo.movieInfo.areaInfo.cnMl
               ? site.areaInfo.cnMl
               : torrentInfo.movieInfo.areaInfo.hk
@@ -1335,7 +1309,7 @@ function processDescription (siteName, description) {
         // category selection
         if (site.categorySel) {
           torrentInfo.infoInSite.category = site.categoryInfo.default || 0
-          if ((siteName === NHD || siteName === PTER) && torrentInfo.movieInfo) {
+          if ((siteName === NHD || siteName === PTERCLUB) && torrentInfo.movieInfo) {
             torrentInfo.infoInSite.category = torrentInfo.movieInfo.category === categoryMovie
               ? site.categoryInfo.movie
               : torrentInfo.movieInfo.category === categoryTvSeries
@@ -1438,7 +1412,7 @@ function processDescription (siteName, description) {
           site.categorySel.val(torrentInfo.infoInSite.category)
         }
         // site-specific
-        if (siteName === PTER && torrentInfo.subtitleInfo && torrentInfo.audioInfo) {
+        if (siteName === PTERCLUB && torrentInfo.subtitleInfo && torrentInfo.audioInfo) {
           if (site.chsubCheck && site.englishSubCheck && site.chdubCheck && site.cantodubCheck) {
             site.chsubCheck.checked = torrentInfo.subtitleInfo.chinese_simplified || torrentInfo.subtitleInfo.chinese_traditional
             site.englishSubCheck.checked = torrentInfo.subtitleInfo.english
@@ -1527,7 +1501,7 @@ function processDescription (siteName, description) {
       return
     }
     let inputFile = null; let titleBox = null; let languageSel = null; let anonymousCheck = null
-    if (siteName === NHD || siteName === PTER || siteName === PUTAO) {
+    if (siteName === NHD || siteName === PTERCLUB || siteName === PUTAO) {
       inputFile = $('input[type="file"][name="file"]')
       titleBox = $('input[type="text"][name="title"]')
       languageSel = $('select[name="sel_lang"]')
@@ -1555,7 +1529,7 @@ function processDescription (siteName, description) {
         titleBox.val(fileName)
         const lang = pathSub.replace(/.*\.(.*)\..*/i, '$1')
         if (lang) {
-          if (siteName === NHD || siteName === PTER || siteName === PUTAO) {
+          if (siteName === NHD || siteName === PTERCLUB || siteName === PUTAO) {
             langEng = 6; langChs = 25; langCht = 28
             langJap = 15; langFre = 9; langGer = 10; langIta = 14
             langKor = 16; langSpa = 26; langOther = 18
