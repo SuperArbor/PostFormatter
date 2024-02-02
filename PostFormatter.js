@@ -626,15 +626,15 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
       }
       description += screenshotsStr
       if (urls.length > 0 && urls.length % teams.length === 0) {
-        if (!teams.find(team => team === teamEncode) && !teams.find(team => team === 'Encode')) {
+        if (!teams.find(team => team.toLowerCase() === teamEncode.toLowerCase() || team.toLowerCase() === 'encode')) {
           // 截图对比描述中可能会多一些内容，如 Source vs TayTO<Shout Factory> vs CRiSC<MGM>
-          teamEncode = teams.find(team => team.includes(teamEncode) || team.includes('Encode'))
+          teamEncode = teams.find(team => team.toLowerCase().includes(teamEncode.toLowerCase()) || team.toLowerCase().includes('encode'))
         }
         if (!screenshots && urls.length / teams.length >= 3) {
           for (let i = 0; i < urls.length; i++) {
             let image = urls[i]
             const teamCurrent = teams[i % teams.length]
-            if (currentScreenshots < maxScreenshots && (teamCurrent === 'Encode' || teamCurrent === teamEncode)) {
+            if (currentScreenshots < maxScreenshots && (teamCurrent.toLowerCase() === 'encode' || teamCurrent.toLowerCase() === teamEncode.toLowerCase())) {
               if (image.match(/\[img\].*?\[\/img\]/)) {
                 screenshots += image
               } else {
