@@ -625,6 +625,8 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
         screenshotsStr = ''
       }
       description += screenshotsStr
+      // 如果之前没有获取到teamEncode，直接用Encode赋值，避免后续'includes'判断错误（string.includes('') === true）
+      teamEncode = teamEncode || 'Encode'
       if (urls.length > 0 && urls.length % teams.length === 0) {
         if (!teams.find(team => team.toLowerCase() === teamEncode.toLowerCase() || team.toLowerCase() === 'encode')) {
           // 截图对比描述中可能会多一些内容，如 Source vs TayTO<Shout Factory> vs CRiSC<MGM>
