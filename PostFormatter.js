@@ -26,8 +26,6 @@ const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg';
 const allSites = [NHD, PUTAO, MTEAM, TTG, GPW, UHD, PTERCLUB]
 const allImageHosts = [ PIXHOST, IMGBOX, IMG4K, ILIKESHOTS, PTERCLUB, IMGPILE, PTPIMG, KSHARE ]
 const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
-const PIXHOST = 'pixhost'; const IMGBOX = 'imghost'; const IMG4K = 'img4k'
-const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'
 const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
 const regexTeam = /\b(?:(?:\w[\w-.]+)|(?:de\[42\])) ?(?:\([\w. ]+\)|<[\w. ]+>|\[[\w. ]+\])?/i
 const regexTeamsSplitter = /\||,|\/|-|vs\.?|>\s*vs\.?\s*</i
@@ -337,8 +335,21 @@ function formatTorrentName (torrentName) {
       .trim()
   )
 }
+// eslint-disable-next-line no-unused-vars
+function teamNumber2ThumbSize(numTeams, siteName) {
+  const size = numTeams === 2
+      ? 350
+      : numTeams === 3
+        ? 250
+        : numTeams === 4
+          ? 190
+          : numTeams === 5
+            ? 150
+            : 150
+  return size
+}
 // decode [url=...][img]...[/img][/url] -> [comparison=...]...[/comparison]
-function urlImg2Comparison (imagesWithUrl) {
+async function urlImg2Comparison (imagesWithUrl, numTeams, siteName) {
   imagesWithUrl = imagesWithUrl.trim()
   const imageHost = allImageHosts.find(ih => imagesWithUrl.match(RegExp(escapeRegExp(ih), 'i')))
   if (!imageHost) {
@@ -373,15 +384,22 @@ function urlImg2Comparison (imagesWithUrl) {
             : ''
   const matches = imagesWithUrl.match(regex)
   if (matches) {
-    return imagesWithUrl
+    let imgUrls = imagesWithUrl
       .replace(regex, replacement)
       .split(/\s+/)
       .filter(ele => { return ele })
+    if (!supportedImageHost) {
+      const size = teamNumber2ThumbSize(numTeams, siteName)
+      imgUrls = await sendImagesToPixhost(imgUrls, size)
+      imgUrls = await urlImg2Comparison(imgUrls.join(' '), numTeams, siteName)
+    }
+    return imgUrls
   } else {
     return []
   }
 }
 // [comparison=...]...[/comparison] -> decode [url=...][img]...[/img][/url]
+async function comparison2UrlImg (imagesComparison, numTeams, siteName) {
   imagesComparison = imagesComparison.trim()
   const imageHost = allImageHosts.find(ih => imagesComparison.match(RegExp(escapeRegExp(ih), 'i')))
   if (!imageHost) {
@@ -398,7 +416,7 @@ function urlImg2Comparison (imagesWithUrl) {
     regex = /https:\/\/images(\d+)\.imgbox\.com\/(\w+\/\w+)\/(\w+)_o\.png/gi
     replacement = '[url=https://imgbox.com/$3][img]https://thumbs$1.imgbox.com/$2/$3_t.png[/img][/url]'
   }
-  if (regex && replacement) {
+  if (regex && replacement && supportedImageHost) {
     const matches = imagesComparison.match(regex)
     return matches
       ? matches.map(matched => {
@@ -408,15 +426,7 @@ function urlImg2Comparison (imagesWithUrl) {
   } else {
     regex = /(https?:[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\.(png|jpg))/gi
     const matches = imagesComparison.match(regex)
-    const size = numTeams === 2
-      ? 350
-      : numTeams === 3
-        ? 250
-        : numTeams === 4
-          ? 190
-          : numTeams === 5
-            ? 150
-            : 150
+    const size = teamNumber2ThumbSize(numTeams, siteName)
     return matches
       ? await sendImagesToPixhost(matches, size)
       : []
@@ -545,7 +555,7 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
       if (regexType === 'boxed' || regexType === 'titled' || regexType === 'comparison') {
         screenshotsStr = `[b]${teams.join(' | ')}[/b]`
         if (!thumbs) {
-          urls = await comparison2UrlImg(urls.join(' '), teams.length)
+          urls = await comparison2UrlImg(urls.join(' '), teams.length, siteName)
         }
         urls.forEach((url, i) => {
           screenshotsStr += (i % teams.length === 0
@@ -591,7 +601,7 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
         screenshotsStr = textToConsume.substring(starts, ends)
       } else if (regexType === 'boxed' || regexType === 'titled') {
         if (thumbs) {
-          urls = urlImg2Comparison(urls.join(' '))
+          urls = await urlImg2Comparison(urls.join(' '), teams.length, siteName)
         }
         screenshotsStr = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
       } else if (regexType === 'simple') {
