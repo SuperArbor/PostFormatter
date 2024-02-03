@@ -289,15 +289,17 @@ function escapeRegExp (string) {
 // requires numbers of left and right tags match
 // keepNonQuoted 选择是否保留两个0级别 quote 之间的内容，如'是这些文字[quote]不是这些文字[/quote]是这些文字[quote]不是这些文字[/quote]是这些文字'
 function processTags (inputText, tag, replacementLeft, replacementRight, keepNonQuoted=true) {
-  let regexTagsLeft = new RegExp('\\[(' + tag + ')((?:=([^\\]]+))?)\\]', 'g')
+  let regexTagsLeft = new RegExp('\\[((' + tag + ')((?:=([^\\]]+))?))\\]', 'g')
   let regexTagsRight = new RegExp('\\[\\/(' + tag + ')\\]', 'g')
   let outputText = ''
-  let index = 0
+  let remainedText = ''
+  let indexOutput = 0
+  let indexRemained = 0
   let currentLevel = 0
   // eslint-disable-next-line no-constant-condition
   while(true) {
-    regexTagsLeft.lastIndex = index
-    regexTagsRight.lastIndex = index
+    regexTagsLeft.lastIndex = indexOutput
+    regexTagsRight.lastIndex = indexOutput
     let matchLeft = regexTagsLeft.exec(inputText)
     let matchRight = regexTagsRight.exec(inputText)
     let match = null
@@ -322,30 +324,40 @@ function processTags (inputText, tag, replacementLeft, replacementRight, keepNon
       if (currentLevel === 0) {
         if (left) {
           // 左括号，0级，根据 keepNonQuoted 确定是否保留上一次匹配末尾到本次匹配之间的内容
-          index = keepNonQuoted ? index : match.index
+          indexOutput = keepNonQuoted ? indexOutput : match.index
         } else {
           // 右括号，0级，无法匹配，扔掉前面的内容，直接从本次匹配末尾开始
-          index = match.index + match[0].length
+          indexOutput = match.index + match[0].length
         }
       }
-      if (index < match.index) {
-        outputText += inputText.substring(index, match.index)
+      if (indexOutput < match.index) {
+        outputText += inputText.substring(indexOutput, match.index)
+        indexOutput = match.index
+      } else {
+        // indexOutput === match.index || indexOutput === match.index + match[0].length
+        remainedText += inputText.substring(indexRemained, match.index)
+        indexRemained = match.index
       }
-      if (index < match.index + match[0].length) {
+      if (indexOutput < match.index + match[0].length) {
         outputText += left
           ? match[0].replace(regexTagsLeft, replacementLeft)
           : match[0].replace(regexTagsRight, replacementRight)
+      } else {
+        remainedText += left
+          ? match[0].replace(regexTagsLeft, replacementLeft)
+          : match[0].replace(regexTagsRight, replacementRight)
       }
+      indexOutput = match.index + match[0].length
+      indexRemained = indexOutput
       left ? currentLevel++
         : currentLevel >=1
           ? currentLevel--
           : 0
-      index = match.index + match[0].length
-    } else {
+      } else {
       break
     }
   }
-  return outputText
+  return [outputText, remainedText]
 }
 function nestExplode (inputText, targetBoxTag) {
   let outputText, c
@@ -741,9 +753,10 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
     if (screenshots) {
       description += `[b]Screenshots[/b]\n${screenshots}`
     }
-    let quotes = processTags(textToConsume, 'quote', '[b]$3[/b][quote]', '[/$1]', false)
+    let [quotes, remained] = processTags(textToConsume, 'quote', '[b]$4[/b][quote]', '[/$1]', false)
+    let [hides] = processTags(remained, 'hide', '[b]$4[/b][hide]', '[/$1]', false)
 
-    description = quotes + description
+    description = quotes + description + hides
     return description
   }
 }
