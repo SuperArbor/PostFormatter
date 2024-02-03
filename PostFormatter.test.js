@@ -1,12 +1,12 @@
 // module imports
 const {
   collectComparisons, generateComparison, processDescription,
-  NHD, GPW} = require('./PostFormatter')
+  NHD, GPW, PUTAO, TTG, PTERCLUB, MTEAM} = require('./PostFormatter')
 const fs = require('fs')
 const path = require('path')
 const glob = require('glob')
 
-const testsSimple = [{
+const simpleScreenshotsTests = [{
   text: `.org/details.php?id=148204&source=details-related[/quote][quote=Source, EbP, NTb (different source)][url=https://pixhost.to/show/320/411481872_999906.png][img]https://t91.pixhost.to/thumbs/320/411481872_999906.png[/img][/url] [url=https://pixhost.to/show/320/411481874_46oz77.png][img]https://t91.pixhost.to/thumbs/320/411481874_46oz77.png[/img][/url] [url=https://pixhost.to/show/320/411481876_u4061m.png][img]https://t91.pixhost.to/thumbs/320/411481876_u4061m.png[/img][/url] 
   [url=https://pixhost.to/show/320/411481878_oea9as.png][img]https://t91.pixhost.to/thumbs/320/411481878_oea9as.png[/img][/url] [url=https://pixhost.to/show/320/411481883_297v98.png][img]https://t91.pixhost.to/thumbs/320/411481883_297v98.png[/img][/url] [url=https://pixhost.to/show/320/411481888_d12398.png][img]https://t91.pixhost.to/thumbs/320/411481888_d12398.png[/img][/url] 
   [url=https://pixhost.to/show/320/411481893_m50sc6.png][img]https://t91.pixhost.to/thumbs/320/411481893_m50sc6.png[/img][/url] [url=https://pixhost.to/show/320/411481896_t02dhl.png][img]https://t91.pixhost.to/thumbs/320/411481896_t02dhl.png[/img][/url] [url=https://pixhost.to/show/320/411481899_tq032o.png][img]https://t91.pixhost.to/thumbs/320/411481899_tq032o.png[/img][/url] 
@@ -127,8 +127,155 @@ const testsSimple = [{
     length: 224
   }]
 }]
+const descriptionTests = {
+  [NHD]: [ {
+    'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
+    'output': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]'
+    }, {
+      'input': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]',
+      'output': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]'
+    }, {
+      'input': '[quote]General \nUnique Id: blahblahblah[/quote]',
+      'output': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]'
+    }, {
+      'input': '[hide]General \nUnique Id: blahblahblah[/hide]',
+      'output': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]'
+    }, {
+      'input': '[box]General \nUnique Id: blahblahblah[/box]',
+      'output': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]'
+    }, {
+      'input': '[expand=test expand]blahblahblah[/expand]',
+      'output': '[box=test expand]blahblahblah[/box]'
+    }, {
+      'input': '[expand]blahblahblah[/expand]',
+      'output': '[box]blahblahblah[/box]'
+    }
+  ],
+  [GPW]: [ {
+    'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
+    'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]',
+      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[quote]General \nUnique Id: blahblahblah[/quote]',
+      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[box]General \nUnique Id: blahblahblah[/box]',
+      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[hide]General \nUnique Id: blahblahblah[/hide]',
+      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[expand=test expand]blahblahblah[/expand]',
+      'output': '[hide=test expand]blahblahblah[/hide]'
+    }, {
+      'input': '[expand]blahblahblah[/expand]',
+      'output': '[hide]blahblahblah[/hide]'
+    }
+  ],
+  [PUTAO]: [ {
+    'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
+    'output': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]'
+    }, {
+      'input': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]',
+      'output': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]'
+    }, {
+      'input': '[quote]General \nUnique Id: blahblahblah[/quote]',
+      'output': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]'
+    }, {
+      'input': '[box]General \nUnique Id: blahblahblah[/box]',
+      'output': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]'
+    }, {
+      'input': '[expand=test expand]blahblahblah[/expand]',
+      'output': '[quote=test expand]blahblahblah[/quote]'
+    }, {
+      'input': '[expand]blahblahblah[/expand]',
+      'output': '[quote]blahblahblah[/quote]'
+    }
+  ],
+  [TTG]: [ {
+    'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
+    'output': '[quote]General \nUnique Id: blahblahblah[/quote]'
+    }, {
+      'input': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]',
+      'output': '[quote]General \nUnique Id: blahblahblah[/quote]'
+    }, {
+      'input': '[quote]General \nUnique Id: blahblahblah[/quote]',
+      'output': '[quote]General \nUnique Id: blahblahblah[/quote]'
+    }, {
+      'input': '[box]General \nUnique Id: blahblahblah[/box]',
+      'output': '[quote]General \nUnique Id: blahblahblah[/quote]'
+    }, {
+      'input': '[expand=test expand]blahblahblah[/expand]',
+      'output': '[b]test expand[/b]\n[quote]blahblahblah[/quote]'
+    }, {
+      'input': '[expand]blahblahblah[/expand]',
+      'output': '[quote]blahblahblah[/quote]'
+    }
+  ],
+  [MTEAM]: [ {
+    'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
+    'output': '[expand]General \nUnique Id: blahblahblah[/expand]'
+    }, {
+      'input': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]',
+      'output': '[expand]General \nUnique Id: blahblahblah[/expand]'
+    }, {
+      'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
+      'output': '[expand]General \nUnique Id: blahblahblah[/expand]'
+    }, {
+      'input': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]',
+      'output': '[expand]General \nUnique Id: blahblahblah[/expand]'
+    }, {
+      'input': '[expand]General \nUnique Id: blahblahblah[/expand]',
+      'output': '[expand]General \nUnique Id: blahblahblah[/expand]'
+    }, {
+      'input': '[box=test expand]blahblahblah[/box]',
+      'output': '[b]test expand[/b]\n[expand]blahblahblah[/expand]'
+    }, {
+      'input': '[box]blahblahblah[/box]',
+      'output': '[expand]blahblahblah[/expand]'
+    }
+  ],
+  [PTERCLUB]: [ {
+      'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
+      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]',
+      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[quote]General \nUnique Id: blahblahblah[/quote]',
+      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[box]General \nUnique Id: blahblahblah[/box]',
+      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[hide]General \nUnique Id: blahblahblah[/hide]',
+      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[box=test expand]blahblahblah[/box]',
+      'output': '[hide=test expand]blahblahblah[/hide]'
+    }, {
+      'input': '[box]blahblahblah[/box]',
+      'output': '[hide]blahblahblah[/hide]'
+    }
+  ],
+}
+test ('test processDescription', () => {
+  Object.entries(descriptionTests).forEach(([siteName, tests]) => {
+    tests.forEach(test => {
+      const input = test.input
+      const expectedOutput = test.output
+      const actualOutput = processDescription(siteName, input)
+      if (actualOutput !== expectedOutput) {
+        console.log(`Error happens in\nsite: ${siteName}\ninput: ${input}`)
+      }
+      expect(actualOutput).toBe(expectedOutput)
+    })
+  })
+})
 test('test simple screenshots conversion', () => {
-  testsSimple.forEach(test => {
+  simpleScreenshotsTests.forEach(test => {
     const result = collectComparisons(test.text)
     expect(result.length).toBe(test.result.length)
     if (result.length === test.result.length) {

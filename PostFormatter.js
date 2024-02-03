@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info and smilies
-// @version      1.3.2.3
+// @version      1.3.2.4
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -86,7 +86,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: 'box',
     boxSupportDescr: true,
-    unsupportedTags: ['align'],
+    unsupportedTags: ['align', 'pre'],
 
     inputFile: $('input[type="file"][name="file"]'),
     nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"), anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
@@ -105,7 +105,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: 'hide',
     boxSupportDescr: true,
-    unsupportedTags: ['align'],
+    unsupportedTags: ['align', 'pre'],
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
     anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
@@ -123,7 +123,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: '',
     boxSupportDescr: true,
-    unsupportedTags: ['align', 'center'],
+    unsupportedTags: ['align', 'center', 'pre'],
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
     anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
@@ -144,7 +144,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: 'expand',
     boxSupportDescr: false,
-    unsupportedTags: ['align'],
+    unsupportedTags: ['align', 'pre'],
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
     anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
@@ -180,7 +180,7 @@ const siteInfoMap = {
     construct: GAZELLE,
     targetBoxTag: 'hide',
     boxSupportDescr: true,
-    unsupportedTags: ['align'],
+    unsupportedTags: ['align', 'pre'],
 
     inputFile: $('#file'),
     mediainfoBox: $('textarea[name="mediainfo[]"]'), descrBox: $('#release_desc'),
@@ -673,75 +673,52 @@ function processDescription (siteName, description) {
   const construct = site.construct
   const targetBoxTag = site.targetBoxTag
   const boxSupportDescr = site.boxSupportDescr
-  const otherTagBoxes = allTagBoxes.filter(tag => tag !== site.targetBoxTag).join('|')
-  const unsupportedTags = site.unsupportedTags.join('|')
+  const allTagBoxesStr = allTagBoxes.join('|')
+  const otherTagBoxesStr = allTagBoxes.filter(tag => tag !== site.targetBoxTag).join('|')
+  const unsupportedTagsStr = site.unsupportedTags.join('|')
   // 对于不支持box标签的站，统一替换为'quote'标签
   const replaceTag = targetBoxTag || 'quote'
   if (targetBoxTag) {
     description = nestExplode(description, targetBoxTag)
     description = compactContent(description, targetBoxTag)
   }
-  if (construct === NEXUSPHP) {
-    description = description
-      // PuTao mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
-      .replace(/\[quote=mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/quote\]/gim,
-        boxSupportDescr
-          ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']'
-          : '[b]MediaInfo[/b]\n[' + replaceTag + ']$1[/' + replaceTag + ']')
-      // NHD mediainfo style，切换为[box=mediainfo]的形式，以便于后续统一匹配mediainfo
-      .replace(/\[mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/mediainfo\]/gim,
-        boxSupportDescr
-          ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']'
-          : '[b]MediaInfo[/b]\n[' + replaceTag + ']$1[/' + replaceTag + ']')
-      // mediainfo style for sites that do not support box tags，该条必须置于下一条上方，否则会被影响导致该类别mediainfo识别不到
-      .replace(RegExp('(?:(?:\\[b\\])?mediainfo(?:\\[\\/b\\])?\\s*)?\\[(' + otherTagBoxes + ')\\]\\s*(General\\s+Unique\\s+ID[^]+?)\\[\\/\\1\\]', 'gi'),
-        boxSupportDescr
-          ? '[' + replaceTag + '=mediainfo]$2[/' + replaceTag + ']'
-          : '[b]MediaInfo[/b]\n[' + replaceTag + ']$2[/' + replaceTag + ']')
-      .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
-        return p1 + p2.toLowerCase() + p3
-      })
-      // 注意otherTagBoxes不需要escape
-      .replace(RegExp('\\[(?:' + otherTagBoxes + ')((=([^\\]]+))?)\\]', 'g'),
-        boxSupportDescr
-          ? `[${replaceTag}$1]`
-          : `[b]$1[/b]\n[${replaceTag}]`)
-      .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'), `[/${replaceTag}]`)
-      .replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, matches => {
-        return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
-      })
-      .replace(RegExp('\\[\\/?(' + unsupportedTags + ')(=[^\\]]+)?\\]', 'g'), '')
-      .replace(/\[pre\]/g, '[font=courier new]').replace(/\[\/pre\]/g, '[/font]')
-      .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
-      .replace(/\[size=(\d+)\]/g, (match, p1) => {
-        return parseInt(p1) > 7 ? '[size=7]' : match
-      })
-      .replace(/\[(\/?img)\d+\]/g, '[$1]') // for pterclub
-  } else if (construct === GAZELLE) {
+  description = description
+    // 处理 mediainfo 容器标签，切换为 [box=mediainfo] 的形式，以便于后续统一匹配 mediainfo
+    .replace(RegExp('\\[(' + allTagBoxesStr + '|quote)(?:\\s*=\\s*mediainfo)?\\][^\\0]*?(General\\s+Unique ID[^\\0]*?)\\[\\/\\1\\]', 'gim'),
+      boxSupportDescr
+        ? '[' + replaceTag + '=mediainfo]$2[/' + replaceTag + ']'
+        : '[' + replaceTag + ']$2[/' + replaceTag + ']')
+    // NHD mediainfo style
+    .replace(/\[mediainfo\]([^\0]*?General\s+Unique ID[^\0]*?)\[\/mediainfo\]/gim,
+      boxSupportDescr
+        ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']'
+        : '[' + replaceTag + ']$1[/' + replaceTag + ']')
+    // 处理除了 mediainfo 以外的容器类标签
+    // 注意 allTagBoxesStr（由多个'|'组成）不需要 escape
+    // 注意 GPW虽然 boxSupportDescr===true，但显示效果有区别，所以最后也会处理为`[b]$1[/b]\n[${replaceTag}]`形式，
+    // 但这一操作会留到后续才执行，因为现在需要保留这个格式方便识别
+    .replace(RegExp('\\[(?:' + otherTagBoxesStr + ')(=([^\\]]+))\\]', 'g'),
+      boxSupportDescr
+        ? `[${replaceTag}$1]`
+        : `[b]$2[/b]\n[${replaceTag}]`)
+    .replace(RegExp('\\[(?:' + otherTagBoxesStr + ')\\]', 'g'), `[${replaceTag}]`)
+    .replace(RegExp('\\[\\/(?:' + otherTagBoxesStr + ')\\]', 'g'), `[/${replaceTag}]`)
+    // 不支持的标签
+    .replace(RegExp('\\[\\/?(' + unsupportedTagsStr + ')(=[^\\]]+)?\\]', 'g'), '\n')
+    .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
+      return p1 + p2.toLowerCase() + p3
+    })
+    .replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, matches => {
+      return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
+    })
+    .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')
+    // for pterclub
+    .replace(/\[(\/?img)\d+\]/g, '[$1]')
+  if (construct === GAZELLE) {
     if (siteName === GPW) {
       description = description
-        .replace(/\[quote=mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/quote\]/gim,
-          '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']')
-        .replace(/\[mediainfo\]([^]*?General\s*Unique\s*ID[^]*?)\[\/mediainfo\]/gim,
-          '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']')
-        .replace(RegExp('(?:(?:\\[b\\])?mediainfo(?:\\[\\/b\\])?\\s*)?\\[(' + otherTagBoxes + ')\\]\\s*(General\\s+Unique\\s+ID[^]+?)\\[\\/\\1\\]', 'gi'),
-          '[' + replaceTag + '=mediainfo]$2[/' + replaceTag + ']')
-        // 将box, mediainfo等tag都转换为quote的形式，后续（处理完对比图之后）会统一处理
-        .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
-          return p1 + p2.toLowerCase() + p3
-        })
-        .replace(RegExp('\\[(?:' + otherTagBoxes + ')((=([^\\]]+))?)\\]', 'g'), `[${replaceTag}$1]`)
-        .replace(RegExp('\\[\\/(?:' + otherTagBoxes + ')\\]', 'g'), `[/${replaceTag}]`)
-        .replace(/\[(size|color|font|b|i|pre)(=[^\]]+)?\]/g, '')
-        .replace(/\[\/(size|color|font|b|i|pre)\]/g, '')
-        .replace(/\[center\]/g, '\n')
-        .replace(/\[\/center\]/g, '\n')
-        .replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, matches => {
-          return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
-        })
-        .replace(RegExp('\\[\\/?(' + unsupportedTags + ')(=[^\\]]+)?\\]', 'g'), '')
-        .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')// 是否要加上第一行？/^(\s*\n)?([\s\S]*\S)\s*$/g
-        .replace(/\[(\/?img)\d+\]/g, '[$1]') // for pterclub
+        .replace(/\[\/?(size|color|font|b|i|pre)(=[^\]]+)?\]/g, '')
+        .replace(/\[\/?center\]/g, '\n')
     }
   }
   return description
@@ -883,12 +860,12 @@ function processDescription (siteName, description) {
         // 优先从简介中获取mediainfo
         const tagForMediainfo = site.targetBoxTag || 'quote'
         const regexMIStr = site.boxSupportDescr
-          ? '\\[' + tagForMediainfo + '\\s*=\\s*mediainfo\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
-          : '\\[' + tagForMediainfo + '\\][^]*?(General\\s*Unique\\s*ID[^\\0]*?)\\[\\/' + tagForMediainfo + '\\]'
+          ? '\\[(' + tagForMediainfo + '|quote)\\s*=\\s*mediainfo\\][^\\0]*?(General\\s+Unique ID[^\\0]*?)\\[\\/\\1\\]'
+          : '\\[(' + tagForMediainfo + '|quote)\\][^\\0]*?(General\\s+Unique ID[^\\0]*?)\\[\\/\\1\\]'
         const regexMI = RegExp(regexMIStr, 'im')
         const mediainfoArray = textToConsume.match(regexMI)
         if (mediainfoArray) {
-          torrentInfo.mediainfoStr = mediainfoArray[1]
+          torrentInfo.mediainfoStr = mediainfoArray[2]
             .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
             .replace(/\s*\[\/\w+\]\s*$/g, '')
           torrentInfo.mediainfo = decodeMediaInfo(torrentInfo.mediainfoStr)
@@ -1639,6 +1616,6 @@ function processDescription (siteName, description) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     collectComparisons, generateComparison, processDescription,
-    NHD, PTERCLUB, GPW, MTEAM, TTG, PUTAO
+    NHD, PTERCLUB, GPW, MTEAM, TTG, PUTAO, siteInfoMap
   }
 }
