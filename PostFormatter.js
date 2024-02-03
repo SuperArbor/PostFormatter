@@ -260,7 +260,7 @@ const siteInfoMap = {
     },
 
     pullMovieScore: true, translatedChineseNameInTitle: false,
-    maxScreenshots: 10, supportedImageHosts: [KSHARE, PIXHOST, PTPIMG, PTERCLUB, ILIKESHOTS, IMGBOX],
+    minScreenshots: 3, maxScreenshots: 10, supportedImageHosts: [KSHARE, PIXHOST, PTPIMG, PTERCLUB, ILIKESHOTS, IMGBOX],
     sourceInfo: { default: '---', bluray: 'Blu-ray', web: 'WEB', hdtv: 'HDTV', dvd: 'DVD' },
     codecInfo: { default: '---', h264: 'H.264', h265: 'H.265', xvid: 'XviD', divx: 'DivX', x264: 'x264', x265: 'x265' },
     standardInfo: { default: '---', res1080i: '1080i', res1080p: '1080p', res2160p: '2160p', res720p: '720p', sd: '480p' },
@@ -308,31 +308,35 @@ function compactContent (inputText, targetBoxTag) {
   return outputText
 }
 function formatTorrentName (torrentName) {
-  return (
-    torrentName
-      .replace(/(\.torrent)+$/, '')
-      .replace(/^\s?(\[.*?\]\s?)+/gi, '')
-      .replace(/\s?(\(\d+\)\s?)+$/gi, '')
-      .replace(/(\.(mkv|mp4|avi|ts|wmv|mpg|torrent))+$/, '')
-      .replace(/\bh\.(26[45])\b/gi, 'H/$1')
-      .replace(/(\b[a-zA-Z]*\d{1,2})\.(\d{1,2}\b)/g, function (_, p1, p2) {
-        return p1 + '/' + p2
-      })
-      .replace(/\b\((\d{4})\)\b/g, '$1')
-      .replace(/\bWEB(?!-DL)\b/gi, 'WEB-DL')
-      .replace(/\bweb-?rip\b/gi, 'WEBRip')
-      .replace(/\bblu-?ray\b/gi, 'BluRay')
-      .replace(/\bdvd(rip)?\b/gi, function (_, p1) {
-        return 'DVD' + (p1 ? 'Rip' : '')
-      })
-      .replace(/\b(480|720|1080|2160)([PI])\b/g, function (_, p1, p2) {
-        return p1 + p2.toLowerCase()
-      })
-      .replace(/\bx\.?(26[45])\b/gi, 'x$1')
-      .replace(/((?<!\d{1,2})\.)|(\.(?!\d\b))/g, ' ')//点号前面是数字（一至两位），后面是单个数字的情况不替换（DDP5.1）
-      .replace(/\//g, '.')
-      .trim()
-  )
+  if (!torrentName) {
+    return ''
+  } else {
+    return (
+      torrentName
+        .replace(/(\.torrent)+$/, '')
+        .replace(/^\s?(\[.*?\]\s?)+/gi, '')
+        .replace(/\s?(\(\d+\)\s?)+$/gi, '')
+        .replace(/(\.(mkv|mp4|avi|ts|wmv|mpg|torrent))+$/, '')
+        .replace(/\bh\.(26[45])\b/gi, 'H/$1')
+        .replace(/(\b[a-zA-Z]*\d{1,2})\.(\d{1,2}\b)/g, function (_, p1, p2) {
+          return p1 + '/' + p2
+        })
+        .replace(/\b\((\d{4})\)\b/g, '$1')
+        .replace(/\bWEB(?!-DL)\b/gi, 'WEB-DL')
+        .replace(/\bweb-?rip\b/gi, 'WEBRip')
+        .replace(/\bblu-?ray\b/gi, 'BluRay')
+        .replace(/\bdvd(rip)?\b/gi, function (_, p1) {
+          return 'DVD' + (p1 ? 'Rip' : '')
+        })
+        .replace(/\b(480|720|1080|2160)([PI])\b/g, function (_, p1, p2) {
+          return p1 + p2.toLowerCase()
+        })
+        .replace(/\bx\.?(26[45])\b/gi, 'x$1')
+        .replace(/((?<!\d{1,2})\.)|(\.(?!\d\b))/g, ' ')//点号前面是数字（一至两位），后面是单个数字的情况不替换（DDP5.1）
+        .replace(/\//g, '.')
+        .trim()
+    )
+  }
 }
 // eslint-disable-next-line no-unused-vars
 function getThumbSize(numTeams, siteName) {
@@ -550,7 +554,7 @@ function collectComparisons (text) {
   }
 }
 // 对比图信息转换
-async function generateComparison (siteName, textToConsume, torrentTitle, mediainfo, maxScreenshots) {
+async function generateComparison (siteName, textToConsume, torrentTitle, mediainfo) {
   const site = siteInfoMap[siteName]
   if (site.construct === NEXUSPHP) {
     let removePlainScreenshots = false
@@ -627,11 +631,11 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
           // 截图对比描述中可能会多一些内容，如 Source vs TayTO<Shout Factory> vs CRiSC<MGM>
           teamEncode = teams.find(team => team.toLowerCase().includes(teamEncode.toLowerCase()) || team.toLowerCase().includes('encode'))
         }
-        if (!screenshots && urls.length / teams.length >= 3) {
+        if (teamEncode && !screenshots && urls.length / teams.length >= site.minScreenshots) {
           for (let i = 0; i < urls.length; i++) {
             let image = urls[i]
             const teamCurrent = teams[i % teams.length]
-            if (currentScreenshots < maxScreenshots && (teamCurrent.toLowerCase() === 'encode' || teamCurrent.toLowerCase() === teamEncode.toLowerCase())) {
+            if (currentScreenshots < site.maxScreenshots && (teamCurrent.toLowerCase() === 'encode' || teamCurrent.toLowerCase() === teamEncode.toLowerCase())) {
               if (image.match(/\[img\].*?\[\/img\]/)) {
                 screenshots += image
               } else {
@@ -837,13 +841,22 @@ function processDescription (siteName, description) {
             const oldText = site.descrBox.val()
             let readClipboard = false
             readClipboard = !oldText
+            btnBingo.focus()
             let descriptionAll = readClipboard ? await navigator.clipboard.readText() : oldText
             descriptionAll = processDescription(siteName, descriptionAll)
             textToConsume = descriptionAll
           }
         }
         // 为了在未选择种子文件的情况下也能获取torrentTitle，将torrentTitle中信息的识别放到mediainfo之后
-        torrentInfo.torrentTitle = site.inputFile.val()
+        // 优先读取nameBox
+        torrentInfo.torrentTitle = nameBox ? nameBox.val() : ''
+        // 再读取inpuFile
+        if (!torrentInfo.torrentTitle) {
+          let inputFile = site.inputFile.val() || ''
+          let inputFileFileds = /([^\\]+)$/.exec(inputFile)
+          if (inputFileFileds) { inputFile = inputFileFileds[1] }
+          torrentInfo.torrentTitle = formatTorrentName(inputFile)
+        }
         //= ========================================================================================================
         // info from mediainfo
         torrentInfo.audioInfo = {
@@ -971,7 +984,9 @@ function processDescription (siteName, description) {
             }
             console.log(torrentInfo.videoInfo.container)
             // 如果 torrentInfo.torrentTitle 尚未被赋值，直接使用mediainfo 中的值
-            torrentInfo.torrentTitle = torrentInfo.torrentTitle || infoValue['Complete name'] || infoValue['Movie name']
+            torrentInfo.torrentTitle = torrentInfo.torrentTitle ||
+              formatTorrentName(infoValue['Complete name']) ||
+              formatTorrentName(infoValue['Movie name'])
           }
         })
         //= ========================================================================================================
@@ -982,8 +997,6 @@ function processDescription (siteName, description) {
         torrentInfo.processingInfo = {}
         torrentInfo.codecInfo = {}
         if (torrentInfo.torrentTitle) {
-          torrentInfo.torrentTitle = /([^\\]+)$/.exec(torrentInfo.torrentTitle)[1]
-          torrentInfo.torrentTitle = formatTorrentName(torrentInfo.torrentTitle)
           torrentInfo.editionInfo.criterionCollection = torrentInfo.torrentTitle.match(/\bcc|criterion\b/i)
           torrentInfo.editionInfo.mastersOfCinema = torrentInfo.torrentTitle.match(/\bmoc\b/i)
           torrentInfo.editionInfo.directorCut = torrentInfo.torrentTitle.match(/\bdc\b/i)
@@ -1522,7 +1535,7 @@ function processDescription (siteName, description) {
         }
         //= ========================================================================================================
         // handling screenshots
-        const description = await generateComparison(siteName, textToConsume, torrentInfo.torrentTitle, torrentInfo.mediainfo, site.maxScreenshots || 10)
+        const description = await generateComparison(siteName, textToConsume, torrentInfo.torrentTitle, torrentInfo.mediainfo)
         site.descrBox.val(description)
       } catch (error) {
         console.error('Error:', error)

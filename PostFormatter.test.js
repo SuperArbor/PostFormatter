@@ -164,7 +164,7 @@ test('test whole screenshots conversion', async () => {
       let data = fs.readFileSync(input, 'utf8')
       for (const targetSite of targetSites) {
         data = processDescription(targetSite, data)
-        const description = await generateComparison(targetSite, data, '', {}, 10)
+        const description = await generateComparison(targetSite, data, '', {})
         const output = `${dirOutput}/${movieName}.${targetSite} from ${originalSite}.bbcode`
         if (description) {
           fs.writeFileSync(output, description)
