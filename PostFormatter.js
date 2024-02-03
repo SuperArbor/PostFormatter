@@ -477,7 +477,8 @@ function string2Mediainfo (mediainfoStr) {
               mi[currentSectorKey][fieldKey] = fieldValue
             } else {
               // invalid mediainfo format
-              return {}
+              mi = {}
+              return
             }
           } else {
             currentSectorKey = fieldKey
@@ -887,7 +888,7 @@ function processDescription (siteName, description) {
           torrentInfo.mediainfo = string2Mediainfo(torrentInfo.mediainfoStr)
           // if the site has a place to fill out the mediainfo, remove it in the description box
           if (site.mediainfoBox) {
-            textToConsume = textToConsume.substring(0, mediainfoArray.index) + 
+            textToConsume = textToConsume.substring(0, mediainfoArray.index) +
               textToConsume.substring(mediainfoArray.index + mediainfoArray[0].length)
           }
         }
@@ -993,6 +994,7 @@ function processDescription (siteName, description) {
         torrentInfo.processingInfo = {}
         torrentInfo.codecInfo = {}
         if (torrentInfo.torrentTitle) {
+          // edition
           torrentInfo.editionInfo.criterionCollection = torrentInfo.torrentTitle.match(/\bcc|criterion\b/i)
           torrentInfo.editionInfo.mastersOfCinema = torrentInfo.torrentTitle.match(/\bmoc\b/i)
           torrentInfo.editionInfo.directorCut = torrentInfo.torrentTitle.match(/\bdc\b/i)
