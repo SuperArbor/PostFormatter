@@ -1,6 +1,6 @@
 // module imports
 const {
-  collectComparisons, generateComparison, processDescription,
+  collectComparisons, generateComparison, processDescription, mediainfo2String, string2Mediainfo,
   NHD, GPW, PUTAO, TTG, PTERCLUB, MTEAM} = require('./PostFormatter')
 const fs = require('fs')
 const path = require('path')
@@ -261,6 +261,135 @@ const descriptionTests = {
     }
   ],
 }
+const mediainfoTest = `General
+Unique ID                      : 212039964144989170962682310739403163448 (0x9F856960EF662AE2AB6E54A9F9974738)
+Complete name                  : At.First.Sight.1999.1080p.BluRay.DD5.1.x264-VietHD.mkv
+Format                         : Matroska
+Format version                 : Version 4
+File size                      : 14.2 GiB
+Duration                       : 2 h 8 min
+Overall bit rate               : 15.8 Mb/s
+Frame rate                     : 23.976 FPS
+Encoded date                   : 2017-02-07 05:18:03 UTC
+Writing application            : mkvmerge v9.7.1 ('Pandemonium') 64bit
+Writing library                : libebml v1.3.4 + libmatroska v1.4.5
+
+Video
+ID                             : 3
+Format                         : AVC
+Format/Info                    : Advanced Video Codec
+Format profile                 : High@L4.1
+Format settings                : CABAC / 4 Ref Frames
+Format settings, CABAC         : Yes
+Format settings, Reference fra : 4 frames
+Codec ID                       : V_MPEG4/ISO/AVC
+Duration                       : 2 h 8 min
+Bit rate                       : 15.2 Mb/s
+Width                          : 1 914 pixels
+Height                         : 1 038 pixels
+Display aspect ratio           : 1.85:1
+Frame rate mode                : Constant
+Frame rate                     : 23.976 (24000/1001) FPS
+Color space                    : YUV
+Chroma subsampling             : 4:2:0
+Bit depth                      : 8 bits
+Scan type                      : Progressive
+Bits/(Pixel*Frame)             : 0.319
+Stream size                    : 13.7 GiB (96%)
+Writing library                : x264 core 148 r2744kMod b97ae06
+Encoding settings              : cabac=1 / ref=4 / deblock=1:-3:-3 / analyse=0x3:0x133 / me=umh / subme=10 / psy=1 / fade_compensate=0.00 / psy_rd=1.00:0.00 / mixed_ref=1 / me_range=24 / chroma_me=1 / trellis=2 / 8x8dct=1 / cqm=0 / deadzone=21,11 / fast_pskip=0 / chroma_qp_offset=-2 / threads=32 / lookahead_threads=5 / sliced_threads=0 / nr=0 / decimate=0 / interlaced=0 / bluray_compat=0 / constrained_intra=0 / bframes=8 / b_pyramid=2 / b_adapt=2 / b_bias=0 / direct=3 / weightb=1 / open_gop=0 / weightp=2 / keyint=250 / keyint_min=23 / scenecut=40 / intra_refresh=0 / rc_lookahead=60 / rc=crf / mbtree=0 / crf=16.5000 / qcomp=0.60 / qpmin=0 / qpmax=69 / qpstep=4 / vbv_maxrate=62500 / vbv_bufsize=78125 / crf_max=0.0 / nal_hrd=none / filler=0 / ip_ratio=1.30 / pb_ratio=1.20 / aq=3:0.70
+Language                       : English
+Default                        : Yes
+Forced                         : No
+Color range                    : Limited
+Matrix coefficients            : BT.709
+
+Audio
+ID                             : 1
+Format                         : AC-3
+Format/Info                    : Audio Coding 3
+Commercial name                : Dolby Digital
+Codec ID                       : A_AC3
+Duration                       : 2 h 8 min
+Bit rate mode                  : Constant
+Bit rate                       : 640 kb/s
+Channel(s)                     : 6 channels
+Channel layout                 : L R C LFE Ls Rs
+Sampling rate                  : 48.0 kHz
+Frame rate                     : 31.250 FPS (1536 SPF)
+Compression mode               : Lossy
+Stream size                    : 590 MiB (4%)
+Language                       : English
+Service kind                   : Complete Main
+Default                        : Yes
+Forced                         : No
+
+Text
+ID                             : 2
+Format                         : UTF-8
+Codec ID                       : S_TEXT/UTF8
+Codec ID/Info                  : UTF-8 Plain Text
+Duration                       : 2 h 2 min
+Bit rate                       : 60 b/s
+Frame rate                     : 0.214 FPS
+Count of elements              : 1574
+Stream size                    : 54.4 KiB (0%)
+Language                       : English
+Default                        : No
+Forced                         : No
+
+Menu
+00:00:00.000                   : en:Logos/Main Titles
+00:03:13.652                   : en:Tension to Tears
+00:08:15.702                   : en:Amy Sees the Light
+00:10:51.651                   : en:A "Sleeping" Eye Dog
+00:13:03.157                   : en:A KISS TO BUILD A DREAM ON
+00:13:52.206                   : en:Canceled Apologies
+00:15:20.420                   : en:"What's Out There?"
+00:18:58.513                   : en:Rhythm of the Rain
+00:21:51.186                   : en:Heavenly Memories
+00:25:24.149                   : en:Scorched Date
+00:26:17.493                   : en:Second-Chance Guy
+00:28:48.894                   : en:A Search for Insight
+00:30:52.060                   : en:Cold/Hot Kisses
+00:35:23.079                   : en:No Changes, Please!
+00:37:59.152                   : en:"Some Great News"
+00:40:23.713                   : en:There Are No Miracles
+00:42:10.487                   : en:Stomping Like Bigfoot
+00:44:19.324                   : en:A Restless Night
+00:45:14.464                   : en:THEY CAN'T TAKE THAT AWAY FROM ME
+00:46:54.394                   : en:Cataract Interaction
+00:47:58.251                   : en:Cool Kid
+00:48:21.399                   : en:Obstacles/Art/Plans
+00:51:14.446                   : en:Surgery &amp; Bad Coffee
+00:52:44.453                   : en:"Can" This Be Sight?
+00:58:14.281                   : en:"So This Is You?"
+01:01:45.618                   : en:Covering Up Holes
+01:03:01.652                   : en:A Beautiful Surprise
+01:06:33.072                   : en:No Manual for Limbo
+01:10:23.928                   : en:Mixed Media
+01:14:09.528                   : en:Sculptured Talk
+01:15:52.547                   : en:Reconstructing Dad
+01:17:10.959                   : en:Crashing a Party
+01:25:06.268                   : en:Happy-Hour Therapy
+01:28:41.608                   : en:EASY COME EASY GO
+01:31:56.511                   : en:Park Perspectives
+01:35:47.116                   : en:Flirting with Colors
+01:38:41.457                   : en:The Light Grows Dim
+01:42:17.673                   : en:A Father Fails
+01:44:33.809                   : en:A Seeing Celebration
+01:46:14.118                   : en:A Cloudy Hockey Game
+01:51:08.871                   : en:Broken Dreams
+01:54:17.732                   : en:Reaching Back Home
+01:58:31.812                   : en:Seeing the Horizon
+02:04:10.944                   : en:LOVE IS WHERE YOU ARE/End Credits`
+
+test ('test mediainfo conversion', () => {
+  const mediainfo = string2Mediainfo(mediainfoTest)
+  expect(Object.entries(mediainfo.General).length > 0)
+  const mediainfoStr = mediainfo2String(mediainfo)
+  expect(mediainfoStr.trim()).toBe(mediainfoTest.trim())
+})
 test ('test processDescription', () => {
   Object.entries(descriptionTests).forEach(([siteName, tests]) => {
     tests.forEach(test => {

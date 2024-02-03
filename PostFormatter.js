@@ -27,6 +27,8 @@ const allSites = [NHD, PUTAO, MTEAM, TTG, GPW, UHD, PTERCLUB]
 const allImageHosts = [ PIXHOST, IMGBOX, IMG4K, ILIKESHOTS, PTERCLUB, IMGPILE, PTPIMG, KSHARE ]
 const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
 const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
+// medianinfo 键长（方便格式化）
+const mediainfoKeyLength = 31
 const regexTeam = /\b(?:(?:\w[\w-.]+)|(?:de\[42\])) ?(?:\([\w. ]+\)|<[\w. ]+>|\[[\w. ]+\])?/i
 const regexTeamsSplitter = /\||,|\/|-|vs\.?|>\s*vs\.?\s*</i
 const regexNormalUrl = /[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
@@ -441,33 +443,47 @@ async function images2ThumbUrls (imageUrls, numTeams, siteName) {
   }
   return thumbUrls
 }
-function decodeMediaInfo (mediainfoStr) {
-  if (!mediainfoStr) {
-    return {}
+function mediainfo2String(mediainfo) {
+  let mediainfoStr = ''
+  if (!mediainfo) {
+    return mediainfoStr
   }
-  function matchField (text) {
-    return text.match(/^\s*(.+?)\s+:\s*(.+)\s*$/)
-  }
-  function matchHead (text) {
-    return text.match(/^\s*([\w]+(\s#\d+)?)$/)
-  }
-  let mi = {}
-  // \r is for clipboard content operation
-  mediainfoStr.split(/\r?\n\r?\n/g).forEach(sector => {
-    const miSector = {}
-    let hasHead = false
-    sector.split(/\r?\n/g).forEach(line => {
-      const fieldArray = matchField(line)
-      const headArray = matchHead(line)
-      if (fieldArray) {
-        miSector[fieldArray[1]] = fieldArray[2]
-      } else if (headArray) {
-        mi[headArray[1]] = miSector
-        hasHead = true
-      }
+  Object.entries(mediainfo).forEach(([sectorKey, sector]) => {
+    mediainfoStr += `${sectorKey}\n`
+    Object.entries(sector).forEach(([fieldKey, fieldValue]) => {
+      // at least keep 1 empty space
+      let emptyLength = Math.max(mediainfoKeyLength - fieldKey.length, 1)
+      mediainfoStr += `${fieldKey}${' '.repeat(emptyLength)}: ${fieldValue}\n`
     })
-    if (!hasHead) {
-      mi = Object.assign({}, mi, miSector)
+    mediainfoStr += '\n'
+  })
+  return mediainfoStr
+}
+function string2Mediainfo (mediainfoStr) {
+  let mi = {}
+  if (!mediainfoStr) {
+    return mi
+  }
+  // \r is for clipboard content operation
+  let currentSectorKey = ''
+  mediainfoStr.split(/\r?\n/g).forEach(sector => {
+    if (sector && sector.trim()) {
+      let [fieldKey, fieldValue] = sector.split(/ +: +/)
+        if (fieldKey) {
+          fieldKey = fieldKey.trim()
+          if (fieldValue) {
+            fieldValue = fieldValue.trim()
+            if (currentSectorKey) {
+              mi[currentSectorKey][fieldKey] = fieldValue
+            } else {
+              // invalid mediainfo format
+              return {}
+            }
+          } else {
+            currentSectorKey = fieldKey
+            mi[currentSectorKey] = {}
+          }
+        }
     }
   })
   return mi
@@ -868,7 +884,7 @@ function processDescription (siteName, description) {
           torrentInfo.mediainfoStr = mediainfoArray[2]
             .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
             .replace(/\s*\[\/\w+\]\s*$/g, '')
-          torrentInfo.mediainfo = decodeMediaInfo(torrentInfo.mediainfoStr)
+          torrentInfo.mediainfo = string2Mediainfo(torrentInfo.mediainfoStr)
           // if the site has a place to fill out the mediainfo, remove it in the description box
           if (site.mediainfoBox) {
             textToConsume = textToConsume.substring(0, mediainfoArray.index) + 
@@ -878,7 +894,7 @@ function processDescription (siteName, description) {
         if (Object.keys(torrentInfo.mediainfo).length === 0 && site.mediainfoBox) {
           // 如果简介中没有有效的mediainfo，读取mediainfobox
           torrentInfo.mediainfoStr = site.mediainfoBox.val()
-          torrentInfo.mediainfo = decodeMediaInfo(torrentInfo.mediainfoStr)
+          torrentInfo.mediainfo = string2Mediainfo(torrentInfo.mediainfoStr)
         }
         Object.entries(torrentInfo.mediainfo).forEach(([infoKey, infoValue]) => {
           if (infoKey.match(/text( #\d+)?/i)) {
@@ -1499,18 +1515,14 @@ function processDescription (siteName, description) {
           if (Object.values(site.containerInfo).includes(torrentInfo.videoInfo.container)) {
             site.containerSel.val(torrentInfo.videoInfo.container)
           }
-          if (Object.keys(torrentInfo.mediainfo).length > 0) {
-            let mediainfoNew = torrentInfo.mediainfoStr
-            const completeNameArray = torrentInfo.mediainfo.General['Complete name']
-            if (!completeNameArray) {
-              const movieNameArray = torrentInfo.mediainfoStr.match(/^Movie name\s*:\s*(.+?)\s*$/mi)
-              if (movieNameArray) {
-                const completeName = torrentInfo.mediainfo.General['Movie name'] + `.${torrentInfo.videoInfo.container.toLowerCase()}`
-                mediainfoNew = torrentInfo.mediainfoStr.replace(/(General\s+Unique ID.+$)\s+(Format\s+.+$)/mi,
-                  `$1\nComplete name                            : ${completeName}\n$2`)
-              }
+          if (torrentInfo.mediainfo && torrentInfo.mediainfo.General) {
+            if (!torrentInfo.mediainfo.General['Complete name'] &&
+              torrentInfo.mediainfo.General['Movie name'] &&
+              torrentInfo.videoInfo &&
+              torrentInfo.videoInfo.container) {
+              torrentInfo.mediainfo.General['Complete name'] = `${torrentInfo.mediainfo.General['Movie name']}.${torrentInfo.videoInfo.container.toLowerCase()}`
             }
-            site.mediainfoBox.val(mediainfoNew)
+            site.mediainfoBox.val(mediainfo2String(torrentInfo.mediainfo))
           }
         }
         //= ========================================================================================================
@@ -1615,7 +1627,7 @@ function processDescription (siteName, description) {
 // Conditionally export for unit testing
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    collectComparisons, generateComparison, processDescription,
+    collectComparisons, generateComparison, processDescription, mediainfo2String, string2Mediainfo,
     NHD, PTERCLUB, GPW, MTEAM, TTG, PUTAO, siteInfoMap
   }
 }
