@@ -68,7 +68,7 @@ const regexScreenshotsThumbsBoxed = RegExp(
 const regexScreenshotsThumbsTitled = RegExp(
   '\\b(' +
   regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
-  ')+)[\\W]*\\n+\\s*' +
+  ')+)[\\W]*\\r?\\n+\\s*' +
   regexScreenshotsThumbsCombined.source,
   'mig')
 const regexScreenshotsSimple = RegExp(
@@ -296,7 +296,7 @@ function compactContent (inputText, targetBoxTag) {
   let outputText, c
   const pat1 = '(\\[\\/?(?:' + targetBoxTag + ')(?:=[^\\]]+)?\\])\\s+(\\S)'
   const pat2 = '(\\S)\\s+(\\[\\/?(?:' + targetBoxTag + ')(?:=[^\\]]+)?\\])'
-  const pat3 = '(\\[' + targetBoxTag + '(?:=[^\\]]+)?\\](?:(?!\\[\\/)[\\s\\S])*\\[(?:font|b|i|u|color|size)(?:=[^\\]]+)?\\])\\n+([^\\n])'
+  const pat3 = '(\\[' + targetBoxTag + '(?:=[^\\]]+)?\\](?:(?!\\[\\/)[\\s\\S])*\\[(?:font|b|i|u|color|size)(?:=[^\\]]+)?\\])\\r?\\n+([^\\r\\n])'
   const regex1 = RegExp(pat1, 'g')
   const regex2 = RegExp(pat2, 'g')
   const regex3 = RegExp(pat3, 'g')
@@ -448,10 +448,11 @@ function decodeMediaInfo (mediainfoStr) {
     return text.match(/^\s*([\w]+(\s#\d+)?)$/)
   }
   let mi = {}
-  mediainfoStr.split('\n\n').forEach(sector => {
+  // \r is for clipboard content operation
+  mediainfoStr.split(/\r?\n\r?\n/g).forEach(sector => {
     const miSector = {}
     let hasHead = false
-    sector.split('\n').forEach(line => {
+    sector.split(/\r?\n/g).forEach(line => {
       const fieldArray = matchField(line)
       const headArray = matchHead(line)
       if (fieldArray) {
