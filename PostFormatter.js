@@ -653,14 +653,17 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
     if (screenshots) {
       description += `[b]Screenshots[/b]\n${screenshots}`
     }
-    const regexQuote = RegExp('\\[(quote|' + site.targetBoxTag + ')(=(.*?))?\\]([^]+)\\[\\/\\1\\]', 'gim')
-    const matchQuote = textToConsume.match(regexQuote)
+    const regexQuoteHeadWithDescr = RegExp('\\[quote=(.*?)\\]', 'i')
+    const regexBoxesOrQuotes = RegExp('\\[(quote|' + site.targetBoxTag + ')(=(.*?))?\\]([^\\0]+)\\[\\/\\1\\]', 'gim')
+    const matchBoxesOrQuotes = textToConsume.match(regexBoxesOrQuotes) || []
     let quotes = ''
-    if (matchQuote) {
-      matchQuote.forEach(quote => {
-        quotes += quote.replace(/\[quote=(.*?)\]/gi, '[b]$1[/b][quote]')
-      })
-    }
+    matchBoxesOrQuotes.forEach(boxOrQuote => {
+      const isQuoteWithDescr = boxOrQuote.match(regexQuoteHeadWithDescr)
+      quotes += isQuoteWithDescr
+        ? boxOrQuote.replace(regexQuoteHeadWithDescr, '[b]$1[/b][quote]')
+        : boxOrQuote
+    })
+
     description = quotes + description
     return description
   }
