@@ -88,8 +88,12 @@ const siteInfoMap = {
   // bracket makes the value of the string 'nexushd' the true key or instead the string 'NHD' will be used as key
   [NHD]: {
     construct: NEXUSPHP,
+    // box 类标签，具备隐藏功能
     targetBoxTag: 'box',
+    // 是否支持 [box=...]的形式
     boxSupportDescr: true,
+    // 是否需要在 box 标签右括号末端加上换行
+    boxNeedBreakLine: false,
     unsupportedTags: ['align', 'pre'],
 
     inputFile: $('input[type="file"][name="file"]'),
@@ -109,6 +113,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: 'hide',
     boxSupportDescr: true,
+    boxNeedBreakLine: false,
     unsupportedTags: ['align', 'pre'],
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
@@ -127,6 +132,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: '',
     boxSupportDescr: true,
+    boxNeedBreakLine: false,
     unsupportedTags: ['align', 'center', 'pre'],
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
@@ -148,6 +154,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: 'expand',
     boxSupportDescr: false,
+    boxNeedBreakLine: false,
     unsupportedTags: ['align', 'pre'],
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
@@ -167,6 +174,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: '',
     boxSupportDescr: false,
+    boxNeedBreakLine: false,
     unsupportedTags: ['align'],
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $("input[type='text'][name='name']"), nameBoxEdit: $("input[type='text'][name='name']"),
@@ -184,6 +192,7 @@ const siteInfoMap = {
     construct: GAZELLE,
     targetBoxTag: 'hide',
     boxSupportDescr: true,
+    boxNeedBreakLine: true,
     unsupportedTags: ['align', 'pre'],
 
     inputFile: $('#file'),
@@ -276,6 +285,67 @@ const siteInfoMap = {
 // functions
 function escapeRegExp (string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+// requires numbers of left and right tags match
+// keepNonQuoted 选择是否保留两个0级别 quote 之间的内容，如'是这些文字[quote]不是这些文字[/quote]是这些文字[quote]不是这些文字[/quote]是这些文字'
+function processTags (inputText, tag, replacementLeft, replacementRight, keepNonQuoted=true) {
+  let regexTagsLeft = new RegExp('\\[(' + tag + ')((?:=([^\\]]+))?)\\]', 'g')
+  let regexTagsRight = new RegExp('\\[\\/(' + tag + ')\\]', 'g')
+  let outputText = ''
+  let index = 0
+  let currentLevel = 0
+  // eslint-disable-next-line no-constant-condition
+  while(true) {
+    regexTagsLeft.lastIndex = index
+    regexTagsRight.lastIndex = index
+    let matchLeft = regexTagsLeft.exec(inputText)
+    let matchRight = regexTagsRight.exec(inputText)
+    let match = null
+    let left = true
+    if (matchLeft && matchRight) {
+      if (matchLeft.index < matchRight.index) {
+        match = matchLeft
+        left = true
+      } else {
+        match = matchRight
+        left = false
+      }
+    } else {
+      left = matchLeft
+      match = matchLeft
+        ? matchLeft
+        : matchRight
+          ? matchRight
+          : null
+    }
+    if (match) {
+      if (currentLevel === 0) {
+        if (left) {
+          // 左括号，0级，根据 keepNonQuoted 确定是否保留上一次匹配末尾到本次匹配之间的内容
+          index = keepNonQuoted ? index : match.index
+        } else {
+          // 右括号，0级，无法匹配，扔掉前面的内容，直接从本次匹配末尾开始
+          index = match.index + match[0].length
+        }
+      }
+      if (index < match.index) {
+        outputText += inputText.substring(index, match.index)
+      }
+      if (index < match.index + match[0].length) {
+        outputText += left
+          ? match[0].replace(regexTagsLeft, replacementLeft)
+          : match[0].replace(regexTagsRight, replacementRight)
+      }
+      left ? currentLevel++
+        : currentLevel >=1
+          ? currentLevel--
+          : 0
+      index = match.index + match[0].length
+    } else {
+      break
+    }
+  }
+  return outputText
 }
 function nestExplode (inputText, targetBoxTag) {
   let outputText, c
@@ -671,16 +741,7 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
     if (screenshots) {
       description += `[b]Screenshots[/b]\n${screenshots}`
     }
-    const regexQuoteHeadWithDescr = RegExp('\\[quote=(.*?)\\]', 'i')
-    const regexBoxesOrQuotes = RegExp('\\[(quote|' + site.targetBoxTag + ')(=(.*?))?\\]([^\\0]+)\\[\\/\\1\\]', 'gim')
-    const matchBoxesOrQuotes = textToConsume.match(regexBoxesOrQuotes) || []
-    let quotes = ''
-    matchBoxesOrQuotes.forEach(boxOrQuote => {
-      const isQuoteWithDescr = boxOrQuote.match(regexQuoteHeadWithDescr)
-      quotes += isQuoteWithDescr
-        ? boxOrQuote.replace(regexQuoteHeadWithDescr, '[b]$1[/b][quote]')
-        : boxOrQuote
-    })
+    let quotes = processTags(textToConsume, 'quote', '[b]$3[/b][quote]', '[/$1]', false)
 
     description = quotes + description
     return description
@@ -691,6 +752,7 @@ function processDescription (siteName, description) {
   const construct = site.construct
   const targetBoxTag = site.targetBoxTag
   const boxSupportDescr = site.boxSupportDescr
+  const boxNeedBreakLine = site.boxNeedBreakLine
   const allTagBoxesStr = allTagBoxes.join('|')
   const otherTagBoxesStr = allTagBoxes.filter(tag => tag !== site.targetBoxTag).join('|')
   const unsupportedTagsStr = site.unsupportedTags.join('|')
@@ -721,6 +783,10 @@ function processDescription (siteName, description) {
         : `[b]$2[/b]\n[${replaceTag}]`)
     .replace(RegExp('\\[(?:' + otherTagBoxesStr + ')\\]', 'g'), `[${replaceTag}]`)
     .replace(RegExp('\\[\\/(?:' + otherTagBoxesStr + ')\\]', 'g'), `[/${replaceTag}]`)
+    .replace(RegExp('\\[\\/(?:' + replaceTag + ')\\](?!\\r?\\n)', 'g'),
+      boxNeedBreakLine
+        ? `[/${replaceTag}]\n`
+        : `[/${replaceTag}]`)
     // 不支持的标签
     .replace(RegExp('\\[\\/?(' + unsupportedTagsStr + ')(=[^\\]]+)?\\]', 'g'), '\n')
     .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
@@ -1626,7 +1692,7 @@ function processDescription (siteName, description) {
 // Conditionally export for unit testing
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    collectComparisons, generateComparison, processDescription, mediainfo2String, string2Mediainfo,
+    collectComparisons, generateComparison, processDescription, mediainfo2String, string2Mediainfo, processTags,
     NHD, PTERCLUB, GPW, MTEAM, TTG, PUTAO, siteInfoMap
   }
 }

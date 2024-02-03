@@ -1,6 +1,6 @@
 // module imports
 const {
-  collectComparisons, generateComparison, processDescription, mediainfo2String, string2Mediainfo,
+  collectComparisons, generateComparison, processDescription, mediainfo2String, string2Mediainfo, processTags,
   NHD, GPW, PUTAO, TTG, PTERCLUB, MTEAM} = require('./PostFormatter')
 const fs = require('fs')
 const path = require('path')
@@ -129,20 +129,20 @@ const simpleScreenshotsTests = [{
 }]
 const descriptionTests = {
   [NHD]: [ {
-    'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
-    'output': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]'
+    'input': '[quote=mediainfo]General\nUnique Id: blahblahblah[/quote]',
+    'output': '[box=mediainfo]General\nUnique Id: blahblahblah[/box]'
     }, {
-      'input': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]',
-      'output': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]'
+      'input': '[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]',
+      'output': '[box=mediainfo]General\nUnique Id: blahblahblah[/box]'
     }, {
-      'input': '[quote]General \nUnique Id: blahblahblah[/quote]',
-      'output': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]'
+      'input': '[quote]General\nUnique Id: blahblahblah[/quote]',
+      'output': '[box=mediainfo]General\nUnique Id: blahblahblah[/box]'
     }, {
-      'input': '[hide]General \nUnique Id: blahblahblah[/hide]',
-      'output': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]'
+      'input': '[hide]General\nUnique Id: blahblahblah[/hide]',
+      'output': '[box=mediainfo]General\nUnique Id: blahblahblah[/box]'
     }, {
-      'input': '[box]General \nUnique Id: blahblahblah[/box]',
-      'output': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]'
+      'input': '[box]General\nUnique Id: blahblahblah[/box]',
+      'output': '[box=mediainfo]General\nUnique Id: blahblahblah[/box]'
     }, {
       'input': '[expand=test expand]blahblahblah[/expand]',
       'output': '[box=test expand]blahblahblah[/box]'
@@ -151,41 +151,18 @@ const descriptionTests = {
       'output': '[box]blahblahblah[/box]'
     }
   ],
-  [GPW]: [ {
-    'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
-    'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
-    }, {
-      'input': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]',
-      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
-    }, {
-      'input': '[quote]General \nUnique Id: blahblahblah[/quote]',
-      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
-    }, {
-      'input': '[box]General \nUnique Id: blahblahblah[/box]',
-      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
-    }, {
-      'input': '[hide]General \nUnique Id: blahblahblah[/hide]',
-      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
-    }, {
-      'input': '[expand=test expand]blahblahblah[/expand]',
-      'output': '[hide=test expand]blahblahblah[/hide]'
-    }, {
-      'input': '[expand]blahblahblah[/expand]',
-      'output': '[hide]blahblahblah[/hide]'
-    }
-  ],
   [PUTAO]: [ {
-    'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
-    'output': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]'
+    'input': '[quote=mediainfo]General\nUnique Id: blahblahblah[/quote]',
+    'output': '[quote=mediainfo]General\nUnique Id: blahblahblah[/quote]'
     }, {
-      'input': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]',
-      'output': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]'
+      'input': '[box=mediainfo]General\nUnique Id: blahblahblah[/box]',
+      'output': '[quote=mediainfo]General\nUnique Id: blahblahblah[/quote]'
     }, {
-      'input': '[quote]General \nUnique Id: blahblahblah[/quote]',
-      'output': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]'
+      'input': '[quote]General\nUnique Id: blahblahblah[/quote]',
+      'output': '[quote=mediainfo]General\nUnique Id: blahblahblah[/quote]'
     }, {
-      'input': '[box]General \nUnique Id: blahblahblah[/box]',
-      'output': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]'
+      'input': '[box]General\nUnique Id: blahblahblah[/box]',
+      'output': '[quote=mediainfo]General\nUnique Id: blahblahblah[/quote]'
     }, {
       'input': '[expand=test expand]blahblahblah[/expand]',
       'output': '[quote=test expand]blahblahblah[/quote]'
@@ -195,17 +172,17 @@ const descriptionTests = {
     }
   ],
   [TTG]: [ {
-    'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
-    'output': '[quote]General \nUnique Id: blahblahblah[/quote]'
+    'input': '[quote=mediainfo]General\nUnique Id: blahblahblah[/quote]',
+    'output': '[quote]General\nUnique Id: blahblahblah[/quote]'
     }, {
-      'input': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]',
-      'output': '[quote]General \nUnique Id: blahblahblah[/quote]'
+      'input': '[box=mediainfo]General\nUnique Id: blahblahblah[/box]',
+      'output': '[quote]General\nUnique Id: blahblahblah[/quote]'
     }, {
-      'input': '[quote]General \nUnique Id: blahblahblah[/quote]',
-      'output': '[quote]General \nUnique Id: blahblahblah[/quote]'
+      'input': '[quote]General\nUnique Id: blahblahblah[/quote]',
+      'output': '[quote]General\nUnique Id: blahblahblah[/quote]'
     }, {
-      'input': '[box]General \nUnique Id: blahblahblah[/box]',
-      'output': '[quote]General \nUnique Id: blahblahblah[/quote]'
+      'input': '[box]General\nUnique Id: blahblahblah[/box]',
+      'output': '[quote]General\nUnique Id: blahblahblah[/quote]'
     }, {
       'input': '[expand=test expand]blahblahblah[/expand]',
       'output': '[b]test expand[/b]\n[quote]blahblahblah[/quote]'
@@ -215,20 +192,20 @@ const descriptionTests = {
     }
   ],
   [MTEAM]: [ {
-    'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
-    'output': '[expand]General \nUnique Id: blahblahblah[/expand]'
+    'input': '[quote=mediainfo]General\nUnique Id: blahblahblah[/quote]',
+    'output': '[expand]General\nUnique Id: blahblahblah[/expand]'
     }, {
-      'input': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]',
-      'output': '[expand]General \nUnique Id: blahblahblah[/expand]'
+      'input': '[box=mediainfo]General\nUnique Id: blahblahblah[/box]',
+      'output': '[expand]General\nUnique Id: blahblahblah[/expand]'
     }, {
-      'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
-      'output': '[expand]General \nUnique Id: blahblahblah[/expand]'
+      'input': '[quote=mediainfo]General\nUnique Id: blahblahblah[/quote]',
+      'output': '[expand]General\nUnique Id: blahblahblah[/expand]'
     }, {
-      'input': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]',
-      'output': '[expand]General \nUnique Id: blahblahblah[/expand]'
+      'input': '[box=mediainfo]General\nUnique Id: blahblahblah[/box]',
+      'output': '[expand]General\nUnique Id: blahblahblah[/expand]'
     }, {
-      'input': '[expand]General \nUnique Id: blahblahblah[/expand]',
-      'output': '[expand]General \nUnique Id: blahblahblah[/expand]'
+      'input': '[expand]General\nUnique Id: blahblahblah[/expand]',
+      'output': '[expand]General\nUnique Id: blahblahblah[/expand]'
     }, {
       'input': '[box=test expand]blahblahblah[/box]',
       'output': '[b]test expand[/b]\n[expand]blahblahblah[/expand]'
@@ -238,28 +215,51 @@ const descriptionTests = {
     }
   ],
   [PTERCLUB]: [ {
-      'input': '[quote=mediainfo]General \nUnique Id: blahblahblah[/quote]',
-      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+      'input': '[quote=mediainfo]General\nUnique Id: blahblahblah[/quote]',
+      'output': '[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]'
     }, {
-      'input': '[box=mediainfo]General \nUnique Id: blahblahblah[/box]',
-      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+      'input': '[box=mediainfo]General\nUnique Id: blahblahblah[/box]',
+      'output': '[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]'
     }, {
-      'input': '[quote]General \nUnique Id: blahblahblah[/quote]',
-      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+      'input': '[quote]General\nUnique Id: blahblahblah[/quote]',
+      'output': '[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]'
     }, {
-      'input': '[box]General \nUnique Id: blahblahblah[/box]',
-      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+      'input': '[box]General\nUnique Id: blahblahblah[/box]',
+      'output': '[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]'
     }, {
-      'input': '[hide]General \nUnique Id: blahblahblah[/hide]',
-      'output': '[hide=mediainfo]General \nUnique Id: blahblahblah[/hide]'
+      'input': '[hide]General\nUnique Id: blahblahblah[/hide]',
+      'output': '[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]'
     }, {
       'input': '[box=test expand]blahblahblah[/box]',
       'output': '[hide=test expand]blahblahblah[/hide]'
     }, {
       'input': '[box]blahblahblah[/box]',
       'output': '[hide]blahblahblah[/hide]'
-    }
+    },
   ],
+  [GPW]: [ {
+    'input': '[quote=mediainfo]General\nUnique Id: blahblahblah[/quote][quote=mediainfo]General\nUnique Id: blahblahblah[/quote]',
+    'output': '[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]\n[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[box=mediainfo]General\nUnique Id: blahblahblah[/box][box=mediainfo]General\nUnique Id: blahblahblah[/box]',
+      'output': '[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]\n[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[quote]General\nUnique Id: blahblahblah[/quote][quote]General\nUnique Id: blahblahblah[/quote]',
+      'output': '[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]\n[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[box]General\nUnique Id: blahblahblah[/box][box]General\nUnique Id: blahblahblah[/box]',
+      'output': '[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]\n[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[hide]General\nUnique Id: blahblahblah[/hide][hide]General\nUnique Id: blahblahblah[/hide]',
+      'output': '[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]\n[hide=mediainfo]General\nUnique Id: blahblahblah[/hide]'
+    }, {
+      'input': '[expand=test expand]blahblahblah[/expand][expand=test expand]blahblahblah[/expand]',
+      'output': '[hide=test expand]blahblahblah[/hide]\n[hide=test expand]blahblahblah[/hide]'
+    }, {
+      'input': '[expand]blahblahblah[/expand][expand]blahblahblah[/expand]',
+      'output': '[hide]blahblahblah[/hide]\n[hide]blahblahblah[/hide]'
+    }
+  ]
 }
 const mediainfoTest = `General
 Unique ID                      : 212039964144989170962682310739403163448 (0x9F856960EF662AE2AB6E54A9F9974738)
@@ -383,7 +383,41 @@ Menu
 01:54:17.732                   : en:Reaching Back Home
 01:58:31.812                   : en:Seeing the Horizon
 02:04:10.944                   : en:LOVE IS WHERE YOU ARE/End Credits`
+const processTagsTests = [{
+    input: {
+      tag: 'quote',
+      inputText: `quote]A0[quote=A0]A0B0[quote=B0]B0C0[quote=C0]C0[/quote]C0B0[/quote]B0B1[quote=B1]B1B0[/quote]B0A0[/quote]Level 0 Text[quote=A0]A0[/quote]`,
+      replacementLeft: '[b]$3[/b][quote]',
+      replacementRight: '[/$1]'
+    },
+    output: {
+      keepNonQuoted: `quote]A0[b]A0[/b][quote]A0B0[b]B0[/b][quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote]Level 0 Text[b]A0[/b][quote]A0[/quote]`,
+      noNonQuoted: `[b]A0[/b][quote]A0B0[b]B0[/b][quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote][b]A0[/b][quote]A0[/quote]`
+    }
+  }, {
+    input: {
+      tag: 'quote',
+      inputText: `A0[/quote][quote=A0]A0B0[quote=B0]B0C0[quote=C0]C0[/quote]C0B0[/quote]B0B1[quote=B1]B1B0[/quote]B0A0[/quote]Level 0 Text[quote=A0]A0[/quote]`,
+      replacementLeft: '[b]$3[/b][quote]',
+      replacementRight: '[/$1]'
+    },
+    output: {
+      keepNonQuoted: `[b]A0[/b][quote]A0B0[b]B0[/b][quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote]Level 0 Text[b]A0[/b][quote]A0[/quote]`,
+      noNonQuoted: `[b]A0[/b][quote]A0B0[b]B0[/b][quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote][b]A0[/b][quote]A0[/quote]`
+    }
+  }
+]
 
+test ('test tags', () => {
+  processTagsTests.forEach((test) => {
+    const input = test.input
+    const output = test.output
+    const actualOutputKeepNoneQuoted = processTags(input.inputText, input.tag, input.replacementLeft, input.replacementRight, true)
+    const actualOutputNoNoneQuoted = processTags(input.inputText, input.tag, input.replacementLeft, input.replacementRight, false)
+    expect(actualOutputKeepNoneQuoted).toBe(output.keepNonQuoted)
+    expect(actualOutputNoNoneQuoted).toBe(output.noNonQuoted)
+  })
+})
 test ('test mediainfo conversion', () => {
   const mediainfo = string2Mediainfo(mediainfoTest)
   expect(Object.entries(mediainfo.General).length > 0)
