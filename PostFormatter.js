@@ -329,7 +329,7 @@ function formatTorrentName (torrentName) {
         return p1 + p2.toLowerCase()
       })
       .replace(/\bx\.?(26[45])\b/gi, 'x$1')
-      .replace(/\./g, ' ')
+      .replace(/((?<!\d{1,2})\.)|(\.(?!\d\b))/g, ' ')//点号前面是数字（一至两位），后面是单个数字的情况不替换（DDP5.1）
       .replace(/\//g, '.')
       .trim()
   )
@@ -998,7 +998,7 @@ function processDescription (siteName, description) {
           torrentInfo.sourceInfo.remux = torrentInfo.torrentTitle.match(/\b(remux)\b/i)
           torrentInfo.sourceInfo.encode = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip|dvdrip|webrip)\b/i)
           torrentInfo.sourceInfo.bluray = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip)\b/i)
-          torrentInfo.sourceInfo.hdtv = torrentInfo.torrentTitle.match(/\bhdtv\b/i)
+          torrentInfo.sourceInfo.hdtv = torrentInfo.torrentTitle.match(/\bhdtv(rip)?\b/i)
           torrentInfo.sourceInfo.webdl = torrentInfo.torrentTitle.match(/\bweb-?dl\b/i)
           torrentInfo.sourceInfo.webrip = torrentInfo.torrentTitle.match(/\bwebrip\b/i)
           torrentInfo.sourceInfo.web = torrentInfo.sourceInfo.webdl || torrentInfo.sourceInfo.webrip
