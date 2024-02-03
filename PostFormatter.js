@@ -1,7 +1,7 @@
 /* eslint-disable object-property-newline */
 // ==UserScript==
 // @name         Post Formatter
-// @description  Format upload info and smilies
+// @description  Format upload info
 // @version      1.3.2.4
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
@@ -27,6 +27,8 @@ const allSites = [NHD, PUTAO, MTEAM, TTG, GPW, UHD, PTERCLUB]
 const allImageHosts = [ PIXHOST, IMGBOX, IMG4K, ILIKESHOTS, PTERCLUB, IMGPILE, PTPIMG, KSHARE ]
 const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
 const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
+// 匿名发布开关
+const ANONYMOUS = true
 // medianinfo 键长（方便格式化）
 const mediainfoKeyLength = 31
 const regexTeam = /\b(?:(?:\w[\w-.]+)|(?:de\[42\])) ?(?:\([\w. ]+\)|<[\w. ]+>|\[[\w. ]+\])?/i
@@ -342,8 +344,8 @@ function formatTorrentName (torrentName) {
 }
 // eslint-disable-next-line no-unused-vars
 function getThumbSize(numTeams, siteName) {
-  const size = numTeams === 2
-      ? 350
+  return numTeams === 2
+      ? 300
       : numTeams === 3
         ? 250
         : numTeams === 4
@@ -351,7 +353,6 @@ function getThumbSize(numTeams, siteName) {
           : numTeams === 5
             ? 150
             : 150
-  return size
 }
 // decode [url=...][img]...[/img][/url] -> [comparison=...]...[/comparison]
 async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
@@ -759,8 +760,6 @@ function processDescription (siteName, description) {
     return
   }
   const site = siteName ? siteInfoMap[siteName] : {}
-  // 匿名发布开关
-  const anonymous = true
   console.log(`running in site ${siteName} and page ${page}`)
   let nameBox = null
   if (page === 'upload' || page === 'edit') {
@@ -815,13 +814,6 @@ function processDescription (siteName, description) {
         // processing description
         let textToConsume = ''
         if (site.construct === NEXUSPHP) {
-          if (site.anonymousControl) {
-            if (siteName === NHD || siteName === PTERCLUB || siteName === PUTAO || siteName === MTEAM) {
-              site.anonymousControl.checked = anonymous
-            } else if (siteName === TTG) {
-              site.anonymousControl.val(anonymous ? 'yes' : 'no')
-            }
-          }
           const oldText = site.descrBox.val()
           let readClipboard = false
           if (siteName === NHD || siteName === PTERCLUB || siteName === PUTAO || siteName === MTEAM) {
@@ -829,21 +821,18 @@ function processDescription (siteName, description) {
           } else if (siteName === TTG) {
             readClipboard = !oldText ? true : oldText.length < 125
           }
-          let descriptionAll = readClipboard ? await navigator.clipboard.readText() : oldText
-          descriptionAll = processDescription(siteName, descriptionAll)
-          site.descrBox.val(descriptionAll)
-          textToConsume = descriptionAll
+          textToConsume = readClipboard ? await navigator.clipboard.readText() : oldText
         } else if (site.construct === GAZELLE) {
           if (siteName === GPW) {
             const oldText = site.descrBox.val()
-            let readClipboard = false
-            readClipboard = !oldText
-            btnBingo.focus()
-            let descriptionAll = readClipboard ? await navigator.clipboard.readText() : oldText
-            descriptionAll = processDescription(siteName, descriptionAll)
-            textToConsume = descriptionAll
+            let readClipboard = !oldText
+            if (readClipboard) {
+              btnBingo.focus()
+            }
+            textToConsume = readClipboard ? await navigator.clipboard.readText() : oldText
           }
         }
+        textToConsume = processDescription(siteName, textToConsume)
         // 为了在未选择种子文件的情况下也能获取torrentTitle，将torrentTitle中信息的识别放到mediainfo之后
         // 优先读取nameBox
         torrentInfo.torrentTitle = nameBox ? nameBox.val() : ''
@@ -1527,6 +1516,14 @@ function processDescription (siteName, description) {
             site.mediainfoBox.val(mediainfo2String(torrentInfo.mediainfo))
           }
         }
+        // anonymously uploading
+        if (site.anonymousControl) {
+          if (siteName === NHD || siteName === PTERCLUB || siteName === PUTAO || siteName === MTEAM) {
+            site.anonymousControl.checked = ANONYMOUS
+          } else if (siteName === TTG) {
+            site.anonymousControl.val(ANONYMOUS ? 'yes' : 'no')
+          }
+        }
         //= ========================================================================================================
         // handling screenshots
         const description = await generateComparison(siteName, textToConsume, torrentInfo.torrentTitle, torrentInfo.mediainfo)
@@ -1561,7 +1558,7 @@ function processDescription (siteName, description) {
     }
     inputFile.change(function () {
       if (anonymousCheck) {
-        anonymousCheck.checked = anonymous
+        anonymousCheck.checked = ANONYMOUS
       }
       let langEng = 1; let langChs = 2; let langCht = 3
       let langJap = 4; let langFre = 5; let langGer = 6; let langIta = 7
