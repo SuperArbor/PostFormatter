@@ -288,7 +288,7 @@ function escapeRegExp (string) {
 }
 // requires numbers of left and right tags match
 // keepNonQuoted 选择是否保留两个0级别 quote 之间的内容，如'是这些文字[quote]不是这些文字[/quote]是这些文字[quote]不是这些文字[/quote]是这些文字'
-function processTags (inputText, tag, replacementLeft, replacementRight, keepNonQuoted=true) {
+function processTags (inputText, tag, processLeft, processRight, keepNonQuoted=true) {
   let regexTagsLeft = new RegExp('\\[((' + tag + ')((?:=([^\\]]+))?))\\]', 'g')
   let regexTagsRight = new RegExp('\\[\\/(' + tag + ')\\]', 'g')
   let outputText = ''
@@ -340,12 +340,12 @@ function processTags (inputText, tag, replacementLeft, replacementRight, keepNon
       }
       if (indexOutput < match.index + match[0].length) {
         outputText += left
-          ? match[0].replace(regexTagsLeft, replacementLeft)
-          : match[0].replace(regexTagsRight, replacementRight)
+          ? processLeft(match[0])
+          : processRight(match[0])
       } else {
         remainedText += left
-          ? match[0].replace(regexTagsLeft, replacementLeft)
-          : match[0].replace(regexTagsRight, replacementRight)
+          ? processLeft(match[0])
+          : processRight(match[0])
       }
       indexOutput = match.index + match[0].length
       indexRemained = indexOutput
@@ -654,8 +654,34 @@ function collectComparisons (text) {
   }
 }
 // 对比图信息转换
-async function generateComparison (siteName, textToConsume, torrentTitle, mediainfo) {
+async function decomposeDescription (siteName, textToConsume, torrentTitle) {
+  let mediainfo = {}
+  let description = ''
   const site = siteInfoMap[siteName]
+  // 优先从简介中获取mediainfo
+  const tagForMediainfo = site.targetBoxTag || 'quote'
+  const regexMIStr = site.boxSupportDescr
+    ? '\\[(' + tagForMediainfo + '|quote)\\s*=\\s*mediainfo\\][^\\0]*?(General\\s+Unique ID[^\\0]*?)\\[\\/\\1\\]'
+    : '\\[(' + tagForMediainfo + '|quote)\\][^\\0]*?(General\\s+Unique ID[^\\0]*?)\\[\\/\\1\\]'
+  const regexMI = RegExp(regexMIStr, 'im')
+  const mediainfoArray = textToConsume.match(regexMI)
+  if (mediainfoArray) {
+    let mediainfoStr = mediainfoArray[2]
+      .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
+      .replace(/\s*\[\/\w+\]\s*$/g, '')
+    mediainfo = string2Mediainfo(mediainfoStr)
+    // if the site has a place to fill out the mediainfo, remove it in the description box
+    if (site.mediainfoBox) {
+      textToConsume = textToConsume.substring(0, mediainfoArray.index) +
+        textToConsume.substring(mediainfoArray.index + mediainfoArray[0].length)
+    }
+  }
+  if (!torrentTitle && mediainfo && mediainfo.General) {
+    torrentTitle = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
+    if (torrentTitle) {
+      torrentTitle = formatTorrentName(torrentTitle)
+    }
+  }
   if (site.construct === NEXUSPHP) {
     let removePlainScreenshots = false
     const comparisons = collectComparisons(textToConsume)
@@ -689,18 +715,11 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
         screenshotsStr +
         textToConsume.substring(ends)
     }
-    return textToConsume
+    description = textToConsume
   } else if (site.construct === GAZELLE && siteName === GPW) {
     let teamEncode = ''
-    let description = ''
     let screenshots = ''
     let currentScreenshots = 0
-    if (!torrentTitle && mediainfo && mediainfo.General) {
-      torrentTitle = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
-      if (torrentTitle) {
-        torrentTitle = formatTorrentName(torrentTitle)
-      }
-    }
     const teamArray = torrentTitle.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
     if (teamArray) {
       teamEncode = teamArray[0]
@@ -753,12 +772,19 @@ async function generateComparison (siteName, textToConsume, torrentTitle, mediai
     if (screenshots) {
       description += `[b]Screenshots[/b]\n${screenshots}`
     }
-    let [quotes, remained] = processTags(textToConsume, 'quote', '[b]$4[/b][quote]', '[/$1]', false)
-    let [hides] = processTags(remained, 'hide', '[b]$4[/b][hide]', '[/$1]', false)
-
-    description = quotes + description + hides
-    return description
+    let [quotes, remained] = processTags(
+      textToConsume, 'quote', 
+      matchLeft => { return matchLeft.replace(/\[quote(?:=([^\]]+))\]/g, '[b]$1[/b]\n[quote]') },
+      matchRight => { return matchRight },
+      false)
+    // 只是为了提取出 hides，内容不做改变
+    let [hides] = processTags(remained, 'hide',
+      matchLeft => { return matchLeft },
+      matchRight => { return matchRight },
+      false)
+    description = quotes + hides + description
   }
+  return [description, mediainfo, torrentTitle]
 }
 function processDescription (siteName, description) {
   const site = siteInfoMap[siteName]
@@ -923,6 +949,8 @@ function processDescription (siteName, description) {
           torrentInfo.torrentTitle = formatTorrentName(inputFile)
         }
         //= ========================================================================================================
+        // decompose description (and generate comparison screenshots)
+        [textToConsume, torrentInfo.mediainfo, torrentInfo.torrentTitle] = await decomposeDescription(siteName, textToConsume, torrentInfo.torrentTitle)
         // info from mediainfo
         torrentInfo.audioInfo = {
           dtsX: false, atmos: false, chineseDub: false, cantoneseDub: false, commentary: false
@@ -940,30 +968,10 @@ function processDescription (siteName, description) {
         subtitleLanguages.forEach(lang => {
           torrentInfo.subtitleInfo[lang] = false
         })
-        torrentInfo.mediainfo = {}
-        torrentInfo.mediainfoStr = ''
-        // 优先从简介中获取mediainfo
-        const tagForMediainfo = site.targetBoxTag || 'quote'
-        const regexMIStr = site.boxSupportDescr
-          ? '\\[(' + tagForMediainfo + '|quote)\\s*=\\s*mediainfo\\][^\\0]*?(General\\s+Unique ID[^\\0]*?)\\[\\/\\1\\]'
-          : '\\[(' + tagForMediainfo + '|quote)\\][^\\0]*?(General\\s+Unique ID[^\\0]*?)\\[\\/\\1\\]'
-        const regexMI = RegExp(regexMIStr, 'im')
-        const mediainfoArray = textToConsume.match(regexMI)
-        if (mediainfoArray) {
-          torrentInfo.mediainfoStr = mediainfoArray[2]
-            .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
-            .replace(/\s*\[\/\w+\]\s*$/g, '')
-          torrentInfo.mediainfo = string2Mediainfo(torrentInfo.mediainfoStr)
-          // if the site has a place to fill out the mediainfo, remove it in the description box
-          if (site.mediainfoBox) {
-            textToConsume = textToConsume.substring(0, mediainfoArray.index) +
-              textToConsume.substring(mediainfoArray.index + mediainfoArray[0].length)
-          }
-        }
         if (Object.keys(torrentInfo.mediainfo).length === 0 && site.mediainfoBox) {
           // 如果简介中没有有效的mediainfo，读取mediainfobox
-          torrentInfo.mediainfoStr = site.mediainfoBox.val()
-          torrentInfo.mediainfo = string2Mediainfo(torrentInfo.mediainfoStr)
+          let mediainfoStr = site.mediainfoBox.val()
+          torrentInfo.mediainfo = string2Mediainfo(mediainfoStr)
         }
         Object.entries(torrentInfo.mediainfo).forEach(([infoKey, infoValue]) => {
           if (infoKey.match(/text( #\d+)?/i)) {
@@ -1603,10 +1611,8 @@ function processDescription (siteName, description) {
             site.anonymousControl.val(ANONYMOUS ? 'yes' : 'no')
           }
         }
-        //= ========================================================================================================
-        // handling screenshots
-        const description = await generateComparison(siteName, textToConsume, torrentInfo.torrentTitle, torrentInfo.mediainfo)
-        site.descrBox.val(description)
+        
+        site.descrBox.val(textToConsume)
       } catch (error) {
         console.error('Error:', error)
       } finally {
@@ -1705,7 +1711,7 @@ function processDescription (siteName, description) {
 // Conditionally export for unit testing
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    collectComparisons, generateComparison, processDescription, mediainfo2String, string2Mediainfo, processTags,
+    collectComparisons, decomposeDescription, processDescription, mediainfo2String, string2Mediainfo, processTags,
     NHD, PTERCLUB, GPW, MTEAM, TTG, PUTAO, siteInfoMap
   }
 }

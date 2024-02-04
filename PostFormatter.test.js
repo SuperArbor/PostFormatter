@@ -1,6 +1,6 @@
 // module imports
 const {
-  collectComparisons, generateComparison, processDescription, mediainfo2String, string2Mediainfo, processTags,
+  collectComparisons, decomposeDescription, processDescription, mediainfo2String, string2Mediainfo, processTags,
   NHD, GPW, PUTAO, TTG, PTERCLUB, MTEAM} = require('./PostFormatter')
 const fs = require('fs')
 const path = require('path')
@@ -386,34 +386,30 @@ Menu
 const processTagsTests = [{
     input: {
       tag: 'quote',
-      inputText: `quote]A0[quote=A0]A0B0[quote=B0]B0C0[quote=C0]C0[/quote]C0B0[/quote]B0B1[quote=B1]B1B0[/quote]B0A0[/quote]Level 0 Text[quote=A0]A0[/quote]`,
-      replacementLeft: '[b]$4[/b][quote]',
-      replacementRight: '[/$1]'
+      inputText: `quote]A0[quote=A0]A0B0[quote]B0C0[quote=C0]C0[/quote]C0B0[/quote]B0B1[quote=B1]B1B0[/quote]B0A0[/quote]Level 0 Text[quote=A0]A0[/quote]`,
     },
     output: {
       keepNonQuoted: [
-        `quote]A0[b]A0[/b][quote]A0B0[b]B0[/b][quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote]Level 0 Text[b]A0[/b][quote]A0[/quote]`,
+        `quote]A0[b]A0[/b][quote]A0B0[quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote]Level 0 Text[b]A0[/b][quote]A0[/quote]`,
         ``
       ],
       noNonQuoted: [
-        `[b]A0[/b][quote]A0B0[b]B0[/b][quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote][b]A0[/b][quote]A0[/quote]`,
+        `[b]A0[/b][quote]A0B0[quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote][b]A0[/b][quote]A0[/quote]`,
         `quote]A0Level 0 Text`
       ]
     }
   }, {
     input: {
       tag: 'quote',
-      inputText: `A0[/quote][quote=A0]A0B0[quote=B0]B0C0[quote=C0]C0[/quote]C0B0[/quote]B0B1[quote=B1]B1B0[/quote]B0A0[/quote]Level 0 Text[quote=A0]A0[/quote]`,
-      replacementLeft: '[b]$4[/b][quote]',
-      replacementRight: '[/$1]'
+      inputText: `A0[/quote][quote=A0]A0B0[quote]B0C0[quote=C0]C0[/quote]C0B0[/quote]B0B1[quote=B1]B1B0[/quote]B0A0[/quote]Level 0 Text[quote=A0]A0[/quote]`,
     },
     output: {
       keepNonQuoted: [
-        `[b]A0[/b][quote]A0B0[b]B0[/b][quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote]Level 0 Text[b]A0[/b][quote]A0[/quote]`,
+        `[b]A0[/b][quote]A0B0[quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote]Level 0 Text[b]A0[/b][quote]A0[/quote]`,
         `A0[/quote]`
       ],
       noNonQuoted: [
-        `[b]A0[/b][quote]A0B0[b]B0[/b][quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote][b]A0[/b][quote]A0[/quote]`,
+        `[b]A0[/b][quote]A0B0[quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote][b]A0[/b][quote]A0[/quote]`,
         `A0[/quote]Level 0 Text`
       ]
     }
@@ -424,8 +420,12 @@ test ('test tags', () => {
   processTagsTests.forEach((test) => {
     const input = test.input
     const output = test.output
-    const actualOutputKeepNoneQuoted = processTags(input.inputText, input.tag, input.replacementLeft, input.replacementRight, true)
-    const actualOutputNoNoneQuoted = processTags(input.inputText, input.tag, input.replacementLeft, input.replacementRight, false)
+    const actualOutputKeepNoneQuoted = processTags(input.inputText, input.tag, 
+      matchLeft => { return matchLeft.replace(/\[quote=([^\]]+)\]/g, '[b]$1[/b][quote]') },
+      matchRight => { return matchRight }, true)
+    const actualOutputNoNoneQuoted = processTags(input.inputText, input.tag, 
+      matchLeft => { return matchLeft.replace(/\[quote=([^\]]+)\]/g, '[b]$1[/b][quote]') },
+      matchRight => { return matchRight }, false)
     expect(JSON.stringify(actualOutputKeepNoneQuoted)).toBe(JSON.stringify(output.keepNonQuoted))
     expect(JSON.stringify(actualOutputNoNoneQuoted)).toBe(JSON.stringify(output.noNonQuoted))
   })
@@ -486,7 +486,7 @@ test('test whole screenshots conversion', async () => {
       let data = fs.readFileSync(input, 'utf8')
       for (const targetSite of targetSites) {
         data = processDescription(targetSite, data)
-        const description = await generateComparison(targetSite, data, '', {})
+        const [description] = await decomposeDescription(targetSite, data, '')
         const output = `${dirOutput}/${movieName}.${targetSite} from ${originalSite}.bbcode`
         if (description) {
           fs.writeFileSync(output, description)
