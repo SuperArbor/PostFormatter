@@ -31,7 +31,7 @@ const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
 const ANONYMOUS = true
 // medianinfo 键长（方便格式化）
 const mediainfoKeyLength = 31
-const regexTeam = /\b(?:(?:\w[\w-.]+)|(?:de\[42\])) ?(?:\([\w. ]+\)|<[\w. ]+>|\[[\w. ]+\])?/i
+const regexTeam = /\b(?:(?:\w[\w-. ]+)|(?:de\[42\])) ?(?:\([\w. ]+\)|<[\w. ]+>|\[[\w. ]+\])?/i
 const regexTeamsSplitter = /\||,|\/|-|vs\.?|>\s*vs\.?\s*</i
 const regexNormalUrl = /[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
 const regexImageUrl = RegExp(
