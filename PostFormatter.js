@@ -25,13 +25,16 @@ const NHD = 'nexushd'; const PUTAO = 'pt.sjtu'; const MTEAM = 'm-team'; const TT
 const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'; const KSHARE = 'kshare.club'; const PIXHOST = 'pixhost'; const IMGBOX = 'imgbox'; const IMG4K = 'img4k'; const ILIKESHOTS = 'yes.ilikeshots.club'
 const allSites = [NHD, PUTAO, MTEAM, TTG, GPW, UHD, PTERCLUB]
 const allImageHosts = [ PIXHOST, IMGBOX, IMG4K, ILIKESHOTS, PTERCLUB, IMGPILE, PTPIMG, KSHARE ]
+// 特殊组名备注
+const weirdTeams = ['de[42]', 'D-Z0N3']
 const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
 const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
 // 匿名发布开关
 const ANONYMOUS = true
 // medianinfo 键长（方便格式化）
 const mediainfoKeyLength = 31
-const regexTeam = /\b(?:(?:\w[\w-. ]+)|(?:de\[42\])) ?(?:\([\w. ]+\)|<[\w. ]+>|\[[\w. ]+\])?/i
+const weirdTeamsStr = weirdTeams.map(team => `(?:${escapeRegExp(team)})`).join('|')
+const regexTeam = RegExp('\\b(?:(?:\\w[\\w-. ]+)|' + weirdTeamsStr + ') ?(?:\\([\\w. ]+\\)|<[\\w. ]+>|\\[[\\w. ]+\\])?', 'i')
 const regexTeamsSplitter = /\||,|\/|-|vs\.?|>\s*vs\.?\s*</i
 const regexNormalUrl = /[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
 const regexImageUrl = RegExp(
