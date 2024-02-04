@@ -33,6 +33,13 @@ const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
 const ANONYMOUS = true
 // medianinfo 键长（方便格式化）
 const mediainfoKeyLength = 31
+const subtitleLanguages = {chinese_simplified: 'chs|zh', chinese_traditional: 'cht', japanese: 'jp|jpn|jap|ja', korean: 'kor|ko', english: 'en|eng',
+  french: 'fre|fra|fr', german: 'ger|deu|de', italian: 'ita|it', polish: 'pol|pl', romanian: 'rum|ron|ro', russian: 'ru|rus', spanish: 'spa|es', thai: 'tai',
+  turkish: 'tur|tr', vietnamese: 'vi|vie', hindi: 'hin|hi', greek: 'gre|ell|el', swedish: 'swe|sv', azerbaijani: 'aze|az', bulgarian: 'bul|bg', danish: 'dan|da',
+  estonian: 'est|et', finnish: 'fin|fi', hebrew: 'heb|he', croatian: 'hrv|hr', hungarian: 'hun|hu', icelandic: 'ice|isl|is', latvian: 'lav|lv', lithuanian: 'lit|lt',
+  dutch: 'dut|nld|nl', norwegian: 'nor|no', portuguese: 'por|pt', slovenian: 'slv|sl', slovak: 'slo|slk|sk', latin: 'lat|la',
+  ukrainian: 'ukr|uk', persian: 'per|fas|fa', arabic: 'ara|ar', brazilian_port: 'bra', czech: 'cze|ces|cs', idonesian: 'ido', serbian: 'srp|sr'
+}
 const weirdTeamsStr = weirdTeams.map(team => `(?:${escapeRegExp(team)})`).join('|')
 const regexTeam = RegExp('\\b(?:(?:\\w[\\w-. ]+)|' + weirdTeamsStr + ') ?(?:\\([\\w. ]+\\)|<[\\w. ]+>|\\[[\\w. ]+\\])?', 'i')
 const regexTeamsSplitter = /\||,|\/|(?<!D)-(?=Z0N3)|(?<=D)-(?!Z0N3)|(?<!D)-(?!Z0N3)| v\.?s\.? |>\s*v\.?s\.?\s*</i
@@ -110,7 +117,16 @@ const siteInfoMap = {
     sourceInfo: { default: 0, bluray: 1, hddvd: 2, dvd: 3, hdtv: 4, webdl: 7, webrip: 9 },
     standardInfo: { default: 0, res1080p: 1, res1080i: 2, res720p: 3, res2160p: 6, sd: 4 },
     processingInfo: { default: 0, raw: 1, encode: 2 },
-    codecInfo: { default: 0, h264: 1, h265: 2, vc1: 3, xvid: 4, mpeg2: 5, flac: 10, ape: 11 }
+    codecInfo: { default: 0, h264: 1, h265: 2, vc1: 3, xvid: 4, mpeg2: 5, flac: 10, ape: 11 },
+
+    inputFileSubtitle: $('input[type="file"][name="file"]'),
+    titleBoxSubtitle: $('input[type="text"][name="title"]'),
+    languageSelSubtitle: $('select[name="sel_lang"]'),
+    anonymousCheckSubtitle: $("input[name='uplver'][type='checkbox']")[0],
+    subtitleInfo: {
+      default: 0, english: 6, chinese_simplified: 25, chinese_traditional: 28, japanese: 15, french: 9,
+      german: 10, italian: 14, korean: 16, spanish: 26, other: 18
+    }
   },
   [PTERCLUB]: {
     construct: NEXUSPHP,
@@ -129,7 +145,16 @@ const siteInfoMap = {
     pullMovieScore: true, translatedChineseNameInTitle: false, doubanIdInsteadofLink: false,
     categoryInfo: { default: 0, movie: 401, tvSeries: 404, tvShow: 405, documentary: 402, animation: 403 },
     sourceInfo: { default: 0, bluray: 2, remux: 3, encode: 6, hdtv: 4, webdl: 5, dvd: 7 },
-    areaInfo: { default: 0, cnMl: 1, hk: 2, tw: 3, euAme: 4, kor: 5, jap: 6, ind: 7, other: 8 }
+    areaInfo: { default: 0, cnMl: 1, hk: 2, tw: 3, euAme: 4, kor: 5, jap: 6, ind: 7, other: 8 },
+
+    inputFileSubtitle: $('input[type="file"][name="file"]'),
+    titleBoxSubtitle: $('input[type="text"][name="title"]'),
+    languageSelSubtitle: $('select[name="sel_lang"]'),
+    anonymousCheckSubtitle: $("input[name='uplver'][type='checkbox']")[0],
+    subtitleInfo: {
+      default: 0, english: 6, chinese_simplified: 25, chinese_traditional: 28, japanese: 15, french: 9,
+      german: 10, italian: 14, korean: 16, spanish: 26, other: 18
+    }
   },
   [PUTAO]: {
     construct: NEXUSPHP,
@@ -151,7 +176,16 @@ const siteInfoMap = {
       catTvShowCnMl: 411, tvShowHkTw: 412, tvShowEuAme: 413, tvshowJapKor: 414
     },
     standardInfo: { default: 0, res1080p: 1, res1080i: 2, res720p: 3, res2160p: 6, sd: 4 },
-    codecInfo: { default: 0, h264: 1, vc1: 2, xvid: 3, mpeg2: 4, flac: 5, ape: 6, h265: 10 }
+    codecInfo: { default: 0, h264: 1, vc1: 2, xvid: 3, mpeg2: 4, flac: 5, ape: 6, h265: 10 },
+
+    inputFileSubtitle: $('input[type="file"][name="file"]'),
+    titleBoxSubtitle: $('input[type="text"][name="title"]'),
+    languageSelSubtitle: $('select[name="sel_lang"]'),
+    anonymousCheckSubtitle: $("input[name='uplver'][type='checkbox']")[0],
+    subtitleInfo: {
+      default: 0, english: 6, chinese_simplified: 25, chinese_traditional: 28, japanese: 15, french: 9,
+      german: 10, italian: 14, korean: 16, spanish: 26, other: 18
+    }
   },
   [MTEAM]: {
     construct: NEXUSPHP,
@@ -171,7 +205,15 @@ const siteInfoMap = {
     categoryInfo: { default: 0, movieHd: 419, movieRemux: 439, tvSeriesHd: 402, documentary: 404, animation: 405 },
     areaInfo: { default: 0, cnMl: 1, euAme: 2, hkTw: 3, jap: 4, kor: 5, other: 6 },
     standardInfo: { default: 0, res1080p: 1, res1080i: 2, res720p: 3, res2160p: 6, sd: 5 },
-    codecInfo: { default: 0, h264: 1, vc1: 2, h265: 16, xvid: 3, mpeg2: 4, flac: 5, ape: 10 }
+    codecInfo: { default: 0, h264: 1, vc1: 2, h265: 16, xvid: 3, mpeg2: 4, flac: 5, ape: 10 },
+
+    inputFileSubtitle: $('input[type="file"][name="file[]"]'),
+    titleBoxSubtitle: $('input[type="text"][name="title[]"]'),
+    languageSelSubtitle: $('select[name="sel_lang[]"]'),
+    anonymousCheckSubtitle: $("input[name='uplver'][type='checkbox']")[0],
+    subtitleInfo: {
+      default: 0, english: 6, chinese_simplified: 25, chinese_traditional: 28, japanese: 15, korean: 16, other: 18
+    }
   },
   [TTG]: {
     construct: NEXUSPHP,
@@ -281,7 +323,9 @@ const siteInfoMap = {
     codecInfo: { default: '---', h264: 'H.264', h265: 'H.265', xvid: 'XviD', divx: 'DivX', x264: 'x264', x265: 'x265' },
     standardInfo: { default: '---', res1080i: '1080i', res1080p: '1080p', res2160p: '2160p', res720p: '720p', sd: '480p' },
     processingInfo: { default: '---', encode: 'Encode', remux: 'Remux' },
-    containerInfo: { default: '---', mkv: 'MKV', mp4: 'MP4', avi: 'AVI' }
+    containerInfo: { default: '---', mkv: 'MKV', mp4: 'MP4', avi: 'AVI' },
+
+    inputFileSubtitle: $('#file')
   }
 }
 //= ========================================================================================================
@@ -853,7 +897,7 @@ function processDescription (siteName, description) {
   'use strict'
   //= ========================================================================================================
   // Main
-  const domainMatchArray = window.location.href.match(/(.*)\/(upload|edit|subtitles|dox)\.php/)
+  const domainMatchArray = window.location.href.match(/(.*)\/(upload|edit|subtitles|dox|torrents)\.php(?:\?action=(.*))?/)
   if (!domainMatchArray) {
     return
   }
@@ -862,6 +906,10 @@ function processDescription (siteName, description) {
   if (siteName === TTG) {
     if (page === 'dox') {
       page = 'subitles'
+    }
+  } else if (siteName === GPW) {
+    if (page === 'torrents' && domainMatchArray[3].match(/edit/i)) {
+      page = 'edit'
     }
   }
   if (!siteName || !page) {
@@ -961,14 +1009,8 @@ function processDescription (siteName, description) {
         torrentInfo.videoInfo = {
           bit10: false, hdr10: false, hdr10plus: false, dovi: false, container: ''
         }
-        const subtitleLanguages = ['chinese_simplified', 'chinese_traditional', 'japanese', 'korean', 'english', 'french',
-          'german', 'italian', 'polish', 'romanian', 'russian', 'spanish', 'thai', 'turkish', 'vietnamese', 'hindi',
-          'greek', 'swedish', 'azerbaijani', 'bulgarian', 'danish', 'estonian', 'finnish', 'hebrew', 'croatian', 'hungarian',
-          'icelandic', 'latvian', 'lithuanian', 'dutch', 'norwegian', 'portuguese', 'slovenian', 'slovak', 'latin',
-          'ukrainian', 'persian', 'arabic', 'brazilian_port', 'czech', 'idonesian', 'serbian'
-        ]
         torrentInfo.subtitleInfo = {}
-        subtitleLanguages.forEach(lang => {
+        Object.keys(subtitleLanguages).forEach(lang => {
           torrentInfo.subtitleInfo[lang] = false
         })
         if (Object.keys(torrentInfo.mediainfo).length === 0 && site.mediainfoBox) {
@@ -1614,7 +1656,6 @@ function processDescription (siteName, description) {
             site.anonymousControl.val(ANONYMOUS ? 'yes' : 'no')
           }
         }
-        
         site.descrBox.val(textToConsume)
       } catch (error) {
         console.error('Error:', error)
@@ -1625,86 +1666,48 @@ function processDescription (siteName, description) {
   } else if (page === 'subtitles') {
     //= ========================================================================================================
     // 字幕页面
-    // 不需要填充信息的站点
-    if (siteName === TTG || siteName === GPW) {
+    if (!site.inputFileSubtitle) {
       return
     }
-    let inputFile = null; let titleBox = null; let languageSel = null; let anonymousCheck = null
-    if (siteName === NHD || siteName === PTERCLUB || siteName === PUTAO) {
-      inputFile = $('input[type="file"][name="file"]')
-      titleBox = $('input[type="text"][name="title"]')
-      languageSel = $('select[name="sel_lang"]')
-      anonymousCheck = $("input[name='uplver'][type='checkbox']")[0]
-    } else if (siteName === MTEAM) {
-      inputFile = $('input[type="file"][name="file[]"]')
-      titleBox = $('input[type="text"][name="title[]"]')
-      languageSel = $('select[name="sel_lang[]"]')
-      anonymousCheck = $("input[name='uplver'][type='checkbox']")[0]
-    }
-    if (!inputFile) {
-      return
-    }
-    inputFile.change(function () {
-      if (anonymousCheck) {
-        anonymousCheck.checked = ANONYMOUS
+    site.inputFileSubtitle.change(function () {
+      if (site.anonymousCheckSubtitle) {
+        site.anonymousCheckSubtitle.checked = ANONYMOUS
       }
-      let langEng = 1; let langChs = 2; let langCht = 3
-      let langJap = 4; let langFre = 5; let langGer = 6; let langIta = 7
-      let langKor = 8; let langSpa = 9; let langOther = 10
-      let langNum = 0
-      const pathSub = inputFile.val()
+      const pathSub = site.inputFileSubtitle.val()
       const fileName = /([^\\]+)$/.exec(pathSub)[1]
       if (fileName) {
-        titleBox.val(fileName)
-        const lang = pathSub.replace(/.*\.(.*)\..*/i, '$1')
-        if (lang) {
-          if (siteName === NHD || siteName === PTERCLUB || siteName === PUTAO) {
-            langEng = 6; langChs = 25; langCht = 28
-            langJap = 15; langFre = 9; langGer = 10; langIta = 14
-            langKor = 16; langSpa = 26; langOther = 18
-            langNum = lang.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || lang.match(/.+( |&)?(chs|cht|cn|zh)/)
-              ? langOther
-              : lang.match(/chs/)
-                ? langChs
-                : lang.match(/cht/)
-                  ? langCht
-                  : lang.match(/eng/)
-                    ? langEng
-                    : lang.match(/jap|jp/)
-                      ? langJap
-                      : lang.match(/fre|fra/)
-                        ? langFre
-                        : lang.match(/ger/)
-                          ? langGer
-                          : lang.match(/ita/)
-                            ? langIta
-                            : lang.match(/kor/)
-                              ? langKor
-                              : lang.match(/spa/)
-                                ? langSpa
-                                : langOther
-          } else if (siteName === MTEAM) {
-            langEng = 6; langChs = 25; langCht = 28
-            langJap = 15; langKor = 16; langOther = 18
-            langNum = lang.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || lang.match(/.+( |&)?(chs|cht|cn|zh)/)
-              ? langOther
-              : lang.match(/chs/)
-                ? langChs
-                : lang.match(/cht/)
-                  ? langCht
-                  : lang.match(/eng/)
-                    ? langEng
-                    : lang.match(/jap|jp/)
-                      ? langJap
-                      : lang.match(/kor/)
-                        ? langKor
-                        : langOther
-          }
+        if (site.titleBoxSubtitle) {
+          site.titleBoxSubtitle.val(fileName)
         }
-        console.log(`language: ${lang}`)
-        languageSel.val(langNum)
-      } else {
-        console.log(`not able to get file name from path ${pathSub}`)
+        const abbrLangInSub = pathSub.replace(/.*\.(.*)\..*/i, '$1') || ''
+        if (site.languageSelSubtitle) {
+          let langSelected = site.subtitleInfo.default
+            if (abbrLangInSub.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || abbrLangInSub.match(/.+( |&)?(chs|cht|cn|zh)/)) {
+              langSelected = site.subtitleInfo.other
+            }
+            else {
+              Object.entries(subtitleLanguages).forEach(([languageInAll, abbrLang]) => {
+                if (abbrLangInSub.match(RegExp(abbrLang, 'i'))) {
+                  langSelected = site.subtitleInfo[languageInAll] || site.subtitleInfo.default
+                  return
+                }
+              })
+            }
+            site.languageSelSubtitle.val(langSelected)
+        } else if (siteName === GPW) {
+          Object.entries(subtitleLanguages).forEach(([languageInAll, abbrLang]) => {
+            if (abbrLangInSub.match(RegExp(abbrLang, 'i'))) {
+              if (site.subtitleInfo[languageInAll]) {
+                Object.keys(site.subtitleInfo).forEach(lang => {
+                  if (site.subtitleInfo[lang]) {
+                    site.subtitleInfo[lang].checked = languageInAll === lang
+                  }
+                })
+              }
+              return
+            }
+          })
+        }
       }
     })
   }
