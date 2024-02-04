@@ -35,7 +35,7 @@ const ANONYMOUS = true
 const mediainfoKeyLength = 31
 const weirdTeamsStr = weirdTeams.map(team => `(?:${escapeRegExp(team)})`).join('|')
 const regexTeam = RegExp('\\b(?:(?:\\w[\\w-. ]+)|' + weirdTeamsStr + ') ?(?:\\([\\w. ]+\\)|<[\\w. ]+>|\\[[\\w. ]+\\])?', 'i')
-const regexTeamsSplitter = /\||,|\/|-|vs\.?|>\s*vs\.?\s*</i
+const regexTeamsSplitter = /\||,|\/|(?<!D)-(?=Z0N3)|(?<=D)-(?!Z0N3)|(?<!D)-(?!Z0N3)| v\.?s\.? |>\s*v\.?s\.?\s*</i
 const regexNormalUrl = /[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
 const regexImageUrl = RegExp(
   'https?:' + regexNormalUrl.source + '?\\.(?:png|jpg)',
