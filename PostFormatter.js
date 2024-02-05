@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info
-// @version      1.3.2.4
+// @version      1.3.2.5
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -21,7 +21,7 @@
 //= ========================================================================================================
 // constants
 const $ = window.jQuery
-const NHD = 'nexushd'; const PUTAO = 'pt.sjtu'; const MTEAM = 'm-team'; const TTG = 'totheglory'; const GPW = 'greatposterwall'
+const NHD = 'nexushd'; const PUTAO = 'pt.sjtu'; const MTEAM = 'm-team'; const TTG = 'totheglory'; const GPW = 'greatposterwall'; const UHD = 'uhdbits'
 const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'; const KSHARE = 'kshare.club'; const PIXHOST = 'pixhost'; const IMGBOX = 'imgbox'; const IMG4K = 'img4k'; const ILIKESHOTS = 'yes.ilikeshots.club'
 const allImageHosts = [ PIXHOST, IMGBOX, IMG4K, ILIKESHOTS, PTERCLUB, IMGPILE, PTPIMG, KSHARE ]
 // 特殊组名备注
@@ -306,18 +306,18 @@ const siteInfoMap = {
     },
     movieEditionCheck: $('input[type="checkbox"][id="movie_edition_information"]')[0],
     movieEditionInfo: {
-      criterionCollection: $("a[onclick*='the_criterion_collection']")[0],
-      mastersOfCinema: $("a[onclick*='masters_of_cinema']")[0],
-      withCommentary: $("a[onclick*='with_commentary']")[0],
-      directorCut: $("a[onclick*='director_cut']")[0],
-      theatrical: $("a[onclick*='theatrical_cut']")[0],
-      uncut: $("a[onclick*='uncut']")[0],
-      unrated: $("a[onclick*='unrated']")[0],
-      extended: $("a[onclick*='extended_edition']")[0],
-      remaster4k: $("a[onclick*='4k_remaster']")[0],
-      remaster: $("a[onclick*='remaster']")[0],
-      restoration4k: $("a[onclick*='4k_restoration']")[0],
-      twoInOne: $("a[onclick*='2_in_1']")[0]
+      criterionCollection: $('a[onclick*="the_criterion_collection"]')[0],
+      mastersOfCinema: $('a[onclick*="masters_of_cinema"]')[0],
+      withCommentary: $('a[onclick*="with_commentary"]')[0],
+      directorCut: $('a[onclick*="director_cut"]')[0],
+      theatrical: $('a[onclick*="theatrical_cut"]')[0],
+      uncut: $('a[onclick*="uncut"]')[0],
+      unrated: $('a[onclick*="unrated"]')[0],
+      extended: $('a[onclick*="extended_edition"]')[0],
+      remaster4k: $('a[onclick*="4k_remaster"]')[0],
+      remaster: $('a[onclick*="remaster"]')[0],
+      restoration4k: $('a[onclick*="4k_restoration"]')[0],
+      twoInOne: $('a[onclick*="2_in_1"]')[0]
     },
     mixedSubCheck: $('input[type="radio"][id="mixed_subtitles"]')[0],
     noSubCheck: $('input[type="radio"][id="no_subtitles"]')[0],
@@ -375,6 +375,55 @@ const siteInfoMap = {
     standardInfo: { default: '---', res1080i: '1080i', res1080p: '1080p', res2160p: '2160p', res720p: '720p', sd: '480p' },
     processingInfo: { default: '---', encode: 'Encode', remux: 'Remux' },
     containerInfo: { default: '---', mkv: 'MKV', mp4: 'MP4', avi: 'AVI' },
+
+    inputFileSubtitle: $('#file')
+  },
+  [UHD]: {
+    hostName: 'uhdbits.org',
+    pages: {
+      upload: 'upload.php',
+      edit: 'torrents.php?action=edit',
+      subtitles: 'subtitle.php'
+    },
+    construct: GAZELLE,
+    targetBoxTag: 'hide',
+    boxSupportDescr: true,
+    boxNeedBreakLine: true,
+    unsupportedTags: ['align', 'pre'],
+
+    inputFile: $('#file'),
+    mediainfoBox: $('textarea[name="mediainfo"]'), descrBox: $('#release_desc'),
+    sourceSel: $('select[id="media"]'), codecSel: $('select[id="codec"]'), standardSel: $('select[id="format"]'), teamBox: $('input[type="text"][id="team"]'),
+    categorySel: $('select[id="categories"]'), anonymousControl: $('input[type="checkbox"][id="anonymous"]')[0],
+    hdrSel: $('select[id="hdr"]'), seasonSel: $('select[id="season"]'),
+    movieEditionInfo: {
+      criterionCollection: $('a:contains("Criterion")')[0],
+      twoInOne: $('a:contains("2in1")')[0],
+      threeInOne: $('a:contains("3in1")')[0],
+      bit10: $('a:contains("10-bit")')[0],
+      remaster4k: $('a:contains("4K Remaster")')[0],
+      restoration4k: $('a:contains("4K Restoration")')[0],
+      bAndWVersion: $('a:contains("B & W Version")')[0],
+      directorCut: $('a:contains("Director\'s Cut")')[0],
+      extras: $('a:contains("Extras")')[0],
+      theatrical: $('a:contains("Theatrical")')[0],
+      extended: $('a:contains("Extended")')[0],
+      hybrid: $('a:contains("Hybrid")')[0],
+      imax: $('a:contains("IMAX")')[0],
+      remaster: $('a:contains("Remastered")')[0],
+      uncut: $('a:contains("Uncut")')[0],
+      tvCut: $('a:contains("TV Cut")')[0],
+      unrated: $('a:contains("Unrated")')[0],
+    },
+    
+    pullMovieScore: true, translatedChineseNameInTitle: false,
+    screenshotsStyle: 'conventional',
+    sourceInfo: { default: '---', bluray: 'Blu-ray', remux: 'Remux', encode: 'Encode', webdl: 'WEB-DL', webrip: 'WEBRip', hdrip: 'HDRip', hdtv: 'HDTV', others: 'Others', hdAudio: 'HD Audio' },
+    codecInfo: { default: '---', h264: 'H.264', h265: 'HEVC', vc1: 'VC-1', mpeg2: 'MPEG-2', av1: 'AV1', x264: 'x264', x265: 'x265', x266: 'x266' },
+    standardInfo: { default: '---', mhd: 'mHD', res1080i: '1080i', res1080p: '1080p', res2160p: '2160p', res720p: '720p', others: 'Others' },
+    hdrInfo: { default: 'No', hdr10: 'HDR10', hdr10plus: 'HDR10+', dovi: 'DoVi' },
+    categoryInfo: { movie: '0', music: '1', tvSeries: '2' },
+    seansonInfo: { default: '---',  s01: '1' },
 
     inputFileSubtitle: $('#file')
   }
@@ -777,6 +826,7 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
   if (!torrentTitle && mediainfo && mediainfo.General) {
     torrentTitle = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
     if (torrentTitle) {
+      torrentTitle = torrentTitle.replace(/.*?([^\\]+)$/, '$1')
       torrentTitle = formatTorrentName(torrentTitle)
     }
   }
@@ -973,11 +1023,11 @@ function processDescription (siteName, description) {
     if (site.construct === NEXUSPHP) {
       btnBingo.attr({
         type: 'button',
-        name: 'bingo_converter',
+        name: 'bingo',
         value: 'BINGO',
         style: 'font-size: 11px; font-weight: bold; color: blue; margin-right: 3px'
       })
-      const table1 = $('<table>').attr({
+      const tableBingo = $('<table>').attr({
         cellspacing: '1',
         cellpadding: '2',
         border: '0',
@@ -990,20 +1040,35 @@ function processDescription (siteName, description) {
         )
       )
       if (siteName === MTEAM || siteName === NHD || siteName === PTERCLUB || siteName === PUTAO) {
-        $('#compose input[name="quote"]').closest('table').after(table1)
+        $('#compose input[name="quote"]').closest('table').after(tableBingo)
       } else if (siteName === TTG) {
-        $('#upload input[name="quote"]').closest('table').after(table1)
+        $('#upload input[name="quote"]').closest('table').after(tableBingo)
       }
     } else if (site.construct === GAZELLE) {
-      btnBingo.attr({
-        type: 'button',
-        name: 'bingo_converter',
-        value: 'BINGO',
-        style: 'font-weight: bold; color: white;',
-        class: 'BBCodeToolbar-button'
-      })
-      const bbcodeToolbar = $('div.BBCodeToolbar').closest('#description-container').find('div.BBCodeToolbar')
-      bbcodeToolbar.append(btnBingo)
+      if (siteName === GPW) {
+        btnBingo.attr({
+          type: 'button',
+          name: 'bingo',
+          value: 'BINGO',
+          style: 'font-weight: bold; color: white;',
+          class: 'BBCodeToolbar-button'
+        })
+        const bbcodeToolbar = $('div.BBCodeToolbar').closest('#description-container').find('div.BBCodeToolbar')
+        bbcodeToolbar.append(btnBingo)
+      } else if (siteName === UHD) {
+        btnBingo.attr({
+          type: 'button',
+          name: 'bingo',
+          value: 'BINGO',
+          style: 'font-weight: bold; color: white;',
+          class: 'wysibb-toolbar-btn'
+        })
+        const divBingo = $('<div>').attr({
+          class: 'wysibb-toolbar-container'
+        }).append(btnBingo)
+        const bbcodeToolbar = $('div.wysibb-toolbar').closest('#textarea_wrap_0').find('div.wysibb-toolbar')
+        bbcodeToolbar.append(divBingo)
+      }
     }
     // function definition
     btnBingo.on('click', async () => {
@@ -1024,14 +1089,12 @@ function processDescription (siteName, description) {
           }
           textToConsume = readClipboard ? await navigator.clipboard.readText() : oldText
         } else if (site.construct === GAZELLE) {
-          if (siteName === GPW) {
-            const oldText = site.descrBox.val()
-            let readClipboard = !oldText
-            if (readClipboard) {
-              btnBingo.focus()
-            }
-            textToConsume = readClipboard ? await navigator.clipboard.readText() : oldText
+          const oldText = site.descrBox.val()
+          let readClipboard = !oldText
+          if (readClipboard) {
+            btnBingo.focus()
           }
+          textToConsume = readClipboard ? await navigator.clipboard.readText() : oldText
         }
         textToConsume = processDescription(siteName, textToConsume)
         // 为了在未选择种子文件的情况下也能获取torrentTitle，将torrentTitle中信息的识别放到mediainfo之后
@@ -1039,9 +1102,7 @@ function processDescription (siteName, description) {
         torrentInfo.torrentTitle = nameBox ? nameBox.val() : ''
         // 再读取inpuFile
         if (!torrentInfo.torrentTitle) {
-          let inputFile = site.inputFile.val() || ''
-          let inputFileFileds = /([^\\]+)$/.exec(inputFile)
-          if (inputFileFileds) { inputFile = inputFileFileds[1] }
+          let inputFile = (site.inputFile.val() || '').replace(/.*?([^\\]+)$/, '$1')
           torrentInfo.torrentTitle = formatTorrentName(inputFile)
         }
         //= ========================================================================================================
@@ -1172,11 +1233,16 @@ function processDescription (siteName, description) {
           torrentInfo.editionInfo.remaster = !torrentInfo.editionInfo.remaster4k && torrentInfo.torrentTitle.match(/\bremaster\b/i)
           torrentInfo.editionInfo.restoration4k = torrentInfo.torrentTitle.match(/\b4k restoration\b/i)
           torrentInfo.editionInfo.twoInOne = torrentInfo.torrentTitle.match(/\b2in1\b/i)
+          torrentInfo.editionInfo.threeInOne = torrentInfo.torrentTitle.match(/\b3in1\b/i)
+          torrentInfo.editionInfo.hybrid = torrentInfo.torrentTitle.match(/\bhybrid\b/i)
+          torrentInfo.editionInfo.imax = torrentInfo.torrentTitle.match(/\bimax\b/i)
+          torrentInfo.editionInfo.tvCut = torrentInfo.torrentTitle.match(/\btv ?cut\b/i)
           // source
           torrentInfo.sourceInfo.remux = torrentInfo.torrentTitle.match(/\b(remux)\b/i)
           torrentInfo.sourceInfo.encode = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip|dvdrip|webrip)\b/i)
           torrentInfo.sourceInfo.bluray = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip)\b/i)
           torrentInfo.sourceInfo.hdtv = torrentInfo.torrentTitle.match(/\bhdtv(rip)?\b/i)
+          torrentInfo.sourceInfo.hdrip = torrentInfo.torrentTitle.match(/\bhdrip\b/i)
           torrentInfo.sourceInfo.webdl = torrentInfo.torrentTitle.match(/\bweb-?dl\b/i)
           torrentInfo.sourceInfo.webrip = torrentInfo.torrentTitle.match(/\bwebrip\b/i)
           torrentInfo.sourceInfo.web = torrentInfo.sourceInfo.webdl || torrentInfo.sourceInfo.webrip
@@ -1188,6 +1254,7 @@ function processDescription (siteName, description) {
           torrentInfo.standardInfo.res720p = torrentInfo.torrentTitle.match(/\b720p\b/i)
           torrentInfo.standardInfo.res2160p = torrentInfo.torrentTitle.match(/\b2160p|4k\b/i)
           torrentInfo.standardInfo.sd = torrentInfo.torrentTitle.match(/\b480p\b/i) || torrentInfo.sourceInfo.dvd
+          torrentInfo.standardInfo.mhd = torrentInfo.torrentTitle.match(/\bmhd\b/i)
           // processing
           torrentInfo.processingInfo.raw = torrentInfo.torrentTitle.match(/\b(remux|web-?dl|(bd|dvd)?iso)\b/i)
           torrentInfo.processingInfo.encode = !torrentInfo.processingInfo.raw
@@ -1197,7 +1264,9 @@ function processDescription (siteName, description) {
           torrentInfo.codecInfo.x264 = torrentInfo.torrentTitle.match(/\bavc|x264\b/i)
           torrentInfo.codecInfo.h265 = torrentInfo.torrentTitle.match(/\bh\.?265\b/i)
           torrentInfo.codecInfo.x265 = torrentInfo.torrentTitle.match(/\bhevc|x265\b/i)
+          torrentInfo.codecInfo.x266 = torrentInfo.torrentTitle.match(/\bx266\b/i)
           torrentInfo.codecInfo.vc1 = torrentInfo.torrentTitle.match(/\bvc-1\b/i)
+          torrentInfo.codecInfo.av1 = torrentInfo.torrentTitle.match(/\bav1\b/i)
           torrentInfo.codecInfo.mpeg2 = torrentInfo.torrentTitle.match(/\bmpeg-2\b/i)
           torrentInfo.codecInfo.xvid = torrentInfo.torrentTitle.match(/\bxvid\b/i)
           torrentInfo.codecInfo.divx = torrentInfo.torrentTitle.match(/\bdivx\b/i)
@@ -1285,7 +1354,7 @@ function processDescription (siteName, description) {
         // fill the page
         // common controls
         // 用于记录种子在站点的匹配信息
-        torrentInfo.infoInSite = { site: siteName }
+        torrentInfo.infoInSite = { 'site': siteName }
         // namebox
         if (nameBox && torrentInfo.torrentTitle) {
           torrentInfo.infoInSite.torrentTitle = torrentInfo.torrentTitle
@@ -1357,7 +1426,7 @@ function processDescription (siteName, description) {
           }
         }
         // source
-        if (site.sourceSel && torrentInfo.sourceInfo) {
+        if (site.sourceSel && torrentInfo.sourceInfo && Object.values(torrentInfo.sourceInfo).some(option => option)) {
           torrentInfo.infoInSite.source = site.sourceInfo.default || 0
           if (siteName === PTERCLUB) {
             torrentInfo.infoInSite.source = torrentInfo.sourceInfo.remux
@@ -1393,11 +1462,27 @@ function processDescription (siteName, description) {
                   : torrentInfo.sourceInfo.web
                     ? site.sourceInfo.web
                     : torrentInfo.infoInSite.source
+          } else if (siteName === UHD) {
+            torrentInfo.infoInSite.source = torrentInfo.sourceInfo.encode
+              ? site.sourceInfo.encode
+              : torrentInfo.sourceInfo.remux
+                ? site.sourceInfo.remux
+                : torrentInfo.sourceInfo.webdl
+                  ? site.sourceInfo.webdl
+                  : torrentInfo.sourceInfo.webrip
+                    ? site.sourceInfo.webrip
+                    : torrentInfo.sourceInfo.hdrip
+                      ? site.sourceInfo.hdrip
+                      : torrentInfo.sourceInfo.hdtv
+                        ? site.sourceInfo.hdtv
+                        : torrentInfo.sourceInfo.bluray
+                          ? site.sourceInfo.bluray
+                          : torrentInfo.infoInSite.source
           }
           site.sourceSel.val(torrentInfo.infoInSite.source)
         }
         // standard
-        if (site.standardSel && torrentInfo.standardInfo) {
+        if (site.standardSel && torrentInfo.standardInfo && Object.values(torrentInfo.standardInfo).some(option => option)) {
           torrentInfo.infoInSite.standard = torrentInfo.standardInfo.res1080p
             ? site.standardInfo.res1080p
             : torrentInfo.standardInfo.res1080i
@@ -1406,13 +1491,18 @@ function processDescription (siteName, description) {
                 ? site.standardInfo.res720p
                 : torrentInfo.standardInfo.res2160p
                   ? site.standardInfo.res2160p
-                  : torrentInfo.standardInfo.sd
-                    ? site.standardInfo.sd
-                    : site.standardInfo.default
+                  : site.standardInfo.default
+          if (torrentInfo.infoInSite.standard === site.standardInfo.default) {
+            if (Object.keys(site.standardInfo).includes('sd') && torrentInfo.standardInfo.sd) {
+              torrentInfo.infoInSite.standard = site.standardInfo.sd
+            } else if (Object.keys(site.standardInfo).includes('mhd') && torrentInfo.standardInfo.mhd) {
+              torrentInfo.infoInSite.standard = site.standardInfo.mhd
+            }
+          }
           site.standardSel.val(torrentInfo.infoInSite.standard)
         }
         // processing
-        if (site.processingSel && torrentInfo.processingInfo) {
+        if (site.processingSel && torrentInfo.processingInfo && Object.values(torrentInfo.processingInfo).some(option => option)) {
           torrentInfo.infoInSite.processing = site.processingInfo.default || 0
           if (siteName === NHD) {
             torrentInfo.infoInSite.processing = torrentInfo.processingInfo.raw
@@ -1431,7 +1521,7 @@ function processDescription (siteName, description) {
           site.processingSel.val(torrentInfo.infoInSite.processing)
         }
         // codec
-        if (site.codecSel && torrentInfo.codecInfo) {
+        if (site.codecSel && torrentInfo.codecInfo && Object.values(torrentInfo.codecInfo).some(option => option)) {
           torrentInfo.infoInSite.codec = site.codecInfo.default || 0
           if (siteName === NHD || siteName === PUTAO || siteName === MTEAM) {
             torrentInfo.infoInSite.codec = torrentInfo.codecInfo.x264 || torrentInfo.codecInfo.h264
@@ -1463,18 +1553,39 @@ function processDescription (siteName, description) {
                       : torrentInfo.codecInfo.divx
                         ? site.codecInfo.divx
                         : torrentInfo.infoInSite.codec
+          } else if (siteName === UHD) {
+            torrentInfo.infoInSite.codec = torrentInfo.codecInfo.h264
+              ? site.codecInfo.h264
+              : torrentInfo.codecInfo.h265
+                ? site.codecInfo.h265
+                : torrentInfo.codecInfo.x264
+                  ? site.codecInfo.x264
+                  : torrentInfo.codecInfo.x265
+                    ? site.codecInfo.x265
+                    : torrentInfo.codecInfo.x266
+                      ? site.codecInfo.x266
+                      : torrentInfo.codecInfo.vc1
+                        ? site.codecInfo.vc1
+                        : torrentInfo.codecInfo.mpeg2
+                          ? site.codecInfo.mpeg2
+                          : torrentInfo.codecInfo.av1
+                            ? site.codecInfo.av1
+                            : torrentInfo.infoInSite.codec
           }
           site.codecSel.val(torrentInfo.infoInSite.codec)
         }
         // team
-        if (site.teamSel) {
-          if (siteName === MTEAM) {
+        if (torrentInfo.team) {
+          if (site.teamSel) {
+            torrentInfo.infoInSite.team = torrentInfo.team
             site.teamSel.find('option').each((_, element) => {
               if (element.text.toLowerCase() === torrentInfo.team.toLowerCase()) {
-                torrentInfo.infoInSite.team = element.value
-                site.teamSel.val(torrentInfo.infoInSite.team)
+                site.teamSel.val(element.value)
               }
             })
+          } else if (site.teamBox) {
+            torrentInfo.infoInSite.team = torrentInfo.team
+            site.teamBox.val(torrentInfo.team)
           }
         }
         // area selection
@@ -1617,71 +1728,107 @@ function processDescription (siteName, description) {
           site.categorySel.val(torrentInfo.infoInSite.category)
         }
         // site-specific
-        if (siteName === PTERCLUB && torrentInfo.subtitleInfo && torrentInfo.audioInfo) {
-          if (site.chsubCheck && site.englishSubCheck && site.chdubCheck && site.cantodubCheck) {
-            site.chsubCheck.checked = torrentInfo.subtitleInfo.chinese_simplified || torrentInfo.subtitleInfo.chinese_traditional
-            site.englishSubCheck.checked = torrentInfo.subtitleInfo.english
-            site.chdubCheck.checked = torrentInfo.audioInfo.chineseDub
-            site.cantodubCheck.checked = torrentInfo.audioInfo.cantoneseDub
+        if (site.construct === NEXUSPHP) {
+          if (siteName === PTERCLUB && torrentInfo.subtitleInfo && torrentInfo.audioInfo) {
+            if (site.chsubCheck && site.englishSubCheck && site.chdubCheck && site.cantodubCheck) {
+              site.chsubCheck.checked = torrentInfo.subtitleInfo.chinese_simplified || torrentInfo.subtitleInfo.chinese_traditional
+              site.englishSubCheck.checked = torrentInfo.subtitleInfo.english
+              site.chdubCheck.checked = torrentInfo.audioInfo.chineseDub
+              site.cantodubCheck.checked = torrentInfo.audioInfo.cantoneseDub
+            }
+          } else if (siteName === MTEAM && torrentInfo.subtitleInfo && torrentInfo.audioInfo) {
+            if (site.chsubCheck && site.chdubCheck) {
+              site.chsubCheck.checked = torrentInfo.subtitleInfo.chinese_simplified || torrentInfo.subtitleInfo.chinese_traditional
+              site.chdubCheck.checked = torrentInfo.audioInfo.chineseDub
+            }
+          } else if (siteName === TTG && torrentInfo.subtitleInfo) {
+            if (torrentInfo.subtitleInfo.chinese_simplified && torrentInfo.subtitleInfo.chinese_traditional) {
+              site.subtitleBox.val('* 内封简繁字幕')
+            } else if (torrentInfo.subtitleInfo.chinese_simplified) {
+              site.subtitleBox.val('* 内封简体字幕')
+            } else if (torrentInfo.subtitleInfo.chinese_traditional) {
+              site.subtitleBox.val('* 内封繁体字幕')
+            }
           }
-        } else if (siteName === MTEAM && torrentInfo.subtitleInfo && torrentInfo.audioInfo) {
-          if (site.chsubCheck && site.chdubCheck) {
-            site.chsubCheck.checked = torrentInfo.subtitleInfo.chinese_simplified || torrentInfo.subtitleInfo.chinese_traditional
-            site.chdubCheck.checked = torrentInfo.audioInfo.chineseDub
-          }
-        } else if (siteName === TTG && torrentInfo.subtitleInfo) {
-          if (torrentInfo.subtitleInfo.chinese_simplified && torrentInfo.subtitleInfo.chinese_traditional) {
-            site.subtitleBox.val('* 内封简繁字幕')
-          } else if (torrentInfo.subtitleInfo.chinese_simplified) {
-            site.subtitleBox.val('* 内封简体字幕')
-          } else if (torrentInfo.subtitleInfo.chinese_traditional) {
-            site.subtitleBox.val('* 内封繁体字幕')
-          }
-        } else if (siteName === GPW) {
-          // movie edition
-          if (torrentInfo.editionInfo) {
-            site.movieEditionCheck.click()
-            if (torrentInfo.editionInfo.criterionCollection) { site.movieEditionInfo.criterionCollection.click() }
-            if (torrentInfo.editionInfo.mastersOfCinema) { site.movieEditionInfo.mastersOfCinema.click() }
-            if (torrentInfo.editionInfo.directorCut) { site.movieEditionInfo.directorCut.click() }
-            if (torrentInfo.editionInfo.unrated) { site.movieEditionInfo.unrated.click() }
-            if (torrentInfo.editionInfo.uncut) { site.movieEditionInfo.uncut.click() }
-            if (torrentInfo.editionInfo.theatrical) { site.movieEditionInfo.theatrical.click() }
-            if (torrentInfo.editionInfo.extended) { site.movieEditionInfo.extended.click() }
-            if (torrentInfo.editionInfo.remaster4k) { site.movieEditionInfo.remaster4k.click() }
-            if (torrentInfo.editionInfo.remaster) { site.movieEditionInfo.remaster.click() }
-            if (torrentInfo.editionInfo.restoration4k) { site.movieEditionInfo.restoration4k.click() }
-            if (torrentInfo.editionInfo.twoInOne) { site.movieEditionInfo.twoInOne.click() }
-            if (torrentInfo.audioInfo && torrentInfo.audioInfo.commentary) { site.movieEditionInfo.withCommentary.click() }
-          }
-          // subtitles
-          const subbed = Object.values(torrentInfo.subtitleInfo).some(x => x)
-          site.noSubCheck.checked = !subbed
-          site.mixedSubCheck.checked = subbed
-          if (subbed) {
-            site.otherSubtitlesDiv.removeClass('hidden')
-            Object.keys(torrentInfo.subtitleInfo).forEach(lang => {
-              if (site.subtitleInfo[lang]) {
-                site.subtitleInfo[lang].checked = torrentInfo.subtitleInfo[lang]
+        } else if (site.construct === GAZELLE) {
+          if (siteName === GPW) {
+            // movie edition
+            if (torrentInfo.editionInfo) {
+              site.movieEditionCheck.click()
+              if (torrentInfo.editionInfo.criterionCollection) { site.movieEditionInfo.criterionCollection.click() }
+              if (torrentInfo.editionInfo.mastersOfCinema) { site.movieEditionInfo.mastersOfCinema.click() }
+              if (torrentInfo.editionInfo.directorCut) { site.movieEditionInfo.directorCut.click() }
+              if (torrentInfo.editionInfo.unrated) { site.movieEditionInfo.unrated.click() }
+              if (torrentInfo.editionInfo.uncut) { site.movieEditionInfo.uncut.click() }
+              if (torrentInfo.editionInfo.theatrical) { site.movieEditionInfo.theatrical.click() }
+              if (torrentInfo.editionInfo.extended) { site.movieEditionInfo.extended.click() }
+              if (torrentInfo.editionInfo.remaster4k) { site.movieEditionInfo.remaster4k.click() }
+              if (torrentInfo.editionInfo.remaster) { site.movieEditionInfo.remaster.click() }
+              if (torrentInfo.editionInfo.restoration4k) { site.movieEditionInfo.restoration4k.click() }
+              if (torrentInfo.editionInfo.twoInOne) { site.movieEditionInfo.twoInOne.click() }
+              if (torrentInfo.audioInfo && torrentInfo.audioInfo.commentary) { site.movieEditionInfo.withCommentary.click() }
+            }
+            // subtitles
+            const subbed = Object.values(torrentInfo.subtitleInfo).some(x => x)
+            site.noSubCheck.checked = !subbed
+            site.mixedSubCheck.checked = subbed
+            if (subbed) {
+              site.otherSubtitlesDiv.removeClass('hidden')
+              Object.keys(torrentInfo.subtitleInfo).forEach(lang => {
+                if (site.subtitleInfo[lang]) {
+                  site.subtitleInfo[lang].checked = torrentInfo.subtitleInfo[lang]
+                }
+              })
+            }
+            // video info
+            if (torrentInfo.videoInfo) {
+              site.videoInfo.bit10.checked = torrentInfo.videoInfo.bit10
+              site.videoInfo.hdr10.checked = torrentInfo.videoInfo.hdr10
+              site.videoInfo.hdr10plus.checked = torrentInfo.videoInfo.hdr10plus
+              site.videoInfo.dovi.checked = torrentInfo.videoInfo.dovi
+            }
+            // audio info
+            if (torrentInfo.audioInfo) {
+              site.audioInfo.dtsX.checked = torrentInfo.audioInfo.dtsX
+              site.audioInfo.atmos.checked = torrentInfo.audioInfo.atmos
+              site.audioInfo.chineseDub.checked = torrentInfo.audioInfo.chineseDub
+            }
+            // container info
+            if (Object.values(site.containerInfo).includes(torrentInfo.videoInfo.container)) {
+              site.containerSel.val(torrentInfo.videoInfo.container)
+            }
+          } else if (siteName === UHD) {
+            // movie edition
+            if (torrentInfo.editionInfo) {
+              if (torrentInfo.editionInfo.criterionCollection) { site.movieEditionInfo.criterionCollection.click() }
+              if (torrentInfo.editionInfo.directorCut) { site.movieEditionInfo.directorCut.click() }
+              if (torrentInfo.editionInfo.unrated) { site.movieEditionInfo.unrated.click() }
+              if (torrentInfo.editionInfo.uncut) { site.movieEditionInfo.uncut.click() }
+              if (torrentInfo.editionInfo.theatrical) { site.movieEditionInfo.theatrical.click() }
+              if (torrentInfo.editionInfo.extended) { site.movieEditionInfo.extended.click() }
+              if (torrentInfo.editionInfo.remaster4k) { site.movieEditionInfo.remaster4k.click() }
+              if (torrentInfo.editionInfo.remaster) { site.movieEditionInfo.remaster.click() }
+              if (torrentInfo.editionInfo.restoration4k) { site.movieEditionInfo.restoration4k.click() }
+              if (torrentInfo.editionInfo.twoInOne) { site.movieEditionInfo.twoInOne.click() }
+              if (torrentInfo.editionInfo.threeInOne) { site.movieEditionInfo.threeInOne.click() }
+              if (torrentInfo.editionInfo.hybrid) { site.movieEditionInfo.hybrid.click() }
+              if (torrentInfo.editionInfo.imax) { site.movieEditionInfo.imax.click() }
+              if (torrentInfo.editionInfo.tvCut) { site.movieEditionInfo.tvCut.click() }
+              if (torrentInfo.videoInfo && (torrentInfo.videoInfo.bit10 || torrentInfo.videoInfo.hdr10 || torrentInfo.videoInfo.hdr10plus || torrentInfo.videoInfo.dovi)) {
+                site.movieEditionInfo.bit10.click()
               }
-            })
-          }
-          // video info
-          if (torrentInfo.videoInfo) {
-            site.videoInfo.bit10.checked = torrentInfo.videoInfo.bit10
-            site.videoInfo.hdr10.checked = torrentInfo.videoInfo.hdr10
-            site.videoInfo.hdr10plus.checked = torrentInfo.videoInfo.hdr10plus
-            site.videoInfo.dovi.checked = torrentInfo.videoInfo.dovi
-          }
-          // audio info
-          if (torrentInfo.audioInfo) {
-            site.audioInfo.dtsX.checked = torrentInfo.audioInfo.dtsX
-            site.audioInfo.atmos.checked = torrentInfo.audioInfo.atmos
-            site.audioInfo.chineseDub.checked = torrentInfo.audioInfo.chineseDub
-          }
-          // container info
-          if (Object.values(site.containerInfo).includes(torrentInfo.videoInfo.container)) {
-            site.containerSel.val(torrentInfo.videoInfo.container)
+            }
+            // hdr info
+            if (torrentInfo.videoInfo) {
+              if (torrentInfo.videoInfo.dovi) { site.hdrSel.val(site.hdrInfo.dovi) }
+              else if (torrentInfo.videoInfo.hdr10plus) { site.hdrSel.val(site.hdrInfo.hdr10plus) }
+              else if (torrentInfo.videoInfo.hdr10) { site.hdrSel.val(site.hdrInfo.hdr10) }
+            }
+            // season info
+            if (site.seasonSel) {
+              // totally unnecessary, only to pass the uploading procedure
+              site.seasonSel.val(site.seansonInfo.s01)
+            }
           }
           // repair the mediainfo in case 'Complete name' is missing
           if (torrentInfo.mediainfo && torrentInfo.mediainfo.General) {
@@ -1696,7 +1843,7 @@ function processDescription (siteName, description) {
         }
         // anonymously uploading
         if (site.anonymousControl) {
-          if (siteName === NHD || siteName === PTERCLUB || siteName === PUTAO || siteName === MTEAM) {
+          if (siteName === NHD || siteName === PTERCLUB || siteName === PUTAO || siteName === MTEAM || siteName === UHD) {
             site.anonymousControl.checked = ANONYMOUS
           } else if (siteName === TTG) {
             site.anonymousControl.val(ANONYMOUS ? 'yes' : 'no')
@@ -1720,7 +1867,7 @@ function processDescription (siteName, description) {
         site.anonymousCheckSubtitle.checked = ANONYMOUS
       }
       const pathSub = site.inputFileSubtitle.val()
-      const fileName = /([^\\]+)$/.exec(pathSub)[1]
+      const fileName = pathSub.replace(/.*?([^\\]+)$/, '$1')
       if (fileName) {
         if (site.titleBoxSubtitle) {
           site.titleBoxSubtitle.val(fileName)
