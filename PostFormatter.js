@@ -87,10 +87,15 @@ const regexScreenshotsThumbsTitled = RegExp(
 const regexScreenshotsSimple = RegExp(
   '(?:\\[b\\])?Screenshots(?:\\[\\/b\\])?\\s*(\\[img\\]' + regexImageUrl + '\\s*\\[\\/img\\]+)',
   'mig')
+// 对比图相关正则表达式信息
 const regexInfo = {
+  // [box=team1, team2, team3]url1 url2 url3[/box]
   boxed: { regex: regexScreenshotsThumbsBoxed, groupForTeams: 2, groupForUrls: 3, groupForThumbs: 4 },
+  // [center]team1 | team2 | team3\nurl1 url2 url3[/center]
   titled: { regex: regexScreenshotsThumbsTitled, groupForTeams: 1, groupForUrls: 2, groupForThumbs: 3 },
+  // [comparison=team1, team2, team3]url1 url2 url3[/comparison]
   comparison: { regex: regexScreenshotsComparison, groupForTeams: 1, groupForUrls: 2, groupForThumbs: -1 },
+  // [img]https://1.png[/img][img]https://2.png[/img][img]https://3.png[/img]
   simple: { regex: regexScreenshotsSimple, groupForTeams: -1, groupForUrls: 1, groupForThumbs: -1 }
 }
 const siteInfoMap = {
@@ -122,6 +127,7 @@ const siteInfoMap = {
     categorySel: $('#browsecat'), sourceSel: $("select[name='source_sel']"), standardSel: $("select[name='standard_sel']"), processingSel: $("select[name='processing_sel']"), codecSel: $("select[name='codec_sel']"),
 
     pullMovieScore: false, translatedChineseNameInTitle: false, doubanIdInsteadofLink: false,
+    screenshotsStyle: 'conventional',
     categoryInfo: { default: 0, movie: 101, tvSeries: 102, tvShow: 103, documentary: 104, animation: 105 },
     sourceInfo: { default: 0, bluray: 1, hddvd: 2, dvd: 3, hdtv: 4, webdl: 7, webrip: 9 },
     standardInfo: { default: 0, res1080p: 1, res1080i: 2, res720p: 3, res2160p: 6, sd: 4 },
@@ -158,6 +164,8 @@ const siteInfoMap = {
     chsubCheck: $('#zhongzi')[0], englishSubCheck: $('#ensub')[0], chdubCheck: $('#guoyu')[0], cantodubCheck: $('#yueyu')[0],
 
     pullMovieScore: true, translatedChineseNameInTitle: false, doubanIdInsteadofLink: false,
+    // 对比图风格，conventional 是指缩略图超链接方式
+    screenshotsStyle: 'conventional',
     categoryInfo: { default: 0, movie: 401, tvSeries: 404, tvShow: 405, documentary: 402, animation: 403 },
     sourceInfo: { default: 0, bluray: 2, remux: 3, encode: 6, hdtv: 4, webdl: 5, dvd: 7 },
     areaInfo: { default: 0, cnMl: 1, hk: 2, tw: 3, euAme: 4, kor: 5, jap: 6, ind: 7, other: 8 },
@@ -191,6 +199,7 @@ const siteInfoMap = {
     categorySel: $('#browsecat'), standardSel: $("select[name='standard_sel']"), codecSel: $("select[name='codec_sel']"),
 
     pullMovieScore: false, translatedChineseNameInTitle: true, doubanIdInsteadofLink: false,
+    screenshotsStyle: 'conventional',
     categoryInfo: {
       default: 0, documentary: 406, animation: 431, movieCn: 401, movieEuAme: 402, movieAsia: 403,
       tvSeriesHkTw: 407, tvSeriesAsia: 408, tvSeriesCnMl: 409, tvSeriesEuAme: 410,
@@ -229,6 +238,7 @@ const siteInfoMap = {
     chsubCheck: $("input[type='checkbox'][name='l_sub']")[0], chdubCheck: $("input[type='checkbox'][name='l_dub']")[0],
 
     pullMovieScore: true, translatedChineseNameInTitle: false, doubanIdInsteadofLink: false,
+    screenshotsStyle: 'conventional',
     categoryInfo: { default: 0, movieHd: 419, movieRemux: 439, tvSeriesHd: 402, documentary: 404, animation: 405 },
     areaInfo: { default: 0, cnMl: 1, euAme: 2, hkTw: 3, jap: 4, kor: 5, other: 6 },
     standardInfo: { default: 0, res1080p: 1, res1080i: 2, res720p: 3, res2160p: 6, sd: 5 },
@@ -261,6 +271,7 @@ const siteInfoMap = {
     categorySel: $('select[name="type"]'), anonymousControl: $('select[name="anonymity"]'),
 
     pullMovieScore: true, translatedChineseNameInTitle: false, doubanIdInsteadofLink: true,
+    screenshotsStyle: 'conventional',
     categoryInfo: {
       default: 0, movie720P: 52, movie1080ip: 53, movie2160p: 108, documentary720p: 62, documentary1080ip: 63,
       tvSeriesEuAme: 87, tvSeriesJap: 88, tvSeriesKor: 99, tvSeriesCn: 90, tvShowJap: 101, tvShowKor: 103, tvShow: 60
@@ -358,6 +369,7 @@ const siteInfoMap = {
 
     pullMovieScore: true, translatedChineseNameInTitle: false,
     minScreenshots: 3, maxScreenshots: 10, supportedImageHosts: [KSHARE, PIXHOST, PTPIMG, PTERCLUB, ILIKESHOTS, IMGBOX],
+    screenshotsStyle: 'comparison',
     sourceInfo: { default: '---', bluray: 'Blu-ray', web: 'WEB', hdtv: 'HDTV', dvd: 'DVD' },
     codecInfo: { default: '---', h264: 'H.264', h265: 'H.265', xvid: 'XviD', divx: 'DivX', x264: 'x264', x265: 'x265' },
     standardInfo: { default: '---', res1080i: '1080i', res1080p: '1080p', res2160p: '2160p', res720p: '720p', sd: '480p' },
@@ -768,7 +780,7 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
       torrentTitle = formatTorrentName(torrentTitle)
     }
   }
-  if (site.construct === NEXUSPHP) {
+  if (site.screenshotsStyle === 'conventional') {
     let removePlainScreenshots = false
     const comparisons = collectComparisons(textToConsume)
       .sort((a, b) => b.starts - a.starts)
@@ -802,7 +814,7 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
         textToConsume.substring(ends)
     }
     description = textToConsume
-  } else if (site.construct === GAZELLE && siteName === GPW) {
+  } else if (site.screenshotsStyle === 'comparison') {
     let teamEncode = ''
     let screenshots = ''
     let currentScreenshots = 0
@@ -875,7 +887,6 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
 // 处理简介文本
 function processDescription (siteName, description) {
   const site = siteInfoMap[siteName]
-  const construct = site.construct
   const targetBoxTag = site.targetBoxTag
   const boxSupportDescr = site.boxSupportDescr
   const boxNeedBreakLine = site.boxNeedBreakLine
@@ -924,12 +935,10 @@ function processDescription (siteName, description) {
     .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')
     // for pterclub
     .replace(/\[(\/?img)\d+\]/g, '[$1]')
-  if (construct === GAZELLE) {
-    if (siteName === GPW) {
-      description = description
-        .replace(/\[\/?(size|color|font|b|i|pre)(=[^\]]+)?\]/g, '')
-        .replace(/\[\/?center\]/g, '\n')
-    }
+  if (siteName === GPW) {
+    description = description
+      .replace(/\[\/?(size|color|font|b|i|pre)(=[^\]]+)?\]/g, '')
+      .replace(/\[\/?center\]/g, '\n')
   }
   return description
 }
