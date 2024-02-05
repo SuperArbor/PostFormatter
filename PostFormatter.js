@@ -808,8 +808,8 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
   // 优先从简介中获取mediainfo
   const tagForMediainfo = site.targetBoxTag || 'quote'
   const regexMIStr = site.boxSupportDescr
-    ? '\\[(' + tagForMediainfo + '|quote)\\s*=\\s*mediainfo\\][^\\0]*?(General\\s+Unique ID[^\\0]*?)\\[\\/\\1\\]'
-    : '\\[(' + tagForMediainfo + '|quote)\\][^\\0]*?(General\\s+Unique ID[^\\0]*?)\\[\\/\\1\\]'
+    ? '\\[(' + tagForMediainfo + '|quote)\\s*=\\s*mediainfo\\]\\s*(General\\s+Unique ID[^\\0]+?)\\[\\/\\1\\]'
+    : '\\[(' + tagForMediainfo + '|quote)\\]\\s*(General\\s+Unique ID[^\\0]+?)\\[\\/\\1\\]'
   const regexMI = RegExp(regexMIStr, 'im')
   const mediainfoArray = textToConsume.match(regexMI)
   if (mediainfoArray) {
@@ -951,12 +951,12 @@ function processDescription (siteName, description) {
   }
   description = description
     // 处理 mediainfo 容器标签，切换为 [box=mediainfo] 的形式，以便于后续统一匹配 mediainfo
-    .replace(RegExp('\\[(' + allTagBoxesStr + '|quote|code)(?:\\s*=\\s*mediainfo)?\\][^\\0]*?(General\\s+Unique ID[^\\0]*?)\\[\\/\\1\\]', 'gim'),
+    .replace(RegExp('\\[(' + allTagBoxesStr + '|quote|code)(?:\\s*=\\s*mediainfo)?\\]\\s*(General\\s+Unique ID[^\\0]+?)\\[\\/\\1\\]', 'gim'),
       boxSupportDescr
         ? '[' + replaceTag + '=mediainfo]$2[/' + replaceTag + ']'
         : '[' + replaceTag + ']$2[/' + replaceTag + ']')
     // NHD mediainfo style
-    .replace(/\[mediainfo\]([^\0]*?General\s+Unique ID[^\0]*?)\[\/mediainfo\]/gim,
+    .replace(/\[mediainfo\](\s*General\s+Unique ID[^\0]+?)\[\/mediainfo\]/gim,
       boxSupportDescr
         ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']'
         : '[' + replaceTag + ']$1[/' + replaceTag + ']')
