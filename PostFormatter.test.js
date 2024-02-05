@@ -396,31 +396,31 @@ Menu
 const processTagsTests = [{
     input: {
       tag: 'quote',
-      inputText: `quote]A0[quote=A0]A0B0[quote]B0C0[quote=C0]C0[/quote]C0B0[/quote]B0B1[quote=B1]B1B0[/quote]B0A0[/quote]Level 0 Text[quote=A0]A0[/quote]`,
+      inputText: `quote]A0[quote=A0]A0B0[quote]B0C0[quote=C0]C0[/quote]C0B0[/quote]B0B1[quote=B1]B1B0[/quote]B0A0[/quote]Level 0 Text[quote=A0]A0[/quote]Level 0 Text`,
     },
     output: {
       keepNonQuoted: [
-        `quote]A0[b]A0[/b][quote]A0B0[quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote]Level 0 Text[b]A0[/b][quote]A0[/quote]`,
+        `quote]A0[b]A0[/b][quote]A0B0[quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote]Level 0 Text[b]A0[/b][quote]A0[/quote]Level 0 Text`,
         ``
       ],
       noNonQuoted: [
         `[b]A0[/b][quote]A0B0[quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote][b]A0[/b][quote]A0[/quote]`,
-        `quote]A0Level 0 Text`
+        `quote]A0Level 0 TextLevel 0 Text`
       ]
     }
   }, {
     input: {
       tag: 'quote',
-      inputText: `A0[/quote][quote=A0]A0B0[quote]B0C0[quote=C0]C0[/quote]C0B0[/quote]B0B1[quote=B1]B1B0[/quote]B0A0[/quote]Level 0 Text[quote=A0]A0[/quote]`,
+      inputText: `A0[/quote][quote=A0]A0B0[quote]B0C0[quote=C0]C0[/quote]C0B0[/quote]B0B1[quote=B1]B1B0[/quote]B0A0[/quote]Level 0 Text[quote=A0]A0[/quote]Level 0 Text`,
     },
     output: {
       keepNonQuoted: [
-        `[b]A0[/b][quote]A0B0[quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote]Level 0 Text[b]A0[/b][quote]A0[/quote]`,
+        `[b]A0[/b][quote]A0B0[quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote]Level 0 Text[b]A0[/b][quote]A0[/quote]Level 0 Text`,
         `A0[/quote]`
       ],
       noNonQuoted: [
         `[b]A0[/b][quote]A0B0[quote]B0C0[b]C0[/b][quote]C0[/quote]C0B0[/quote]B0B1[b]B1[/b][quote]B1B0[/quote]B0A0[/quote][b]A0[/b][quote]A0[/quote]`,
-        `A0[/quote]Level 0 Text`
+        `A0[/quote]Level 0 TextLevel 0 Text`
       ]
     }
   }
