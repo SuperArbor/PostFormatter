@@ -115,6 +115,8 @@ const siteInfoMap = {
     targetBoxTag: 'box',
     // 是否支持 [box=...]的形式
     boxSupportDescr: true,
+    // [quote=A] displays as 'title': -A---, 'writer': -A wrote---, 'none': ------
+    quoteStyle: 'title',
     // 是否需要在 box 标签右括号末端加上换行
     boxNeedBreakLine: false,
     // 不支持的标签
@@ -153,6 +155,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: 'hide',
     boxSupportDescr: true,
+    quoteStyle: 'title',
     boxNeedBreakLine: false,
     unsupportedTags: ['align', 'pre'],
 
@@ -189,6 +192,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: '',
     boxSupportDescr: true,
+    quoteStyle: 'none',
     boxNeedBreakLine: false,
     unsupportedTags: ['align', 'center', 'pre'],
 
@@ -227,6 +231,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: 'expand',
     boxSupportDescr: false,
+    quoteStyle: 'none',
     boxNeedBreakLine: false,
     unsupportedTags: ['align', 'pre'],
 
@@ -262,6 +267,7 @@ const siteInfoMap = {
     construct: NEXUSPHP,
     targetBoxTag: '',
     boxSupportDescr: false,
+    quoteStyle: 'writer',
     boxNeedBreakLine: false,
     unsupportedTags: ['align'],
 
@@ -287,6 +293,7 @@ const siteInfoMap = {
     construct: GAZELLE,
     targetBoxTag: 'hide',
     boxSupportDescr: true,
+    quoteStyle: 'writer',
     boxNeedBreakLine: true,
     unsupportedTags: ['align', 'pre'],
 
@@ -386,8 +393,9 @@ const siteInfoMap = {
       subtitles: 'subtitle.php'
     },
     construct: GAZELLE,
-    targetBoxTag: 'hide',
+    targetBoxTag: 'spoiler',
     boxSupportDescr: true,
+    quoteStyle: 'writer',
     boxNeedBreakLine: true,
     unsupportedTags: ['align', 'pre'],
 
@@ -877,7 +885,15 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
         screenshotsStr +
         textToConsume.substring(ends)
     }
-    description = textToConsume
+    if (site.quoteStyle === 'writer') {
+      [description] = processTags(
+        textToConsume, 'quote',
+        matchLeft => { return matchLeft.replace(/\[quote(?:=([^\]]+))\]/g, '[b]$1[/b]\n[quote]') },
+        matchRight => { return matchRight },
+        true)
+    } else {
+      description = textToConsume
+    }
   } else if (site.screenshotsStyle === 'comparison') {
     let teamEncode = ''
     let screenshots = ''
@@ -886,6 +902,7 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
     if (teamArray) {
       teamEncode = teamArray[0]
     }
+    let screenshotsStrAll = ''
     const comparisons = collectComparisons(textToConsume)
       .sort((a, b) => b.starts - a.starts)
     for (let { starts, ends, teams, urls, regexType, thumbs } of comparisons) {
@@ -904,7 +921,7 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
       } else {
         screenshotsStr = ''
       }
-      description += screenshotsStr
+      screenshotsStrAll += screenshotsStr
       // 如果之前没有获取到teamEncode，直接用Encode赋值，避免后续'includes'判断错误（string.includes('') === true）
       teamEncode = teamEncode || 'Encode'
       if (urls.length > 0 && urls.length % teams.length === 0) {
@@ -932,19 +949,23 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
         textToConsume.substring(ends)
     }
     if (screenshots) {
-      description += `[b]Screenshots[/b]\n${screenshots}`
+      screenshotsStrAll += `[b]Screenshots[/b]\n${screenshots}`
     }
     let [quotes, remained] = processTags(
       textToConsume, 'quote',
-      matchLeft => { return matchLeft.replace(/\[quote(?:=([^\]]+))\]/g, '[b]$1[/b]\n[quote]') },
+      matchLeft => {
+        return site.quoteStyle === 'writer'
+          ? matchLeft.replace(/\[quote(?:=([^\]]+))\]/g, '[b]$1[/b]\n[quote]')
+          : matchLeft
+      },
       matchRight => { return matchRight },
       false)
-    // 只是为了提取出 hides，内容不做改变
-    let [hides] = processTags(remained, 'hide',
+    // 只是为了提取出 boxes
+    let [boxes] = processTags(remained, site.targetBoxTag,
       matchLeft => { return matchLeft },
       matchRight => { return matchRight },
       false)
-    description = quotes + hides + description
+    description = quotes + boxes + screenshotsStrAll
   }
   return [description, mediainfo, torrentTitle]
 }
@@ -967,13 +988,13 @@ function processDescription (siteName, description) {
     // 处理 mediainfo 容器标签，切换为 [box=mediainfo] 的形式，以便于后续统一匹配 mediainfo
     .replace(RegExp('\\[(' + allTagBoxesStr + '|quote|code)(?:\\s*=\\s*mediainfo)?\\]\\s*(General\\s+Unique ID[^\\0]+?)\\[\\/\\1\\]', 'gim'),
       boxSupportDescr
-        ? '[' + replaceTag + '=mediainfo]$2[/' + replaceTag + ']'
-        : '[' + replaceTag + ']$2[/' + replaceTag + ']')
+        ? `[${replaceTag}=mediainfo]$2[/${replaceTag}]`
+        : `[${replaceTag}]$2[/${replaceTag}]`)
     // NHD mediainfo style
     .replace(/\[mediainfo\](\s*General\s+Unique ID[^\0]+?)\[\/mediainfo\]/gim,
       boxSupportDescr
-        ? '[' + replaceTag + '=mediainfo]$1[/' + replaceTag + ']'
-        : '[' + replaceTag + ']$1[/' + replaceTag + ']')
+        ? `[${replaceTag}=mediainfo]$1[/${replaceTag}]`
+        : `[${replaceTag}]$1[/${replaceTag}]`)
     // 处理除了 mediainfo 以外的容器类标签
     // 注意 allTagBoxesStr（由多个'|'组成）不需要 escape
     // 注意 GPW虽然 boxSupportDescr===true，但显示效果有区别，所以最后也会处理为`[b]$1[/b]\n[${replaceTag}]`形式，
@@ -1925,6 +1946,6 @@ function processDescription (siteName, description) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     collectComparisons, decomposeDescription, processDescription, mediainfo2String, string2Mediainfo, processTags,
-    NHD, PTERCLUB, GPW, MTEAM, TTG, PUTAO, siteInfoMap
+    NHD, PTERCLUB, GPW, MTEAM, TTG, PUTAO, UHD, siteInfoMap
   }
 }

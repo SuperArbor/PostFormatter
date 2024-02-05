@@ -1,7 +1,7 @@
 // module imports
 const {
   collectComparisons, decomposeDescription, processDescription, mediainfo2String, string2Mediainfo, processTags,
-  NHD, GPW, PUTAO, TTG, PTERCLUB, MTEAM} = require('./PostFormatter')
+  NHD, GPW, PUTAO, TTG, PTERCLUB, MTEAM, UHD} = require('./PostFormatter')
 const fs = require('fs')
 const path = require('path')
 const glob = require('glob')
@@ -501,7 +501,7 @@ test('test whole screenshots conversion', async () => {
     }
   });
   const inputs = await glob.glob('./test files/input/*.bbcode')
-  const targetSites = [NHD, GPW]
+  const targetSites = [NHD, GPW, UHD]
   for (const input of inputs) {
     const [movieName, originalSite] = path.basename(input).split('.')
     try {
