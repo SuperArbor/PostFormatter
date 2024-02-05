@@ -21,9 +21,8 @@
 //= ========================================================================================================
 // constants
 const $ = window.jQuery
-const NHD = 'nexushd'; const PUTAO = 'pt.sjtu'; const MTEAM = 'm-team'; const TTG = 'totheglory'; const GPW = 'greatposterwall'; const UHD = 'uhdbits'
+const NHD = 'nexushd'; const PUTAO = 'pt.sjtu'; const MTEAM = 'm-team'; const TTG = 'totheglory'; const GPW = 'greatposterwall'
 const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'; const KSHARE = 'kshare.club'; const PIXHOST = 'pixhost'; const IMGBOX = 'imgbox'; const IMG4K = 'img4k'; const ILIKESHOTS = 'yes.ilikeshots.club'
-const allSites = [NHD, PUTAO, MTEAM, TTG, GPW, UHD, PTERCLUB]
 const allImageHosts = [ PIXHOST, IMGBOX, IMG4K, ILIKESHOTS, PTERCLUB, IMGPILE, PTPIMG, KSHARE ]
 // 特殊组名备注
 const weirdTeams = ['de[42]', 'D-Z0N3']
@@ -97,6 +96,15 @@ const regexInfo = {
 const siteInfoMap = {
   // bracket makes the value of the string 'nexushd' the true key or instead the string 'NHD' will be used as key
   [NHD]: {
+    // 主页
+    hostName: 'nexushd.org',
+    // 匹配页面
+    pages: {
+      upload: 'upload.php',
+      edit: 'edit.php',
+      subtitles: 'subtitles.php'
+    },
+    // 架构
     construct: NEXUSPHP,
     // box 类标签，具备隐藏功能
     targetBoxTag: 'box',
@@ -104,6 +112,7 @@ const siteInfoMap = {
     boxSupportDescr: true,
     // 是否需要在 box 标签右括号末端加上换行
     boxNeedBreakLine: false,
+    // 不支持的标签
     unsupportedTags: ['align', 'pre'],
 
     inputFile: $('input[type="file"][name="file"]'),
@@ -129,6 +138,12 @@ const siteInfoMap = {
     }
   },
   [PTERCLUB]: {
+    hostName: 'pterclub.com',
+    pages: {
+      upload: 'upload.php',
+      edit: 'edit.php',
+      subtitles: 'subtitles.php'
+    },
     construct: NEXUSPHP,
     targetBoxTag: 'hide',
     boxSupportDescr: true,
@@ -157,6 +172,12 @@ const siteInfoMap = {
     }
   },
   [PUTAO]: {
+    hostName: 'pt.sjtu.edu.cn',
+    pages: {
+      upload: 'upload.php',
+      edit: 'edit.php',
+      subtitles: 'subtitles.php'
+    },
     construct: NEXUSPHP,
     targetBoxTag: '',
     boxSupportDescr: true,
@@ -188,6 +209,12 @@ const siteInfoMap = {
     }
   },
   [MTEAM]: {
+    hostName: 'm-team.cc',
+    pages: {
+      upload: 'upload.php',
+      edit: 'edit.php',
+      subtitles: 'subtitles.php'
+    },
     construct: NEXUSPHP,
     targetBoxTag: 'expand',
     boxSupportDescr: false,
@@ -216,6 +243,12 @@ const siteInfoMap = {
     }
   },
   [TTG]: {
+    hostName: 'totheglory.im',
+    pages: {
+      upload: 'upload.php',
+      edit: 'edit.php',
+      subtitles: 'dox.php'
+    },
     construct: NEXUSPHP,
     targetBoxTag: '',
     boxSupportDescr: false,
@@ -234,6 +267,12 @@ const siteInfoMap = {
     }
   },
   [GPW]: {
+    hostName: 'greatposterwall.com',
+    pages: {
+      upload: 'upload.php',
+      edit: 'torrents.php?action=edit',
+      subtitles: 'subtitles.php'
+    },
     construct: GAZELLE,
     targetBoxTag: 'hide',
     boxSupportDescr: true,
@@ -594,27 +633,27 @@ function string2Mediainfo (mediainfoStr) {
   if (!mediainfoStr) {
     return mi
   }
-  // \r is for clipboard content operation
   let currentSectorKey = ''
+  // \r is for clipboard content operation
   mediainfoStr.split(/\r?\n/g).forEach(sector => {
     if (sector && sector.trim()) {
       let [fieldKey, fieldValue] = sector.split(/ +: +/)
-        if (fieldKey) {
-          fieldKey = fieldKey.trim()
-          if (fieldValue) {
-            fieldValue = fieldValue.trim()
-            if (currentSectorKey) {
-              mi[currentSectorKey][fieldKey] = fieldValue
-            } else {
-              // invalid mediainfo format
-              mi = {}
-              return
-            }
+      if (fieldKey) {
+        fieldKey = fieldKey.trim()
+        if (fieldValue) {
+          fieldValue = fieldValue.trim()
+          if (currentSectorKey) {
+            mi[currentSectorKey][fieldKey] = fieldValue
           } else {
-            currentSectorKey = fieldKey
-            mi[currentSectorKey] = {}
+            // invalid mediainfo format
+            mi = {}
+            return
           }
+        } else {
+          currentSectorKey = fieldKey
+          mi[currentSectorKey] = {}
         }
+      }
     }
   })
   return mi
@@ -646,7 +685,7 @@ async function sendImagesToPixhost (urls, size) {
             }))
           } else {
             console.log(response)
-            reject(new Error('上传失败，请重试'))
+            reject(new Error('Failed to upload'))
           }
         }
       }
@@ -700,7 +739,7 @@ function collectComparisons (text) {
     }
   }
 }
-// 对比图信息转换
+// 从简介中提取信息并格式化截图
 async function decomposeDescription (siteName, textToConsume, torrentTitle) {
   let mediainfo = {}
   let description = ''
@@ -820,7 +859,7 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
       description += `[b]Screenshots[/b]\n${screenshots}`
     }
     let [quotes, remained] = processTags(
-      textToConsume, 'quote', 
+      textToConsume, 'quote',
       matchLeft => { return matchLeft.replace(/\[quote(?:=([^\]]+))\]/g, '[b]$1[/b]\n[quote]') },
       matchRight => { return matchRight },
       false)
@@ -833,6 +872,7 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
   }
   return [description, mediainfo, torrentTitle]
 }
+// 处理简介文本
 function processDescription (siteName, description) {
   const site = siteInfoMap[siteName]
   const construct = site.construct
@@ -893,35 +933,31 @@ function processDescription (siteName, description) {
   }
   return description
 }
-(function () {
+(() => {
   'use strict'
   //= ========================================================================================================
   // Main
-  const domainMatchArray = window.location.href.match(/(.*)\/(upload|edit|subtitles|dox|torrents)\.php(?:\?action=(.*))?/)
-  if (!domainMatchArray) {
-    return
-  }
-  const siteName = allSites.find(sn => domainMatchArray[1].match(RegExp(escapeRegExp(sn)), 'i'))
-  let page = domainMatchArray[2]
-  if (siteName === TTG) {
-    if (page === 'dox') {
-      page = 'subitles'
-    }
-  } else if (siteName === GPW) {
-    if (page === 'torrents' && domainMatchArray[3].match(/edit/i)) {
-      page = 'edit'
-    }
+  const siteName = Object.keys(siteInfoMap).find(sn => {
+    let st = siteInfoMap[sn]
+    return window.location.href.match(escapeRegExp(st.hostName))
+  })
+  let page = ''
+  let site = {}
+  if (siteName) {
+    site = siteInfoMap[siteName]
+    page = Object.keys(site.pages).find(pg => {
+      let url = `${site.hostName}/${site.pages[pg]}`
+      return window.location.href.match(escapeRegExp(url))
+    })
   }
   if (!siteName || !page) {
     return
   }
-  const site = siteName ? siteInfoMap[siteName] : {}
   console.log(`running in site ${siteName} and page ${page}`)
-  let nameBox = null
   if (page === 'upload' || page === 'edit') {
     //= ========================================================================================================
     // 上传和编辑种子页面
-    nameBox = page === 'upload'
+    const nameBox = page === 'upload'
       ? site.nameBoxUpload
       : site.nameBoxEdit
     const btnBingo = $('<input>')
@@ -961,7 +997,7 @@ function processDescription (siteName, description) {
       bbcodeToolbar.append(btnBingo)
     }
     // function definition
-    btnBingo.on('click', async function () {
+    btnBingo.on('click', async () => {
       const oriTextBingo = btnBingo.val()
       const torrentInfo = {}
       try {
@@ -1002,7 +1038,6 @@ function processDescription (siteName, description) {
         //= ========================================================================================================
         // decompose description (and generate comparison screenshots)
         [textToConsume, torrentInfo.mediainfo, torrentInfo.torrentTitle] = await decomposeDescription(siteName, textToConsume, torrentInfo.torrentTitle)
-        // info from mediainfo
         torrentInfo.audioInfo = {
           dtsX: false, atmos: false, chineseDub: false, cantoneseDub: false, commentary: false
         }
@@ -1018,6 +1053,7 @@ function processDescription (siteName, description) {
           let mediainfoStr = site.mediainfoBox.val()
           torrentInfo.mediainfo = string2Mediainfo(mediainfoStr)
         }
+        // info from mediainfo
         Object.entries(torrentInfo.mediainfo).forEach(([infoKey, infoValue]) => {
           if (infoKey.match(/text( #\d+)?/i)) {
             // subtitle
@@ -1634,10 +1670,11 @@ function processDescription (siteName, description) {
             site.audioInfo.atmos.checked = torrentInfo.audioInfo.atmos
             site.audioInfo.chineseDub.checked = torrentInfo.audioInfo.chineseDub
           }
-          // repair the mediainfo in case 'Complete name' is missing
+          // container info
           if (Object.values(site.containerInfo).includes(torrentInfo.videoInfo.container)) {
             site.containerSel.val(torrentInfo.videoInfo.container)
           }
+          // repair the mediainfo in case 'Complete name' is missing
           if (torrentInfo.mediainfo && torrentInfo.mediainfo.General) {
             if (!torrentInfo.mediainfo.General['Complete name'] &&
               torrentInfo.mediainfo.General['Movie name'] &&
@@ -1669,7 +1706,7 @@ function processDescription (siteName, description) {
     if (!site.inputFileSubtitle) {
       return
     }
-    site.inputFileSubtitle.change(function () {
+    site.inputFileSubtitle.change(() => {
       if (site.anonymousCheckSubtitle) {
         site.anonymousCheckSubtitle.checked = ANONYMOUS
       }
