@@ -890,7 +890,7 @@ function processDescription (siteName, description) {
   }
   description = description
     // 处理 mediainfo 容器标签，切换为 [box=mediainfo] 的形式，以便于后续统一匹配 mediainfo
-    .replace(RegExp('\\[(' + allTagBoxesStr + '|quote)(?:\\s*=\\s*mediainfo)?\\][^\\0]*?(General\\s+Unique ID[^\\0]*?)\\[\\/\\1\\]', 'gim'),
+    .replace(RegExp('\\[(' + allTagBoxesStr + '|quote|code)(?:\\s*=\\s*mediainfo)?\\][^\\0]*?(General\\s+Unique ID[^\\0]*?)\\[\\/\\1\\]', 'gim'),
       boxSupportDescr
         ? '[' + replaceTag + '=mediainfo]$2[/' + replaceTag + ']'
         : '[' + replaceTag + ']$2[/' + replaceTag + ']')
