@@ -8,7 +8,7 @@
 
 （3）【可选】自动勾选匿名发布种子和字幕。
 
-（4）目前支持NHD、PuTao、PTerClub、M-Team、TTG、GPW几个站。
+（4）目前支持NHD、PuTao、PTerClub、M-Team、TTG、GPW、UHDBits几个站。
 
 （5）各个PT站BB代码支持情况不同，同一个种子的描述内容在各站的显示效果会有一定区别。
 
