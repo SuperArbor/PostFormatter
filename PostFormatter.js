@@ -505,7 +505,16 @@ function processTags (inputText, tag, processLeft, processRight, keepNonQuoted=t
         : currentLevel >=1
           ? currentLevel--
           : 0
+    } else {
+      if (currentLevel === 0) {
+        if (keepNonQuoted) {
+          outputText += inputText.substring(indexOutput)
+        } else {
+          remainedText += inputText.substring(indexRemained)
+        }
       } else {
+        outputText += inputText.substring(indexOutput)
+      }
       break
     }
   }
