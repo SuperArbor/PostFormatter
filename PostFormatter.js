@@ -71,7 +71,7 @@ const regexImageUrlsSeparated = RegExp(
 // 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
 // possible splitters for teams: '|',',','/','-','vs'
 const regexScreenshotsThumbsBoxed = RegExp(
-  '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*\\s*(' +
+  '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
   regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
   ')+)\\s*\\]' +
   regexScreenshotsThumbsCombined.source +

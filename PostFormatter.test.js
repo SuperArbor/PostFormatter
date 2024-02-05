@@ -126,6 +126,16 @@ const simpleScreenshotsTests = [{
     type: 'titled',
     length: 224
   }]
+}, {
+  text: `[box=Source vs SA89 vs D-Z0N3]
+  [url=http://imgbox.com/nuev0hIZ][img]https://thumbs2.imgbox.com/9e/31/nuev0hIZ_t.png[/img][/url] [url=http://imgbox.com/dUkK8F8I][img]https://thumbs2.imgbox.com/d7/82/dUkK8F8I_t.png[/img][/url] [url=http://imgbox.com/Pv21A211][img]https://thumbs2.imgbox.com/8e/2b/Pv21A211_t.png[/img][/url] [url=http://imgbox.com/6QnVQZwF][img]https://thumbs2.imgbox.com/5f/d0/6QnVQZwF_t.png[/img][/url] [url=http://imgbox.com/DxmxAOm2][img]https://thumbs2.imgbox.com/c7/cc/DxmxAOm2_t.png[/img][/url] [url=http://imgbox.com/zLSPYX4g][img]https://thumbs2.imgbox.com/e1/f1/zLSPYX4g_t.png[/img][/url] [url=http://imgbox.com/Z0t95QEJ][img]https://thumbs2.imgbox.com/66/ca/Z0t95QEJ_t.png[/img][/url] [url=http://imgbox.com/01xFPk8U][img]https://thumbs2.imgbox.com/0a/1f/01xFPk8U_t.png[/img][/url] [url=http://imgbox.com/NCOpuwsc][img]https://thumbs2.imgbox.com/f1/2e/NCOpuwsc_t.png[/img][/url] [url=http://imgbox.com/SWvUtub8][img]https://thumbs2.imgbox.com/63/8d/SWvUtub8_t.png[/img][/url] [url=http://imgbox.com/TyQeel8Z][img]https://thumbs2.imgbox.com/59/1d/TyQeel8Z_t.png[/img][/url] [url=http://imgbox.com/tDOzetUt][img]https://thumbs2.imgbox.com/f5/7c/tDOzetUt_t.png[/img][/url] [url=http://imgbox.com/Ne3LyAS2][img]https://thumbs2.imgbox.com/a9/c7/Ne3LyAS2_t.png[/img][/url] [url=http://imgbox.com/vkWmPlNR][img]https://thumbs2.imgbox.com/77/ee/vkWmPlNR_t.png[/img][/url] [url=http://imgbox.com/swffa2aQ][img]https://thumbs2.imgbox.com/11/96/swffa2aQ_t.png[/img][/url][/box]`,
+  result: [{
+    teams: ['Source', 'SA89', 'D-Z0N3'],
+    numUrls: 15,
+    thumbs: true,
+    type: 'boxed',
+    length: 1493
+  }]
 }]
 const descriptionTests = {
   [NHD]: [ {
@@ -417,7 +427,7 @@ const processTagsTests = [{
 ]
 
 test ('test tags', () => {
-  processTagsTests.forEach((test) => {
+  processTagsTests.forEach(test => {
     const input = test.input
     const output = test.output
     const actualOutputKeepNoneQuoted = processTags(input.inputText, input.tag, 
@@ -452,17 +462,29 @@ test ('test processDescription', () => {
 test('test simple screenshots conversion', () => {
   simpleScreenshotsTests.forEach(test => {
     const result = collectComparisons(test.text)
+    if (result.length !== test.result.length) {
+      console.log(`expected result length ${test.result.length}, actual length ${result.length}`)
+    }
     expect(result.length).toBe(test.result.length)
     if (result.length === test.result.length) {
       for (const i in result) {
         const output = result[i]
-        const input = test.result[i]
-        expect(output.urls.length).toBe(input.numUrls)
-        expect(output.regexType).toBe(input.type)
-        expect(output.thumbs).toBe(input.thumbs)
-        expect(JSON.stringify(output.teams)).toBe(JSON.stringify(input.teams))
+        const expected = test.result[i]
+        if (output.urls.length !== expected.numUrls) {
+          console.log(`expected urls ${expected.numUrls}, actual urls ${output.urls.length}`)
+        }
+        expect(output.urls.length).toBe(expected.numUrls)
+        expect(output.regexType).toBe(expected.type)
+        expect(output.thumbs).toBe(expected.thumbs)
+        if (JSON.stringify(output.teams) !== JSON.stringify(expected.teams)) {
+          console.log(`expected teams ${expected.teams}, actual teams ${output.teams}`)
+        }
+        expect(JSON.stringify(output.teams)).toBe(JSON.stringify(expected.teams))
         let outputLength = output.text.trim().length
-        expect(outputLength).toBe(input.length)
+        if (outputLength !== expected.length) {
+          console.log(`expected length ${expected.length}, actual length ${outputLength}`)
+        }
+        expect(outputLength).toBe(expected.length)
       }
     }
   })
