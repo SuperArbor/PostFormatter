@@ -425,7 +425,12 @@ const siteInfoMap = {
     categoryInfo: { movie: '0', music: '1', tvSeries: '2' },
     seansonInfo: { default: '---',  s01: '1' },
 
-    inputFileSubtitle: $('#file')
+    inputFileSubtitle: $('input[type="file"][name="sub"]'),
+    titleBoxSubtitle: $('input[type="text"][name="releasename"]'),
+    languageSelSubtitle: $('select[name="language"]'),
+    subtitleInfo: {
+      default: '', english: 'English', vietnamese: 'Vietnamese', danish: 'Danish', norwegian: 'Norwegian', finnish: 'Finnish', spanish: 'Spanish', french: 'French'
+    }
   }
 }
 //= ========================================================================================================
@@ -1872,10 +1877,10 @@ function processDescription (siteName, description) {
         if (site.titleBoxSubtitle) {
           site.titleBoxSubtitle.val(fileName)
         }
-        const abbrLangInSub = pathSub.replace(/.*\.(.*)\..*/i, '$1') || ''
+        const abbrLangInSub = pathSub.replace(/.*\.([^.]+)\.[^.]+$/i, '$1') || ''
         if (site.languageSelSubtitle) {
           let langSelected = site.subtitleInfo.default
-            if (abbrLangInSub.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || abbrLangInSub.match(/.+( |&)?(chs|cht|cn|zh)/)) {
+            if (site.subtitleInfo.other && abbrLangInSub.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || abbrLangInSub.match(/.+( |&)?(chs|cht|cn|zh)/)) {
               langSelected = site.subtitleInfo.other
             }
             else {
