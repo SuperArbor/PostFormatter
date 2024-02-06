@@ -137,6 +137,61 @@ const simpleScreenshotsTests = [{
     type: 'boxed',
     length: 1493
   }]
+}, {
+  text: `encoded 226105 frames, 25.28 fps, 11046.58 kb/s, 12419 MB[/code]
+
+  [b][u]Source Compare[/u][/b]
+  
+  USA BD | Hybrid(Merged) Source | AMZN WEB-DL(Resized)
+  [url=https://pixhost.to/show/674/444102172_x7l819.png][img]https://t92.pixhost.to/thumbs/674/444102172_x7l819.png[/img][/url] [url=https://pixhost.to/show/674/444102192_8v89r5.png][img]https://t92.pixhost.to/thumbs/674/444102192_8v89r5.png[/img][/url] [url=https://pixhost.to/show/674/444102198_to9mr9.png][img]https://t92.pixhost.to/thumbs/674/444102198_to9mr9.png[/img][/url] 
+  [url=https://pixhost.to/show/674/444102205_h6yj9p.png][img]https://t92.pixhost.to/thumbs/674/444102205_h6yj9p.png[/img][/url] [url=https://pixhost.to/show/674/444102209_61fyr7.png][img]https://t92.pixhost.to/thumbs/674/444102209_61fyr7.png[/img][/url] [url=https://pixhost.to/show/674/444102213_g004wa.png][img]https://t92.pixhost.to/thumbs/674/444102213_g004wa.png[/img][/url] 
+  [url=https://pixhost.to/show/674/444102214_81s2fz.png][img]https://t92.pixhost.to/thumbs/674/444102214_81s2fz.png[/img][/url] [url=https://pixhost.to/show/674/444102216_19w170.png][img]https://t92.pixhost.to/thumbs/674/444102216_19w170.png[/img][/url] [url=https://pixhost.to/show/674/444102219_4mlzx2.png][img]https://t92.pixhost.to/thumbs/674/444102219_4mlzx2.png[/img][/url] 
+  [url=https://pixhost.to/show/674/444102221_y61106.png][img]https://t92.pixhost.to/thumbs/674/444102221_y61106.png[/img][/url] [url=https://pixhost.to/show/674/444102226_x5cd4j.png][img]https://t92.pixhost.to/thumbs/674/444102226_x5cd4j.png[/img][/url] [url=https://pixhost.to/show/674/444102228_o0esan.png][img]https://t92.pixhost.to/thumbs/674/444102228_o0esan.png[/img][/url]
+  [url=https://pixhost.to/show/674/444102231_0a9lh6.png][img]https://t92.pixhost.to/thumbs/674/444102231_0a9lh6.png[/img][/url] [url=https://pixhost.to/show/674/444102233_du5e3p.png][img]https://t92.pixhost.to/thumbs/674/444102233_du5e3p.png[/img][/url] [url=https://pixhost.to/show/674/444102236_07835j.png][img]https://t92.pixhost.to/thumbs/674/444102236_07835j.png[/img][/url] 
+  [url=https://pixhost.to/show/674/444102239_mz47i1.png][img]https://t92.pixhost.to/thumbs/674/444102239_mz47i1.png[/img][/url] [url=https://pixhost.to/show/674/444102241_hn0n4m.png][img]https://t92.pixhost.to/thumbs/674/444102241_hn0n4m.png[/img][/url] [url=https://pixhost.to/show/674/444102243_o9k5s3.png][img]https://t92.pixhost.to/thumbs/674/444102243_o9k5s3.png[/img][/url] 
+  [url=https://pixhost.to/show/674/444102245_82m0u7.png][img]https://t92.pixhost.to/thumbs/674/444102245_82m0u7.png[/img][/url] [url=https://pixhost.to/show/674/444102246_d0y5ed.png][img]https://t92.pixhost.to/thumbs/674/444102246_d0y5ed.png[/img][/url] [url=https://pixhost.to/show/674/444102248_8zh2pv.png][img]https://t92.pixhost.to/thumbs/674/444102248_8zh2pv.png[/img][/url] 
+  [url=https://pixhost.to/show/674/444102249_6d258k.png][img]https://t92.pixhost.to/thumbs/674/444102249_6d258k.png[/img][/url] [url=https://pixhost.to/show/674/444102251_x4s5hr.png][img]https://t92.pixhost.to/thumbs/674/444102251_x4s5hr.png[/img][/url] [url=https://pixhost.to/show/674/444102252_2fz31g.png][img]https://t92.pixhost.to/thumbs/674/444102252_2fz31g.png[/img][/url]
+  [url=https://pixhost.to/show/674/444102255_6xu8pt.png][img]https://t92.pixhost.to/thumbs/674/444102255_6xu8pt.png[/img][/url] [url=https://pixhost.to/show/674/444102256_v033fm.png][img]https://t92.pixhost.to/thumbs/674/444102256_v033fm.png[/img][/url] [url=https://pixhost.to/show/674/444102259_f5dt1k.png][img]https://t92.pixhost.to/thumbs/674/444102259_f5dt1k.png[/img][/url] 
+  [url=https://pixhost.to/show/674/444102260_va9q57.png][img]https://t92.pixhost.to/thumbs/674/444102260_va9q57.png[/img][/url] [url=https://pixhost.to/show/674/444102262_78n84s.png][img]https://t92.pixhost.to/thumbs/674/444102262_78n84s.png[/img][/url] [url=https://pixhost.to/show/674/444102264_h5quj1.png][img]https://t92.pixhost.to/thumbs/674/444102264_h5quj1.png[/img][/url] 
+  [url=https://pixhost.to/show/674/444102266_8k9mcu.png][img]https://t92.pixhost.to/thumbs/674/444102266_8k9mcu.png[/img][/url] [url=https://pixhost.to/show/674/444102267_xy8y3c.png][img]https://t92.pixhost.to/thumbs/674/444102267_xy8y3c.png[/img][/url] [url=https://pixhost.to/show/674/444102268_129h2k.png][img]https://t92.pixhost.to/thumbs/674/444102268_129h2k.png[/img][/url]
+  
+  [b][u]Deband Compare[/u][/b]
+  
+  USA BD | Filtered Source | eXterminator | HiDt
+  [url=https://pixhost.to/show/673/444101825_u9r8q8.png][img]https://t92.pixhost.to/thumbs/673/444101825_u9r8q8.png[/img][/url] [url=https://pixhost.to/show/673/444101826_pr92h7.png][img]https://t92.pixhost.to/thumbs/673/444101826_pr92h7.png[/img][/url] [url=https://pixhost.to/show/673/444101827_9xqe58.png][img]https://t92.pixhost.to/thumbs/673/444101827_9xqe58.png[/img][/url] [url=https://pixhost.to/show/673/444101828_2jwd17.png][img]https://t92.pixhost.to/thumbs/673/444101828_2jwd17.png[/img][/url]
+  [url=https://pixhost.to/show/673/444101829_yzzjhs.png][img]https://t92.pixhost.to/thumbs/673/444101829_yzzjhs.png[/img][/url] [url=https://pixhost.to/show/673/444101831_m40i49.png][img]https://t92.pixhost.to/thumbs/673/444101831_m40i49.png[/img][/url] [url=https://pixhost.to/show/673/444101834_03p2b8.png][img]https://t92.pixhost.to/thumbs/673/444101834_03p2b8.png[/img][/url] [url=https://pixhost.to/show/673/444101836_0jl859.png][img]https://t92.pixhost.to/thumbs/673/444101836_0jl859.png[/img][/url]
+  [url=https://pixhost.to/show/673/444101837_h7o785.png][img]https://t92.pixhost.to/thumbs/673/444101837_h7o785.png[/img][/url] [url=https://pixhost.to/show/673/444101839_999fh2.png][img]https://t92.pixhost.to/thumbs/673/444101839_999fh2.png[/img][/url] [url=https://pixhost.to/show/673/444101841_2nbyct.png][img]https://t92.pixhost.to/thumbs/673/444101841_2nbyct.png[/img][/url] [url=https://pixhost.to/show/673/444101842_r216yr.png][img]https://t92.pixhost.to/thumbs/673/444101842_r216yr.png[/img][/url]
+  [url=https://pixhost.to/show/673/444101843_c2hpjy.png][img]https://t92.pixhost.to/thumbs/673/444101843_c2hpjy.png[/img][/url] [url=https://pixhost.to/show/673/444101845_sa1387.png][img]https://t92.pixhost.to/thumbs/673/444101845_sa1387.png[/img][/url] [url=https://pixhost.to/show/673/444101857_m2zqt2.png][img]https://t92.pixhost.to/thumbs/673/444101857_m2zqt2.png[/img][/url] [url=https://pixhost.to/show/673/444101858_x35o33.png][img]https://t92.pixhost.to/thumbs/673/444101858_x35o33.png[/img][/url]
+  
+  [b][u]Screenshot Compare[/u][/b]
+  
+  USA BD | Hybrid(Merged) Source | eXterminator | HiDt | AMZN 4K(Resized)
+  [url=https://pixhost.to/show/674/444102407_n5y8zl.png][img]https://t92.pixhost.to/thumbs/674/444102407_n5y8zl.png[/img][/url] [url=https://pixhost.to/show/674/444102408_998u37.png][img]https://t92.pixhost.to/thumbs/674/444102408_998u37.png[/img][/url] [url=https://pixhost.to/show/674/444102409_93p545.png][img]https://t92.pixhost.to/thumbs/674/444102409_93p545.png[/img][/url] [url=https://pixhost.to/show/674/444102410_r53r40.png][img]https://t92.pixhost.to/thumbs/674/444102410_r53r40.png[/img][/url] [url=https://pixhost.to/show/674/444102412_tzo6b7.png][img]https://t92.pixhost.to/thumbs/674/444102412_tzo6b7.png[/img][/url]
+  [url=https://pixhost.to/show/674/444102414_4526er.png][img]https://t92.pixhost.to/thumbs/674/444102414_4526er.png[/img][/url] [url=https://pixhost.to/show/674/444102417_3e7l5y.png][img]https://t92.pixhost.to/thumbs/674/444102417_3e7l5y.png[/img][/url] [url=https://pixhost.to/show/674/444102418_wri2t0.png][img]https://t92.pixhost.to/thumbs/674/444102418_wri2t0.png[/img][/url] [url=https://pixhost.to/show/674/444102419_28b6e3.png][img]https://t92.pixhost.to/thumbs/674/444102419_28b6e3.png[/img][/url] [url=https://pixhost.to/show/674/444102420_kwc6y6.png][img]https://t92.pixhost.to/thumbs/674/444102420_kwc6y6.png[/img][/url]
+  [url=https://pixhost.to/show/674/444102421_zyxvi8.png][img]https://t92.pixhost.to/thumbs/674/444102421_zyxvi8.png[/img][/url] [url=https://pixhost.to/show/674/444102422_c39aib.png][img]https://t92.pixhost.to/thumbs/674/444102422_c39aib.png[/img][/url] [url=https://pixhost.to/show/674/444102424_uy4071.png][img]https://t92.pixhost.to/thumbs/674/444102424_uy4071.png[/img][/url] [url=https://pixhost.to/show/674/444102425_dne9w5.png][img]https://t92.pixhost.to/thumbs/674/444102425_dne9w5.png[/img][/url] [url=https://pixhost.to/show/674/444102426_x1781f.png][img]https://t92.pixhost.to/thumbs/674/444102426_x1781f.png[/img][/url]
+  [url=https://pixhost.to/show/674/444102428_g15v5h.png][img]https://t92.pixhost.to/thumbs/674/444102428_g15v5h.png[/img][/url] [url=https://pixhost.to/show/674/444102431_jwc1yt.png][img]https://t92.pixhost.to/thumbs/674/444102431_jwc1yt.png[/img][/url] [url=https://pixhost.to/show/674/444102432_535ft5.png][img]https://t92.pixhost.to/thumbs/674/444102432_535ft5.png[/img][/url] [url=https://pixhost.to/show/674/444102433_56476f.png][img]https://t92.pixhost.to/thumbs/674/444102433_56476f.png[/img][/url] [url=https://pixhost.to/show/674/444102435_n1syi8.png][img]https://t92.pixhost.to/thumbs/674/444102435_n1syi8.png[/img][/url]
+  [url=https://pixhost.to/show/674/444102436_13241e.png][img]https://t92.pixhost.to/thumbs/674/444102436_13241e.png[/img][/url] [url=https://pixhost.to/show/674/444102437_5511s5.png][img]https://t92.pixhost.to/thumbs/674/444102437_5511s5.png[/img][/url] [url=https://pixhost.to/show/674/444102438_sb457t.png][img]https://t92.pixhost.to/thumbs/674/444102438_sb457t.png[/img][/url] [url=https://pixhost.to/show/674/444102440_h2y066.png][img]https://t92.pixhost.to/thumbs/674/444102440_h2y066.png[/img][/url] [url=https://pixhost.to/show/674/444102442_k80n2k.png][img]https://t92.pixhost.to/thumbs/674/444102442_k80n2k.png[/img][/url]
+  [url=https://pixhost.to/show/674/444102443_0l37z0.png][img]https://t92.pixhost.to/thumbs/674/444102443_0l37z0.png[/img][/url] [url=https://pixhost.to/show/674/444102444_9l83wg.png][img]https://t92.pixhost.to/thumbs/674/444102444_9l83wg.png[/img][/url] [url=https://pixhost.to/show/674/444102445_7ye5u5.png][img]https://t92.pixhost.to/thumbs/674/444102445_7ye5u5.png[/img][/url] [url=https://pixhost.to/show/674/444102446_do01sh.png][img]https://t92.pixhost.to/thumbs/674/444102446_do01sh.png[/img][/url] [url=https://pixhost.to/show/674/444102447_82zisu.png][img]https://t92.pixhost.to/thumbs/674/444102447_82zisu.png[/img][/url]
+  [url=https://pixhost.to/show/674/444102448_j562so.png][img]https://t92.pixhost.to/thumbs/674/444102448_j562so.png[/img][/url] [url=https://pixhost.to/show/674/444102449_1pi2v5.png][img]https://t92.pixhost.to/thumbs/674/444102449_1pi2v5.png[/img][/url] [url=https://pixhost.to/show/674/444102451_4sld87.png][img]https://t92.pixhost.to/thumbs/674/444102451_4sld87.png[/img][/url] [url=https://pixhost.to/show/674/444102453_5z23e7.png][img]https://t92.pixhost.to/thumbs/674/444102453_5z23e7.png[/img][/url] [url=https://pixhost.to/show/674/444102454_49aw8b.png][img]https://t92.pixhost.to/thumbs/674/444102454_49aw8b.png[/img][/url]`,
+  result: [{
+    teams: ['USA BD', 'Hybrid(Merged) Source', 'AMZN WEB-DL(Resized)'],
+    numUrls: 33,
+    thumbs: true,
+    type: 'titled',
+    length: 4241
+  }, {
+    teams: ['USA BD', 'Filtered Source', 'eXterminator', 'HiDt'],
+    numUrls: 16,
+    thumbs: true,
+    type: 'titled',
+    length: 2070
+  }, {
+    teams: ['USA BD', 'Hybrid(Merged) Source', 'eXterminator', 'HiDt', 'AMZN 4K(Resized)'],
+    numUrls: 35,
+    thumbs: true,
+    type: 'titled',
+    length: 4495
+  }]
 }]
 const descriptionTests = {
   [NHD]: [ {

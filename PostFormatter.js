@@ -24,7 +24,7 @@ const $ = window.jQuery
 const NHD = 'nexushd'; const PUTAO = 'pt.sjtu'; const MTEAM = 'm-team'; const TTG = 'totheglory'; const GPW = 'greatposterwall'; const UHD = 'uhdbits'
 const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'; const KSHARE = 'kshare.club'; const PIXHOST = 'pixhost'; const IMGBOX = 'imgbox'; const IMG4K = 'img4k'; const ILIKESHOTS = 'yes.ilikeshots.club'
 // 特殊组名备注
-const weirdTeams = ['de[42]', 'D-Z0N3']
+const weirdTeams = ['de[42]', 'D-Z0N3', 'WEB-DL']
 const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
 const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
 // 匿名发布开关
@@ -39,8 +39,8 @@ const subtitleLanguages = {chinese_simplified: 'chs|zh', chinese_traditional: 'c
   ukrainian: 'ukr|uk', persian: 'per|fas|fa', arabic: 'ara|ar', brazilian_port: 'bra', czech: 'cze|ces|cs', idonesian: 'ido', serbian: 'srp|sr'
 }
 const weirdTeamsStr = weirdTeams.map(team => `(?:${escapeRegExp(team)})`).join('|')
-const regexTeam = RegExp('\\b(?:(?:\\w[\\w-. ]+)|' + weirdTeamsStr + ') ?(?:\\([\\w. ]+\\)|<[\\w. ]+>|\\[[\\w. ]+\\])?', 'i')
-const regexTeamsSplitter = /\||,|\/|(?<!D)-(?=Z0N3)|(?<=D)-(?!Z0N3)|(?<!D)-(?!Z0N3)| v\.?s\.? |>\s*v\.?s\.?\s*</i
+const regexTeam = RegExp('\\b(?:(?:' + weirdTeamsStr + '|\\w[\\w-. ]+)) ?(?:(?:\\([\\w. ]+\\)|<[\\w. ]+>|\\[[\\w. ]+\\]) ?(?:[\\w. ]+)?)?', 'i')
+const regexTeamsSplitter = /\||,|\/|(?<!D)-(?=Z0N3)|(?<=D)-(?!Z0N3)|(?<!WEB)-(?=DL)|(?<=WEB)-(?!DL)|(?<!WEB|D)-(?!DL|Z0N3)| v\.?s\.? |>\s*v\.?s\.?\s*</i
 const regexNormalUrl = /[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
 const regexImageUrl = RegExp(
   'https?:' + regexNormalUrl.source + '?\\.(?:png|jpg)',
@@ -937,7 +937,6 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
     }
     let screenshotsStrAll = ''
     const comparisons = collectComparisons(textToConsume)
-      .sort((a, b) => b.starts - a.starts)
     for (let { starts, ends, teams, urls, regexType, thumbs } of comparisons) {
       let screenshotsStr = ''
       if (regexType === 'comparison') {
@@ -1055,7 +1054,7 @@ function processDescription (siteName, description) {
     .replace(/\[(\/?img)\d+\]/g, '[$1]')
   if (siteName === GPW) {
     description = description
-      .replace(/\[\/?(size|color|font|b|i|pre)(=[^\]]+)?\]/g, '')
+      .replace(/\[\/?(size|color|font|b|i|u|pre)(=[^\]]+)?\]/g, '')
       .replace(/\[\/?center\]/g, '\n')
   }
   return description
