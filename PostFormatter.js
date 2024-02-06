@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info
-// @version      1.3.2.5
+// @version      1.3.2.6
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -19,7 +19,7 @@
 // @license      MIT
 // ==/UserScript==
 //= ========================================================================================================
-// constants
+// constants and configurations
 const $ = window.jQuery
 const NHD = 'nexushd'; const PUTAO = 'pt.sjtu'; const MTEAM = 'm-team'; const TTG = 'totheglory'; const GPW = 'greatposterwall'; const UHD = 'uhdbits'
 const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'; const KSHARE = 'kshare.club'; const PIXHOST = 'pixhost'; const IMGBOX = 'imgbox'; const IMG4K = 'img4k'; const ILIKESHOTS = 'yes.ilikeshots.club'
@@ -41,8 +41,8 @@ const subtitleLanguages = {chinese_simplified: 'chs|zh', chinese_traditional: 'c
 const weirdTeamsStr = weirdTeams.map(team => `(?:${escapeRegExp(team)})`).join('|')
 const regexTeam = RegExp('\\b(?:(?:' + weirdTeamsStr + '|\\w[\\w-. ]+)) ?(?:(?:\\([\\w. ]+\\)|<[\\w. ]+>|\\[[\\w. ]+\\]) ?(?:[\\w. ]+)?)?', 'i')
 // const regexTeamsSplitter = /\||,|\/|(?<!D)-(?=Z0N3)|(?<=D)-(?!Z0N3)|(?<!WEB)-(?=DL)|(?<=WEB)-(?!DL)|(?<!WEB|D)-(?!DL|Z0N3)| v\.?s\.? |>\s*v\.?s\.?\s*</i
-const allSplitters = [',', '|', '/', '-', ' vs ', ' v.s ', ' v.s. ']
-const [regexTeamsSplitter] = getTeamSplitterCombinations(weirdTeams, allSplitters, 'i')
+const allTeamSplitters = [',', '|', '/', '-', ' vs ', ' v.s ', ' v.s. ', '> vs <']
+const [regexTeamsSplitter] = getTeamSplitterRegex(weirdTeams, allTeamSplitters, 'i')
 const regexNormalUrl = /[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
 const regexImageUrl = RegExp(
   'https?:' + regexNormalUrl.source + '?\\.(?:png|jpg)',
@@ -70,7 +70,6 @@ const regexImageUrlsSeparated = RegExp(
   '(' + regexImageUrl.source + ')',
   'mig')
 // 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
-// possible splitters for teams: '|',',','/','-','vs'
 const regexScreenshotsThumbsBoxed = RegExp(
   '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
   regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
@@ -502,8 +501,8 @@ const imageHostInfoMap = {
 function escapeRegExp (string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
-// 生成teamSplitter的正则表达组合，如teams = ['D-Z0N3'], splitters = ['-'], 返回'(?<=D)-(?!Z0N3)|(?<!D)-(?=Z0N3)|(?<!D)-(?!Z0N3)'
-function getTeamSplitterCombinations(teams, splitters, flags='') {
+// 生成teamSplitter的正则表达组合以escape特定组名，如teams = ['D-Z0N3'], splitters = ['-'], 返回'(?<=D)-(?!Z0N3)|(?<!D)-(?=Z0N3)|(?<!D)-(?!Z0N3)'
+function getTeamSplitterRegex(teams, splitters, flags='') {
   let patterns = []
   for (let splitter of splitters) {
     let leftPatterns = []
@@ -542,7 +541,7 @@ function getTeamSplitterCombinations(teams, splitters, flags='') {
   let regex = RegExp(patterns.join('|'), flags)
   return [regex, patterns]
 }
-// requires numbers of left and right tags match
+// requires numbers of left and right tags match, other wise some of the contents may be removed
 // keepNonQuoted 选择是否保留两个0级别 quote 之间的内容，如'是这些文字[quote]不是这些文字[/quote]是这些文字[quote]不是这些文字[/quote]是这些文字'
 function processTags (inputText, tag, processLeft, processRight, keepNonQuoted=true) {
   let regexTagsLeft = new RegExp('\\[((' + tag + ')((?:=([^\\]]+))?))\\]', 'g')
@@ -2019,7 +2018,7 @@ function processDescription (siteName, description) {
 // Conditionally export for unit testing
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    collectComparisons, decomposeDescription, processDescription, mediainfo2String, string2Mediainfo, processTags, getTeamSplitterCombinations,
+    collectComparisons, decomposeDescription, processDescription, mediainfo2String, string2Mediainfo, processTags, getTeamSplitterCombinations: getTeamSplitterRegex,
     NHD, PTERCLUB, GPW, MTEAM, TTG, PUTAO, UHD, siteInfoMap
   }
 }
