@@ -5,6 +5,7 @@ const {
 const fs = require('fs')
 const path = require('path')
 const glob = require('glob')
+const { fail } = require('assert')
 
 const simpleScreenshotsTests = [{
   text: `.org/details.php?id=148204&source=details-related[/quote][quote=Source, EbP, NTb (different source)][url=https://pixhost.to/show/320/411481872_999906.png][img]https://t91.pixhost.to/thumbs/320/411481872_999906.png[/img][/url] [url=https://pixhost.to/show/320/411481874_46oz77.png][img]https://t91.pixhost.to/thumbs/320/411481874_46oz77.png[/img][/url] [url=https://pixhost.to/show/320/411481876_u4061m.png][img]https://t91.pixhost.to/thumbs/320/411481876_u4061m.png[/img][/url] 
@@ -500,22 +501,26 @@ test('test whole screenshots conversion', async () => {
       });
     }
   });
-  const inputs = await glob.glob('./test files/input/*.bbcode')
+  const pathsinput = await glob.glob('./test files/input/*.bbcode')
   const targetSites = [NHD, GPW, UHD]
-  for (const input of inputs) {
-    const [movieName, originalSite] = path.basename(input).split('.')
+  for (const pathInput of pathsinput) {
+    const [movieName, originalSite] = path.basename(pathInput).split('.')
     try {
-      let data = fs.readFileSync(input, 'utf8')
+      let input = fs.readFileSync(pathInput, 'utf8')
       for (const targetSite of targetSites) {
-        data = processDescription(targetSite, data)
-        const [description] = await decomposeDescription(targetSite, data, '')
-        const output = `${dirOutput}/${movieName}.${targetSite} from ${originalSite}.bbcode`
-        if (description) {
-          fs.writeFileSync(output, description)
+        input = processDescription(targetSite, input)
+        // let comparisonsInput = collectComparisons(input)
+        let [output] = await decomposeDescription(targetSite, input, '')
+        output = processDescription(targetSite, output)
+        // let comparisonsOutput = collectComparisons(output)
+        // expect(comparisonsOutput.length).toBe(comparisonsInput.length)
+        const pathOutput = `${dirOutput}/${movieName}.${targetSite} from ${originalSite}.bbcode`
+        if (output) {
+          fs.writeFileSync(pathOutput, output)
         }
       }
     } catch (err) {
-      console.error(err)
+      fail(err)
     }
   }
 }, 30000)

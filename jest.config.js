@@ -8,5 +8,5 @@ module.exports = {
     url: 'https://jestjs.io/',
     userAgent: 'Agent/007'
   },
-  verbose: false
+  verbose: true
 }

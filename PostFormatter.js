@@ -23,7 +23,6 @@
 const $ = window.jQuery
 const NHD = 'nexushd'; const PUTAO = 'pt.sjtu'; const MTEAM = 'm-team'; const TTG = 'totheglory'; const GPW = 'greatposterwall'; const UHD = 'uhdbits'
 const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'; const KSHARE = 'kshare.club'; const PIXHOST = 'pixhost'; const IMGBOX = 'imgbox'; const IMG4K = 'img4k'; const ILIKESHOTS = 'yes.ilikeshots.club'
-const allImageHosts = [ PIXHOST, IMGBOX, IMG4K, ILIKESHOTS, PTERCLUB, IMGPILE, PTPIMG, KSHARE ]
 // 特殊组名备注
 const weirdTeams = ['de[42]', 'D-Z0N3']
 const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
@@ -423,7 +422,7 @@ const siteInfoMap = {
       tvCut: $('a:contains("TV Cut")')[0],
       unrated: $('a:contains("Unrated")')[0],
     },
-    
+
     pullMovieScore: true, translatedChineseNameInTitle: false,
     screenshotsStyle: 'conventional',
     sourceInfo: { default: '---', bluray: 'Blu-ray', remux: 'Remux', encode: 'Encode', webdl: 'WEB-DL', webrip: 'WEBRip', hdrip: 'HDRip', hdtv: 'HDTV', others: 'Others', hdAudio: 'HD Audio' },
@@ -439,6 +438,61 @@ const siteInfoMap = {
     subtitleInfo: {
       default: '', english: 'English', vietnamese: 'Vietnamese', danish: 'Danish', norwegian: 'Norwegian', finnish: 'Finnish', spanish: 'Spanish', french: 'French'
     }
+  }
+}
+const imageHostInfoMap = {
+  [PIXHOST]: {
+    images2Thumbs: {
+      pattern: /https:\/\/img(\d+)\.pixhost\.to\/images\/([\w/]+)\.png/gi,
+      replacement: '[url=https://pixhost.to/show/$2.png][img]https://t$1.pixhost.to/thumbs/$2.png[/img][/url]'
+    },
+    thumbs2Images: {
+      pattern: /\[url=https:\/\/pixhost\.to\/show\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+.png)\]\s*\[img\]https:\/\/t([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.pixhost[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\]\s*\[\/url\]/gi,
+      replacement: 'https://img$2.pixhost.to/images/$1'
+    }
+  },
+  [IMGBOX]: {
+    images2Thumbs: {
+      pattern: /https:\/\/images(\d+)\.imgbox\.com\/(\w+\/\w+)\/(\w+)_o\.png/gi,
+      replacement: '[url=https://imgbox.com/$3][img]https://thumbs$1.imgbox.com/$2/$3_t.png[/img][/url]'
+    },
+    thumbs2Images: {
+      pattern: /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]https:\/\/thumbs([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)_t\.png\[\/img\]\s*\[\/url\]/gi,
+      replacement: 'https://images$1_o.png'
+    }
+  },
+  [IMG4K]: {
+    images2Thumbs: null,
+    thumbs2Images: {
+      pattern: /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.md\.png\[\/img\]\s*\[\/url\]/gi,
+      replacement: '$1.png'
+    }
+  },
+  [ILIKESHOTS]: {
+    images2Thumbs: null,
+    thumbs2Images: null
+  },
+  [PTERCLUB]: {
+    images2Thumbs: null,
+    thumbs2Images: {
+      pattern: /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.th\.png\[\/img\]\s*\[\/url\]/gi,
+      replacement: '$1.png'
+    }
+  },
+  [IMGPILE]: {
+    images2Thumbs: null,
+    thumbs2Images: {
+      pattern: /\[url=https:\/\/imgpile\.com\/i\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\]\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\.png\[\/img\]\s*\[\/url\]/gi,
+      replacement: 'https://imgpile.com/images/$1.png'
+    }
+  },
+  [PTPIMG]: {
+    images2Thumbs: null,
+    thumbs2Images: null
+  },
+  [KSHARE]: {
+    images2Thumbs: null,
+    thumbs2Images: null
   }
 }
 //= ========================================================================================================
@@ -608,37 +662,22 @@ function getThumbSize(numTeams, siteName) {
 // decode [url=...][img]...[/img][/url] -> [comparison=...]...[/comparison]
 async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
   thumbUrls = thumbUrls.trim()
-  const imageHost = allImageHosts.find(ih => thumbUrls.match(RegExp(escapeRegExp(ih), 'i')))
+  const imageHostName = Object.keys(imageHostInfoMap).find(ih => thumbUrls.match(RegExp(escapeRegExp(ih), 'i'))) || ''
+  const imageHost = imageHostInfoMap[imageHostName]
   if (!imageHost) {
     return []
   }
-  let regex = ''
-  let replacement = ''
-  if (imageHost === PIXHOST) {
-    regex = /\[url=https:\/\/pixhost\.to\/show\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+.png)\]\s*\[img\]https:\/\/t([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.pixhost[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\[\/img\]\s*\[\/url\]/gi
-    replacement = 'https://img$2.pixhost.to/images/$1'
-  } else if (imageHost === IMGBOX) {
-    regex = /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]https:\/\/thumbs([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)_t\.png\[\/img\]\s*\[\/url\]/gi
-    replacement = 'https://images$1_o.png'
-  } else if (imageHost === IMG4K) {
-    regex = /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.md\.png\[\/img\]\s*\[\/url\]/gi
-    replacement = '$1.png'
-  } else if (imageHost === PTERCLUB) {
-    regex = /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.th\.png\[\/img\]\s*\[\/url\]/gi
-    replacement = '$1.png'
-  } else if (imageHost === IMGPILE) {
-    regex = /\[url=https:\/\/imgpile\.com\/i\/([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\]\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\.png\[\/img\]\s*\[\/url\]/gi
-    replacement = 'https://imgpile.com/images/$1.png'
-  }
+  let pattern = imageHost.thumbs2Images.pattern
+  let replacement = imageHost.thumbs2Images.replacement
   let imageUrls = []
-  if (regex) {
-    const matches = thumbUrls.match(regex)
+  if (pattern) {
+    const matches = thumbUrls.match(pattern)
     const site = siteInfoMap[siteName]
-    const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHost) : true
+    const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
     const supportPixhost = site.supportedImageHosts ? site.supportedImageHosts.includes(PIXHOST) : true
     let imageUrlsTest = matches
       ? matches.map(matched => {
-        return matched.replace(regex, replacement)
+        return matched.replace(pattern, replacement)
       })
       : []
     if (supportCurrentImageHost) {
@@ -654,30 +693,24 @@ async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
 // [comparison=...]...[/comparison] -> decode [url=...][img]...[/img][/url]
 async function images2ThumbUrls (imageUrls, numTeams, siteName) {
   imageUrls = imageUrls.trim()
-  const imageHost = allImageHosts.find(ih => imageUrls.match(RegExp(escapeRegExp(ih), 'i')))
+  const imageHostName = Object.keys(imageHostInfoMap).find(ih => imageUrls.match(RegExp(escapeRegExp(ih), 'i'))) || ''
+  const imageHost = imageHostInfoMap[imageHostName]
   if (!imageHost) {
     return []
   }
-  let regex = ''
-  let replacement = ''
-  if (imageHost === PIXHOST) {
-    regex = /https:\/\/img(\d+)\.pixhost\.to\/images\/([\w/]+)\.png/gi
-    replacement = '[url=https://pixhost.to/show/$2.png][img]https://t$1.pixhost.to/thumbs/$2.png[/img][/url]'
-  } else if (imageHost === IMGBOX) {
-    regex = /https:\/\/images(\d+)\.imgbox\.com\/(\w+\/\w+)\/(\w+)_o\.png/gi
-    replacement = '[url=https://imgbox.com/$3][img]https://thumbs$1.imgbox.com/$2/$3_t.png[/img][/url]'
-  }
+  let pattern = imageHost.images2Thumbs.pattern
+  let replacement = imageHost.images2Thumbs.replacement
   const site = siteInfoMap[siteName]
-  const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHost) : true
+  const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
   const supportPixhost = site.supportedImageHosts ? site.supportedImageHosts.includes(PIXHOST) : true
   const size = getThumbSize(numTeams, siteName)
   let thumbUrls = []
-  if (regex) {
-    const matches = imageUrls.match(regex)
+  if (pattern) {
+    const matches = imageUrls.match(pattern)
     if (supportCurrentImageHost) {
       thumbUrls = matches
         ? matches.map(matched => {
-          return matched.replace(regex, replacement)
+          return matched.replace(pattern, replacement)
         })
         : []
     } else {
@@ -687,8 +720,8 @@ async function images2ThumbUrls (imageUrls, numTeams, siteName) {
     }
   } else {
     // 不可从图片链接解析缩略图的图床（如PTPIMG），发送至Pixhost
-    regex = /(https?:[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\.(png|jpg))/gi
-    const matches = imageUrls.match(regex)
+    pattern = /(https?:[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\.(png|jpg))/gi
+    const matches = imageUrls.match(pattern)
     thumbUrls = matches && supportPixhost
       ? await sendImagesToPixhost(matches, size)
       : []
