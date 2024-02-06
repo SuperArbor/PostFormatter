@@ -698,8 +698,8 @@ async function images2ThumbUrls (imageUrls, numTeams, siteName) {
   if (!imageHost) {
     return []
   }
-  let pattern = imageHost.images2Thumbs.pattern
-  let replacement = imageHost.images2Thumbs.replacement
+  let pattern = imageHost.images2Thumbs ? imageHost.images2Thumbs.pattern: ''
+  let replacement = imageHost.images2Thumbs ? imageHost.images2Thumbs.replacement: ''
   const site = siteInfoMap[siteName]
   const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
   const supportPixhost = site.supportedImageHosts ? site.supportedImageHosts.includes(PIXHOST) : true
