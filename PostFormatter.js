@@ -667,8 +667,8 @@ async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
   if (!imageHost) {
     return []
   }
-  let pattern = imageHost.thumbs2Images.pattern
-  let replacement = imageHost.thumbs2Images.replacement
+  let pattern = imageHost.thumbs2Images ?  imageHost.thumbs2Images.pattern : ''
+  let replacement = imageHost.thumbs2Images ? imageHost.thumbs2Images.replacement : ''
   let imageUrls = []
   if (pattern) {
     const matches = thumbUrls.match(pattern)
