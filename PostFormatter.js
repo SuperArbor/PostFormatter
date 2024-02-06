@@ -40,7 +40,9 @@ const subtitleLanguages = {chinese_simplified: 'chs|zh', chinese_traditional: 'c
 }
 const weirdTeamsStr = weirdTeams.map(team => `(?:${escapeRegExp(team)})`).join('|')
 const regexTeam = RegExp('\\b(?:(?:' + weirdTeamsStr + '|\\w[\\w-. ]+)) ?(?:(?:\\([\\w. ]+\\)|<[\\w. ]+>|\\[[\\w. ]+\\]) ?(?:[\\w. ]+)?)?', 'i')
-const regexTeamsSplitter = /\||,|\/|(?<!D)-(?=Z0N3)|(?<=D)-(?!Z0N3)|(?<!WEB)-(?=DL)|(?<=WEB)-(?!DL)|(?<!WEB|D)-(?!DL|Z0N3)| v\.?s\.? |>\s*v\.?s\.?\s*</i
+// const regexTeamsSplitter = /\||,|\/|(?<!D)-(?=Z0N3)|(?<=D)-(?!Z0N3)|(?<!WEB)-(?=DL)|(?<=WEB)-(?!DL)|(?<!WEB|D)-(?!DL|Z0N3)| v\.?s\.? |>\s*v\.?s\.?\s*</i
+const allSplitters = [',', '|', '/', '-', ' vs ', ' v.s ', ' v.s. ']
+const [regexTeamsSplitter] = getTeamSplitterCombinations(weirdTeams, allSplitters, 'i')
 const regexNormalUrl = /[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
 const regexImageUrl = RegExp(
   'https?:' + regexNormalUrl.source + '?\\.(?:png|jpg)',
@@ -499,6 +501,46 @@ const imageHostInfoMap = {
 // functions
 function escapeRegExp (string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+// 生成teamSplitter的正则表达组合，如teams = ['D-Z0N3'], splitters = ['-'], 返回'(?<=D)-(?!Z0N3)|(?<!D)-(?=Z0N3)|(?<!D)-(?!Z0N3)'
+function getTeamSplitterCombinations(teams, splitters, flags='') {
+  let patterns = []
+  for (let splitter of splitters) {
+    let leftPatterns = []
+    let rightPatterns = []
+    for (let team of teams) {
+      let i = 0
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        let lastIndex = team.indexOf(splitter, i)
+        if (lastIndex >= 0) {
+          let [left, right] = [escapeRegExp(team.substring(0, lastIndex)), escapeRegExp(team.substring(lastIndex + splitter.length))]
+          if (left && right) {
+            patterns.push(`(?<=${left})${escapeRegExp(splitter)}(?!${right})`)
+            patterns.push(`(?<!${left})${escapeRegExp(splitter)}(?=${right})`)
+            leftPatterns.push(left)
+            rightPatterns.push(right)
+          } else if (left) {
+            patterns.push(`(?<!${left})${escapeRegExp(splitter)}`)
+            leftPatterns.push(left)
+          } else if (right) {
+            patterns.push(`${escapeRegExp(splitter)}(?!${right})`)
+            rightPatterns.push(right)
+          }
+          i = lastIndex + 1
+        } else {
+          break
+        }
+      }
+    }
+    if (leftPatterns.length || rightPatterns.length) {
+      patterns.push(`(?<!${leftPatterns.join('|')})${escapeRegExp(splitter)}(?!${rightPatterns.join('|')})`)
+    } else {
+      patterns.push(escapeRegExp(splitter))
+    }
+  }
+  let regex = RegExp(patterns.join('|'), flags)
+  return [regex, patterns]
 }
 // requires numbers of left and right tags match
 // keepNonQuoted 选择是否保留两个0级别 quote 之间的内容，如'是这些文字[quote]不是这些文字[/quote]是这些文字[quote]不是这些文字[/quote]是这些文字'
@@ -1977,7 +2019,7 @@ function processDescription (siteName, description) {
 // Conditionally export for unit testing
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    collectComparisons, decomposeDescription, processDescription, mediainfo2String, string2Mediainfo, processTags,
+    collectComparisons, decomposeDescription, processDescription, mediainfo2String, string2Mediainfo, processTags, getTeamSplitterCombinations,
     NHD, PTERCLUB, GPW, MTEAM, TTG, PUTAO, UHD, siteInfoMap
   }
 }

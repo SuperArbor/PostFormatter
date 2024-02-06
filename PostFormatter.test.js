@@ -1,6 +1,6 @@
 // module imports
 const {
-  collectComparisons, decomposeDescription, processDescription, mediainfo2String, string2Mediainfo, processTags,
+  collectComparisons, decomposeDescription, processDescription, mediainfo2String, string2Mediainfo, processTags, getTeamSplitterCombinations,
   NHD, GPW, PUTAO, TTG, PTERCLUB, MTEAM, UHD} = require('./PostFormatter')
 const fs = require('fs')
 const path = require('path')
@@ -481,6 +481,18 @@ const processTagsTests = [{
     }
   }
 ]
+const teamSplitterTests = [{
+  teams: ['D-Z0N3', 'WEB-DL'],
+  splitters: ['-'],
+  patterns: ['(?<=D)-(?!Z0N3)', '(?<!D)-(?=Z0N3)', '(?<=WEB)-(?!DL)', '(?<!WEB)-(?=DL)', '(?<!D|WEB)-(?!Z0N3|DL)']
+}, {
+  teams: ['D-Z0N3,Z0N4', 'WEB-DL'],
+  splitters: ['-', ','],
+  patterns: [
+    '(?<=D)-(?!Z0N3,Z0N4)', '(?<!D)-(?=Z0N3,Z0N4)', '(?<=WEB)-(?!DL)', '(?<!WEB)-(?=DL)', '(?<!D|WEB)-(?!Z0N3,Z0N4|DL)',
+    '(?<=D-Z0N3),(?!Z0N4)', '(?<!D-Z0N3),(?=Z0N4)', '(?<!D-Z0N3),(?!Z0N4)'
+  ]
+}]
 
 test ('test tags', () => {
   processTagsTests.forEach(test => {
@@ -579,3 +591,12 @@ test('test whole screenshots conversion', async () => {
     }
   }
 }, 30000)
+test('test teamSplitter regex', () => {
+  for (let test of teamSplitterTests) {
+    let teams = test.teams
+    let splitters = test.splitters
+    let expectedOutput = test.patterns
+    let actualOutput = getTeamSplitterCombinations(teams, splitters)[1]
+    expect(JSON.stringify(expectedOutput)).toBe(JSON.stringify(actualOutput))
+  }
+})
