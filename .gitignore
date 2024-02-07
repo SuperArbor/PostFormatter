@@ -2,3 +2,4 @@
 node_modules/*
 *.yml
 test files/*
+*.nnb

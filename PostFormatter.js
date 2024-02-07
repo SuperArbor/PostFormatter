@@ -43,9 +43,12 @@ const regexTeam = RegExp('\\b(?:(?:' + weirdTeamsStr + '|\\w[\\w-. ]+)) ?(?:(?:\
 // const regexTeamsSplitter = /\||,|\/|(?<!D)-(?=Z0N3)|(?<=D)-(?!Z0N3)|(?<!WEB)-(?=DL)|(?<=WEB)-(?!DL)|(?<!WEB|D)-(?!DL|Z0N3)| v\.?s\.? |>\s*v\.?s\.?\s*</i
 const allTeamSplitters = [',', '|', '/', '-', ' vs ', ' v.s ', ' v.s. ', '> vs <']
 const [regexTeamsSplitter] = getTeamSplitterRegex(weirdTeams, allTeamSplitters, 'i')
-const regexNormalUrl = /[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
+// max comparison teams in a comparison, must be larger than 1
+const maxTeamsInComparison = 8
+const maxNonWordsInTitled = 20
+const regexNormalUrl = /https?:[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
 const regexImageUrl = RegExp(
-  'https?:' + regexNormalUrl.source + '?\\.(?:png|jpg)',
+  regexNormalUrl.source + '?\\.(?:png|jpg)',
   'i')
 // compare with comparison (GPW style)
 const regexScreenshotsComparison = RegExp(
@@ -73,7 +76,7 @@ const regexImageUrlsSeparated = RegExp(
 const regexScreenshotsThumbsBoxed = RegExp(
   '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
   regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
-  ')+)\\s*\\]' +
+  `){1,${maxTeamsInComparison-1}})\\s*\\]` +
   regexScreenshotsThumbsCombined.source +
   '\\s*\\[\\/\\1\\]',
   'mig')
@@ -81,7 +84,7 @@ const regexScreenshotsThumbsBoxed = RegExp(
 const regexScreenshotsThumbsTitled = RegExp(
   '\\b(' +
   regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
-  ')+)[\\W]*\\r?\\n+\\s*' +
+  `){1,${maxTeamsInComparison-1}})[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*` +
   regexScreenshotsThumbsCombined.source,
   'mig')
 const regexScreenshotsSimple = RegExp(
