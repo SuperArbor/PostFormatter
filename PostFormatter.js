@@ -434,7 +434,7 @@ const siteInfoMap = {
     standardInfo: { default: '---', mhd: 'mHD', res1080i: '1080i', res1080p: '1080p', res2160p: '2160p', res720p: '720p', others: 'Others' },
     hdrInfo: { default: 'No', hdr10: 'HDR10', hdr10plus: 'HDR10+', dovi: 'DoVi' },
     categoryInfo: { movie: '0', music: '1', tvSeries: '2' },
-    seansonInfo: { default: '---',  s01: '1' },
+    seansonInfo: { default: '---', s01: '1' },
 
     inputFileSubtitle: $('input[type="file"][name="sub"]'),
     titleBoxSubtitle: $('input[type="text"][name="releasename"]'),
@@ -711,7 +711,7 @@ async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
   if (!imageHost) {
     return []
   }
-  let pattern = imageHost.thumbs2Images ?  imageHost.thumbs2Images.pattern : ''
+  let pattern = imageHost.thumbs2Images ? imageHost.thumbs2Images.pattern : ''
   let replacement = imageHost.thumbs2Images ? imageHost.thumbs2Images.replacement : ''
   let imageUrls = []
   if (pattern) {
