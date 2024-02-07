@@ -978,6 +978,7 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
     }
     let screenshotsStrAll = ''
     const comparisons = collectComparisons(textToConsume)
+      .sort((a, b) => b.starts - a.starts)
     for (let { starts, ends, teams, urls, regexType, thumbs } of comparisons) {
       let screenshotsStr = ''
       if (regexType === 'comparison') {
@@ -994,7 +995,7 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
       } else {
         screenshotsStr = ''
       }
-      screenshotsStrAll += screenshotsStr
+      screenshotsStrAll = `${screenshotsStr}\n${screenshotsStrAll}`
       // 如果之前没有获取到teamEncode，直接用Encode赋值，避免后续'includes'判断错误（string.includes('') === true）
       teamEncode = teamEncode || 'Encode'
       if (urls.length > 0 && urls.length % teams.length === 0) {
@@ -1038,7 +1039,7 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
       matchLeft => { return matchLeft },
       matchRight => { return matchRight },
       false)
-    description = quotes + boxes + screenshotsStrAll
+    description = `${quotes}${boxes}\n${screenshotsStrAll}`
   }
   return [description, mediainfo, torrentTitle]
 }
