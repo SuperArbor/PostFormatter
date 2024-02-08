@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info
-// @version      1.3.2.6
+// @version      1.3.2.7
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -53,21 +53,20 @@ const regexImageUrl = RegExp(
 // compare with comparison (GPW style)
 const regexScreenshotsComparison = RegExp(
   '\\[comparison=(' +
-  regexTeam.source + '\\s*(?:,\\s*' + regexTeam.source +
-  '?)+)\\](\\s*(?:' +
+  regexTeam.source + '(?:\\s*,\\s*' + regexTeam.source + `){1,${maxTeamsInComparison-1}})\\](\\s*(?:` +
   regexImageUrl.source + '(?:\\s+|\\s*,)\\s*)+' + regexImageUrl.source +
   ')\\s*\\[\\/comparison\\]',
   'mig')
 // compare with thumbs
 const regexScreenshotsThumbsCombined = RegExp(
   '((?:\\s*(\\[url=' +
-  regexNormalUrl.source + '?\\])?\\s*\\[img\\]' +
-  regexImageUrl.source + '?\\[\\/img\\]\\s*(?:\\[\\/url\\])?\\s*)+)',
+  regexNormalUrl.source + '\\])?\\s*\\[img\\]' +
+  regexImageUrl.source + '\\[\\/img\\]\\s*(?:\\[\\/url\\])?\\s*)+)',
   'mi')
 const regexScreenshotsThumbsSeparated = RegExp(
   '(\\[url=' +
-  regexNormalUrl.source + '?\\])?\\s*\\[img\\]' +
-  regexImageUrl.source + '?\\[\\/img\\]\\s*(?:\\[\\/url\\])?',
+  regexNormalUrl.source + '\\])?\\s*\\[img\\]' +
+  regexImageUrl.source + '\\[\\/img\\]\\s*(?:\\[\\/url\\])?',
   'mig')
 const regexImageUrlsSeparated = RegExp(
   '(' + regexImageUrl.source + ')',
@@ -75,16 +74,16 @@ const regexImageUrlsSeparated = RegExp(
 // 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
 const regexScreenshotsThumbsBoxed = RegExp(
   '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
-  regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
-  `){1,${maxTeamsInComparison-1}})\\s*\\]` +
+  regexTeam.source + '(\\s*(?:' + regexTeamsSplitter.source + ')\\s*)' +
+  regexTeam.source + '(?:\\3' + regexTeam.source + `){0,${maxTeamsInComparison-2}})\\s*\\]` +
   regexScreenshotsThumbsCombined.source +
   '\\s*\\[\\/\\1\\]',
   'mig')
 // 第二种不包含[box|hide|expand|spoiler|quote=]标签，要求Source, Encode与截图之间至少有一个换行符
 const regexScreenshotsThumbsTitled = RegExp(
   '\\b(' +
-  regexTeam.source + '(?:\\s*(?:' + regexTeamsSplitter.source + ')\\s*' + regexTeam.source +
-  `){1,${maxTeamsInComparison-1}})[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*` +
+  regexTeam.source + '(\\s*(?:' + regexTeamsSplitter.source + ')\\s*)' +
+  regexTeam.source + '(?:\\2' + regexTeam.source + `){0,${maxTeamsInComparison-2}})[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*` +
   regexScreenshotsThumbsCombined.source,
   'mig')
 const regexScreenshotsSimple = RegExp(
@@ -93,9 +92,9 @@ const regexScreenshotsSimple = RegExp(
 // 对比图相关正则表达式信息
 const regexInfo = {
   // [box=team1, team2, team3]url1 url2 url3[/box]
-  boxed: { regex: regexScreenshotsThumbsBoxed, groupForTeams: 2, groupForUrls: 3, groupForThumbs: 4 },
+  boxed: { regex: regexScreenshotsThumbsBoxed, groupForTeams: 2, groupForUrls: 4, groupForThumbs: 5 },
   // [center]team1 | team2 | team3\nurl1 url2 url3[/center]
-  titled: { regex: regexScreenshotsThumbsTitled, groupForTeams: 1, groupForUrls: 2, groupForThumbs: 3 },
+  titled: { regex: regexScreenshotsThumbsTitled, groupForTeams: 1, groupForUrls: 3, groupForThumbs: 4 },
   // [comparison=team1, team2, team3]url1 url2 url3[/comparison]
   comparison: { regex: regexScreenshotsComparison, groupForTeams: 1, groupForUrls: 2, groupForThumbs: -1 },
   // [img]https://1.png[/img][img]https://2.png[/img][img]https://3.png[/img]
