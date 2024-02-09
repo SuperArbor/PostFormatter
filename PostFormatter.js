@@ -74,7 +74,7 @@ const regexScreenshotsThumbsBoxed = RegExp(
   '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
   regexTeam.source + '(\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
   regexTeam.source + '(?:\\3' + regexTeam.source + `){0,${maxTeamsInComparison-2}})\\s*\\]` +
-  '((?:\\s*' + regexScreenshotsThumbs.source + '\\s*)+)' + '\\[\\/\\1\\]',
+  '((?:\\s*' + regexScreenshotsThumbs.source + '\\s*)+)\\[\\/\\1\\]',
   'mig')
 // 截图模式：不包含[box|hide|expand|spoiler|quote=]标签，封装的是缩略图，要求Source, Encode与截图之间至少有一个换行符
 const regexScreenshotsThumbsTitled = RegExp(
@@ -88,7 +88,7 @@ const regexScreenshotsImagesBoxed = RegExp(
   '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
   regexTeam.source + '(\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
   regexTeam.source + '(?:\\3' + regexTeam.source + `){0,${maxTeamsInComparison-2}})\\s*\\]` +
-  '((?:\\s*' + regexScreenshotsImages.source + '\\s*)+)' + '\\[\\/\\1\\]',
+  '((?:\\s*' + regexScreenshotsImages.source + '\\s*)+)\\[\\/\\1\\]',
   'mig')
 // 截图模式：不包含[box|hide|expand|spoiler|quote=]标签，封装的是图片链接，要求Source, Encode与截图之间至少有一个换行符
 const regexScreenshotsImagesTitled = RegExp(
@@ -1238,8 +1238,8 @@ function processDescription (siteName, description) {
             // subtitle
             let matchLang = false
             const language = infoValue.Language || infoValue.Title
-            if (language.match(/chinese|chs|cht/i)) {
-              if (language.match(/cht|(chinese( |_)traditional)/i)) {
+            if (language.match(/chinese/i)) {
+              if (language.match(/cht|(chinese( |_)traditional)|(traditional( |_)chinese)/i)) {
                 torrentInfo.subtitleInfo.chinese_traditional = true
               } else {
                 torrentInfo.subtitleInfo.chinese_simplified = true
