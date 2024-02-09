@@ -16,8 +16,8 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'EbP', 'NTb (different source)'],
     numUrls: 15,
-    thumbs: true,
-    type: 'boxed',
+    urlType: 'thumbsBbCode',
+    containerStyle: 'boxed',
     length: 1952
   }]
 }, {
@@ -29,8 +29,8 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'Filtered', 'c0kE', 'PTER', 'HANDJOB'],
     numUrls: 20,
-    thumbs: true,
-    type: 'titled',
+    urlType: 'thumbsBbCode',
+    containerStyle: 'titled',
     length: 2729
   }]
 }, {
@@ -41,8 +41,8 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'Encode'],
     numUrls: 8,
-    thumbs: false,
-    type: 'comparison',
+    urlType: 'images',
+    containerStyle: 'comparison',
     length: 540
   }]
 }, {
@@ -61,8 +61,8 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'EbP', 'NTb (different source)'],
     numUrls: 15,
-    thumbs: true,
-    type: 'boxed',
+    urlType: 'thumbsBbCode',
+    containerStyle: 'boxed',
     length: 1948
   }]
 }, {
@@ -106,14 +106,14 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'c0kE', 'POH'],
     numUrls: 24,
-    thumbs: true,
-    type: 'titled',
+    urlType: 'thumbsBbCode',
+    containerStyle: 'titled',
     length: 2808
   }, {
     teams: ['Source', 'c0kE'],
     numUrls: 24,
-    thumbs: true,
-    type: 'titled',
+    urlType: 'thumbsBbCode',
+    containerStyle: 'titled',
     length: 2814
   }]
 }, {
@@ -123,8 +123,8 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'iFT', 'SOIGNEUR', 'NTG'],
     numUrls: 2,
-    thumbs: true,
-    type: 'titled',
+    urlType: 'thumbsBbCode',
+    containerStyle: 'titled',
     length: 224
   }]
 }, {
@@ -133,8 +133,8 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'SA89', 'D-Z0N3'],
     numUrls: 15,
-    thumbs: true,
-    type: 'boxed',
+    urlType: 'thumbsBbCode',
+    containerStyle: 'boxed',
     length: 1493
   }]
 }, {
@@ -176,20 +176,20 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['USA BD', 'Hybrid(Merged) Source', 'AMZN WEB-DL(Resized)'],
     numUrls: 33,
-    thumbs: true,
-    type: 'titled',
+    urlType: 'thumbsBbCode',
+    containerStyle: 'titled',
     length: 4241
   }, {
     teams: ['USA BD', 'Filtered Source', 'eXterminator', 'HiDt'],
     numUrls: 16,
-    thumbs: true,
-    type: 'titled',
+    urlType: 'thumbsBbCode',
+    containerStyle: 'titled',
     length: 2070
   }, {
     teams: ['USA BD', 'Hybrid(Merged) Source', 'eXterminator', 'HiDt', 'AMZN 4K(Resized)'],
     numUrls: 35,
-    thumbs: true,
-    type: 'titled',
+    urlType: 'thumbsBbCode',
+    containerStyle: 'titled',
     length: 4495
   }]
 }]
@@ -541,9 +541,15 @@ test('test simple screenshots conversion', () => {
         if (output.urls.length !== expected.numUrls) {
           console.log(`expected urls ${expected.numUrls}, actual urls ${output.urls.length}`)
         }
+        if (output.urls.length !== expected.numUrls) {
+          console.log(`expected urls ${expected.numUrls}, actual urls ${output.urls.length}`)
+        }
         expect(output.urls.length).toBe(expected.numUrls)
-        expect(output.regexType).toBe(expected.type)
-        expect(output.thumbs).toBe(expected.thumbs)
+        expect(output.containerStyle).toBe(expected.containerStyle)
+        if (output.urlType !== expected.urlType) {
+          console.log(`expected urlType ${expected.urlType}, actual urlType ${output.urlType}`)
+        }
+        expect(output.urlType).toBe(expected.urlType)
         if (JSON.stringify(output.teams) !== JSON.stringify(expected.teams)) {
           console.log(`expected teams ${expected.teams}, actual teams ${output.teams}`)
         }

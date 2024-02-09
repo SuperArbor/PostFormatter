@@ -46,60 +46,70 @@ const [regexTeamsSplitter] = getTeamSplitterRegex(weirdTeams, allTeamSplitters, 
 // max comparison teams in a comparison, must be larger than 1
 const maxTeamsInComparison = 8
 const maxNonWordsInTitled = 20
+// simple regexes
 const regexNormalUrl = /https?:[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
 const regexImageUrl = RegExp(
   regexNormalUrl.source + '?\\.(?:png|jpg)',
-  'i')
+  'ig')
+// compare with thumbs
+const regexScreenshotsThumbs = RegExp(
+  '\\[url=' +
+  regexNormalUrl.source + '\\]\\s*\\[img\\]' +
+  regexImageUrl.source + '\\[\\/img\\]\\s*\\[\\/url\\]',
+  'ig')
+// compare with thumbs
+const regexScreenshotsImages = RegExp(
+  '\\[img\\]' + regexImageUrl.source + '\\[\\/img\\]',
+  'ig')
+// complex regexes
 // compare with comparison (GPW style)
 const regexScreenshotsComparison = RegExp(
   '\\[comparison=(' +
-  regexTeam.source + '(?:\\s*,\\s*' + regexTeam.source + `){1,${maxTeamsInComparison-1}})\\](\\s*(?:` +
+  regexTeam.source + '(?:\\s*(,)\\s*' + regexTeam.source + `){1,${maxTeamsInComparison-1}})\\](\\s*(?:` +
   regexImageUrl.source + '(?:\\s+|\\s*,)\\s*)+' + regexImageUrl.source +
   ')\\s*\\[\\/comparison\\]',
   'mig')
-// compare with thumbs
-const regexScreenshotsThumbsCombined = RegExp(
-  '((?:\\s*(\\[url=' +
-  regexNormalUrl.source + '\\])?\\s*\\[img\\]' +
-  regexImageUrl.source + '\\[\\/img\\]\\s*(?:\\[\\/url\\])?\\s*)+)',
-  'mi')
-const regexScreenshotsThumbsSeparated = RegExp(
-  '(\\[url=' +
-  regexNormalUrl.source + '\\])?\\s*\\[img\\]' +
-  regexImageUrl.source + '\\[\\/img\\]\\s*(?:\\[\\/url\\])?',
-  'mig')
-const regexImageUrlsSeparated = RegExp(
-  '(' + regexImageUrl.source + ')',
-  'mig')
-// 两种截图模式，第一种是包含[box|hide|expand|spoiler|quote=]标签的
+// 截图模式:包含[box|hide|expand|spoiler|quote=]标签，封装的是缩略图
 const regexScreenshotsThumbsBoxed = RegExp(
   '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
-  regexTeam.source + '(\\s*(?:' + regexTeamsSplitter.source + ')\\s*)' +
+  regexTeam.source + '(\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
   regexTeam.source + '(?:\\3' + regexTeam.source + `){0,${maxTeamsInComparison-2}})\\s*\\]` +
-  regexScreenshotsThumbsCombined.source +
-  '\\s*\\[\\/\\1\\]',
+  '((?:\\s*' + regexScreenshotsThumbs.source + '\\s*)+)' + '\\[\\/\\1\\]',
   'mig')
-// 第二种不包含[box|hide|expand|spoiler|quote=]标签，要求Source, Encode与截图之间至少有一个换行符
+// 截图模式：不包含[box|hide|expand|spoiler|quote=]标签，封装的是缩略图，要求Source, Encode与截图之间至少有一个换行符
 const regexScreenshotsThumbsTitled = RegExp(
   '\\b(' +
-  regexTeam.source + '(\\s*(?:' + regexTeamsSplitter.source + ')\\s*)' +
+  regexTeam.source + '(\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
   regexTeam.source + '(?:\\2' + regexTeam.source + `){0,${maxTeamsInComparison-2}})[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*` +
-  regexScreenshotsThumbsCombined.source,
+  '((?:\\s*' + regexScreenshotsThumbs.source + '\\s*)+)',
   'mig')
-const regexScreenshotsSimple = RegExp(
-  '(?:\\[b\\])?Screenshots(?:\\[\\/b\\])?\\s*(\\[img\\]' + regexImageUrl + '\\s*\\[\\/img\\]+)',
+// 截图模式:包含[box|hide|expand|spoiler|quote=]标签，封装的是图片链接
+const regexScreenshotsImagesBoxed = RegExp(
+  '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
+  regexTeam.source + '(\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
+  regexTeam.source + '(?:\\3' + regexTeam.source + `){0,${maxTeamsInComparison-2}})\\s*\\]` +
+  '((?:\\s*' + regexScreenshotsImages.source + '\\s*)+)' + '\\[\\/\\1\\]',
   'mig')
-// 对比图相关正则表达式信息
-const regexInfo = {
-  // [box=team1, team2, team3]url1 url2 url3[/box]
-  boxed: { regex: regexScreenshotsThumbsBoxed, groupForTeams: 2, groupForUrls: 4, groupForThumbs: 5 },
-  // [center]team1 | team2 | team3\nurl1 url2 url3[/center]
-  titled: { regex: regexScreenshotsThumbsTitled, groupForTeams: 1, groupForUrls: 3, groupForThumbs: 4 },
-  // [comparison=team1, team2, team3]url1 url2 url3[/comparison]
-  comparison: { regex: regexScreenshotsComparison, groupForTeams: 1, groupForUrls: 2, groupForThumbs: -1 },
-  // [img]https://1.png[/img][img]https://2.png[/img][img]https://3.png[/img]
-  simple: { regex: regexScreenshotsSimple, groupForTeams: -1, groupForUrls: 1, groupForThumbs: -1 }
-}
+// 截图模式：不包含[box|hide|expand|spoiler|quote=]标签，封装的是图片链接，要求Source, Encode与截图之间至少有一个换行符
+const regexScreenshotsImagesTitled = RegExp(
+  '\\b(' +
+  regexTeam.source + '(\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
+  regexTeam.source + '(?:\\2' + regexTeam.source + `){0,${maxTeamsInComparison-2}})[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*` +
+  '((?:\\s*' + regexScreenshotsImages.source + '\\s*)+)',
+  'mig')
+// 对比图相关正则表达式信息，由于可能不止一个会被匹配到，注意排序
+const regexInfo = [
+  // [box=team1, team2, team3][url=...][img]https://1.png[/img][/url] [url=...][img]https://2.png[/img][/url] [url=...][img]https://3.png[/img][/url][/box]
+  { regex: regexScreenshotsThumbsBoxed, groupForTeams: 2, groupForTeamSplitter: 4, groupForUrls: 5, containerStyle: 'boxed', urlType: 'thumbsBbCode' },
+  // team1 | team2 | team3\n[url=...][img]https://1.png[/img][/url] [url=...][img]https://2.png[/img][/url] [url=...][img]https://3.png[/img][/url]
+  { regex: regexScreenshotsThumbsTitled, groupForTeams: 1, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'titled', urlType: 'thumbsBbCode' },
+  // [box=team1, team2, team3]][img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img][/box]
+  { regex: regexScreenshotsImagesBoxed, groupForTeams: 2, groupForTeamSplitter: 4, groupForUrls: 5, containerStyle: 'boxed', urlType: 'imagesBbCode' },
+  // team1 | team2 | team3\n[img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img]
+  { regex: regexScreenshotsImagesTitled, groupForTeams: 1, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'titled', urlType: 'imagesBbCode' },
+  // [comparison=team1, team2, team3]https://1.png https://2.png https://3.png[/comparison]
+  { regex: regexScreenshotsComparison, groupForTeams: 1, groupForTeamSplitter: 2, groupForUrls: 3, containerStyle: 'comparison', urlType: 'images' }
+]
 const siteInfoMap = {
   // bracket makes the value of the string 'nexushd' the true key or instead the string 'NHD' will be used as key
   [NHD]: {
@@ -702,7 +712,7 @@ function getThumbSize(numTeams, siteName) {
             ? 150
             : 150
 }
-// decode [url=...][img]...[/img][/url] -> [comparison=...]...[/comparison]
+// decode [url=...][img]...[/img][/url] -> https://1.png
 async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
   thumbUrls = thumbUrls.trim()
   const imageHostName = Object.keys(imageHostInfoMap).find(ih => thumbUrls.match(RegExp(escapeRegExp(ih), 'i'))) || ''
@@ -733,7 +743,7 @@ async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
   }
   return imageUrls
 }
-// [comparison=...]...[/comparison] -> decode [url=...][img]...[/img][/url]
+// https://1.png -> [url=...][img]...[/img][/url]
 async function images2ThumbUrls (imageUrls, numTeams, siteName) {
   imageUrls = imageUrls.trim()
   const imageHostName = Object.keys(imageHostInfoMap).find(ih => imageUrls.match(RegExp(escapeRegExp(ih), 'i'))) || ''
@@ -858,32 +868,29 @@ function collectComparisons (text) {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const currentIndex = lastIndex
-    for (const key in regexInfo) {
-      const regex = regexInfo[key].regex
+    for (let type of regexInfo) {
+      const regex = type.regex
       regex.lastIndex = lastIndex
       const match = regex.exec(text)
       if (match) {
-        const result = { starts: 0, ends: 0, teams: [], urls: [], regexType: '', thumbs: false, text: '' }
-        result.regexType = key
-        if (regexInfo[key].groupForTeams >= 0) {
-          result.teams = match[regexInfo[key].groupForTeams]
-            .split(regexTeamsSplitter)
+        const result = { starts: 0, ends: 0, teams: [], urls: [], containerStyle: '', urlType: '', text: '' }
+        result.containerStyle = type.containerStyle
+        result.urlType = type.urlType
+        if (type.groupForTeams >= 0 && type.groupForTeamSplitter >= 0) {
+          let teamSplitter = match[type.groupForTeamSplitter]
+          result.teams = match[type.groupForTeams]
+            .split(teamSplitter)
             .map(ele => { return ele.trim() })
         }
-        if (regexInfo[key].groupForUrls >= 0) {
-          const urls = match[regexInfo[key].groupForUrls]
-          if (key === 'comparison') {
-            result.urls = urls.match(regexImageUrlsSeparated)
-          } else {
-            result.urls = urls.match(regexScreenshotsThumbsSeparated)
+        if (type.groupForUrls >= 0) {
+          const urls = match[type.groupForUrls]
+          if (type.urlType === 'thumbsBbCode') {
+            result.urls = urls.match(regexScreenshotsThumbs)
+          } else if (type.urlType === 'imagesBbCode') {
+            result.urls = urls.match(regexScreenshotsImages)
+          } else if (type.urlType === 'images') {
+            result.urls = urls.match(regexImageUrl)
           }
-        }
-        if (regexInfo[key].groupForThumbs >= 0) {
-          result.thumbs = !!match[regexInfo[key].groupForThumbs]
-        } else if (key === 'comparison') {
-          result.thumbs = false
-        } else if (key === 'simple') {
-          result.thumbs = false
         }
         result.starts = match.index
         result.ends = match.index + match[0].length
@@ -929,33 +936,26 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
     }
   }
   if (site.screenshotsStyle === 'conventional') {
-    let removePlainScreenshots = false
     const comparisons = collectComparisons(textToConsume)
       .sort((a, b) => b.starts - a.starts)
-    for (let { starts, ends, teams, urls, regexType, thumbs } of comparisons) {
+    // eslint-disable-next-line no-unused-vars
+    for (let { starts, ends, teams, urls, containerStyle, urlType } of comparisons) {
+      // convert to titled style no matter what the original style is
+      if (urlType === 'images') {
+        urls = await images2ThumbUrls(urls.join(' '), teams.length, siteName)
+      } else if (urlType === 'imagesBbCode') {
+        urls = urls.map(url => url.replace(/\[img\](.+?)\[\/img\]/, '$1'))
+        urls = await images2ThumbUrls(urls.join(' '), teams.length, siteName)
+      }
       let screenshotsStr = ''
-      if (regexType === 'boxed' || regexType === 'titled' || regexType === 'comparison') {
+      if (urls.length > 0) {
         screenshotsStr = `[b]${teams.join(' | ')}[/b]`
-        if (!thumbs) {
-          urls = await images2ThumbUrls(urls.join(' '), teams.length, siteName)
-        }
-        if (urls.length > 0) {
-          urls.forEach((url, i) => {
-            screenshotsStr += (i % teams.length === 0
-              ? '\n' + url
-              : ' ' + url)
-          })
-          screenshotsStr = `[center]${screenshotsStr}[/center]\n`
-          removePlainScreenshots = true
-        }
-      } else if (regexType === 'simple') {
-        if (removePlainScreenshots) {
-          screenshotsStr = ''
-        } else {
-          screenshotsStr = textToConsume.substring(starts, ends)
-        }
-      } else {
-        screenshotsStr = ''
+        urls.forEach((url, i) => {
+          screenshotsStr += (i % teams.length === 0
+            ? '\n' + url
+            : ' ' + url)
+        })
+        screenshotsStr = `[center]${screenshotsStr}[/center]\n`
       }
       textToConsume = textToConsume.substring(0, starts) +
         screenshotsStr +
@@ -981,21 +981,19 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
     let screenshotsStrAll = ''
     const comparisons = collectComparisons(textToConsume)
       .sort((a, b) => b.starts - a.starts)
-    for (let { starts, ends, teams, urls, regexType, thumbs } of comparisons) {
+    for (let { starts, ends, teams, urls, containerStyle, urlType } of comparisons) {
       let screenshotsStr = ''
-      if (regexType === 'comparison') {
+      if (containerStyle === 'comparison') {
         screenshotsStr = textToConsume.substring(starts, ends)
-      } else if (regexType === 'boxed' || regexType === 'titled') {
-        if (thumbs) {
+      } else if (containerStyle === 'boxed' || containerStyle === 'titled') {
+        if (urlType === 'thumbsBbCode') {
           urls = await thumbs2ImageUrls(urls.join(' '), teams.length, siteName)
+        } else if (urlType === 'imagesBbCode') {
+          urls = urls.map(url => url.replace(/\[img\](.+?)\[\/img\]/, '$1'))
         }
         if (urls.length > 0) {
           screenshotsStr = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
         }
-      } else if (regexType === 'simple') {
-        screenshotsStr = ''
-      } else {
-        screenshotsStr = ''
       }
       screenshotsStrAll = `${screenshotsStr}\n${screenshotsStrAll}`
       // 如果之前没有获取到teamEncode，直接用Encode赋值，避免后续'includes'判断错误（string.includes('') === true）
@@ -1010,7 +1008,7 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
             let image = urls[i]
             const teamCurrent = teams[i % teams.length]
             if (currentScreenshots < site.maxScreenshots && (teamCurrent.toLowerCase() === 'encode' || teamCurrent.toLowerCase() === teamEncode.toLowerCase())) {
-              if (image.match(/\[img\].*?\[\/img\]/)) {
+              if (image.match(/\[img\].+?\[\/img\]/)) {
                 screenshots += image
               } else {
                 screenshots += `[img]${image}[/img]`
