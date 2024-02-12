@@ -103,7 +103,7 @@ const regexInfo = [
   { regex: regexScreenshotsThumbsBoxed, groupForTeams: 2, groupForTeamSplitter: 4, groupForUrls: 5, containerStyle: 'boxed', urlType: 'thumbsBbCode' },
   // team1 | team2 | team3\n[url=...][img]https://1.png[/img][/url] [url=...][img]https://2.png[/img][/url] [url=...][img]https://3.png[/img][/url]
   { regex: regexScreenshotsThumbsTitled, groupForTeams: 1, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'titled', urlType: 'thumbsBbCode' },
-  // [box=team1, team2, team3]][img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img][/box]
+  // [box=team1, team2, team3][img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img][/box]
   { regex: regexScreenshotsImagesBoxed, groupForTeams: 2, groupForTeamSplitter: 4, groupForUrls: 5, containerStyle: 'boxed', urlType: 'imagesBbCode' },
   // team1 | team2 | team3\n[img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img]
   { regex: regexScreenshotsImagesTitled, groupForTeams: 1, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'titled', urlType: 'imagesBbCode' },
@@ -906,11 +906,11 @@ function collectComparisons (text) {
   }
 }
 // 从简介中提取信息并格式化截图
-async function decomposeDescription (siteName, textToConsume, torrentTitle) {
+async function decomposeDescription (siteName, textToConsume, mediainfoStr, torrentTitle) {
   let mediainfo = {}
   let description = ''
   const site = siteInfoMap[siteName]
-  // 优先从简介中获取mediainfo
+  // 优先从简介中获取mediainfo，避免mediainfo框内容陈旧导致冲突
   const tagForMediainfo = site.targetBoxTag || 'quote'
   const regexMIStr = site.boxSupportDescr
     ? '\\[(' + tagForMediainfo + '|quote)\\s*=\\s*mediainfo\\]\\s*(General\\s+Unique ID[^\\0]+?)\\[\\/\\1\\]'
@@ -918,15 +918,18 @@ async function decomposeDescription (siteName, textToConsume, torrentTitle) {
   const regexMI = RegExp(regexMIStr, 'im')
   const mediainfoArray = textToConsume.match(regexMI)
   if (mediainfoArray) {
-    let mediainfoStr = mediainfoArray[2]
+    let miStr = mediainfoArray[2]
       .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
       .replace(/\s*\[\/\w+\]\s*$/g, '')
-    mediainfo = string2Mediainfo(mediainfoStr)
+    mediainfo = string2Mediainfo(miStr)
     // if the site has a place to fill out the mediainfo, remove it in the description box
     if (site.mediainfoBox) {
       textToConsume = textToConsume.substring(0, mediainfoArray.index) +
         textToConsume.substring(mediainfoArray.index + mediainfoArray[0].length)
     }
+  } else {
+    // 若简介中无mediainfo信息，读取mediainfoStr
+    mediainfo = string2Mediainfo(mediainfoStr)
   }
   if (!torrentTitle && mediainfo && mediainfo.General) {
     torrentTitle = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
@@ -1215,8 +1218,9 @@ function processDescription (siteName, description) {
           torrentInfo.torrentTitle = formatTorrentName(inputFile)
         }
         //= ========================================================================================================
+        let mediainfoStr = site.mediainfoBox.val()
         // decompose description (and generate comparison screenshots)
-        [textToConsume, torrentInfo.mediainfo, torrentInfo.torrentTitle] = await decomposeDescription(siteName, textToConsume, torrentInfo.torrentTitle)
+        ;[textToConsume, torrentInfo.mediainfo, torrentInfo.torrentTitle] = await decomposeDescription(siteName, textToConsume, mediainfoStr, torrentInfo.torrentTitle)
         torrentInfo.audioInfo = {
           dtsX: false, atmos: false, chineseDub: false, cantoneseDub: false, commentary: false
         }
@@ -1227,11 +1231,6 @@ function processDescription (siteName, description) {
         Object.keys(subtitleLanguages).forEach(lang => {
           torrentInfo.subtitleInfo[lang] = false
         })
-        if (Object.keys(torrentInfo.mediainfo).length === 0 && site.mediainfoBox) {
-          // 如果简介中没有有效的mediainfo，读取mediainfobox
-          let mediainfoStr = site.mediainfoBox.val()
-          torrentInfo.mediainfo = string2Mediainfo(mediainfoStr)
-        }
         // info from mediainfo
         Object.entries(torrentInfo.mediainfo).forEach(([infoKey, infoValue]) => {
           if (infoKey.match(/text( #\d+)?/i)) {

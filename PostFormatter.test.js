@@ -583,7 +583,7 @@ test('test whole screenshots conversion', async () => {
       for (const targetSite of targetSites) {
         input = processDescription(targetSite, input)
         // let comparisonsInput = collectComparisons(input)
-        let [output] = await decomposeDescription(targetSite, input, '')
+        let [output] = await decomposeDescription(targetSite, input, '', '')
         output = processDescription(targetSite, output)
         // let comparisonsOutput = collectComparisons(output)
         // expect(comparisonsOutput.length).toBe(comparisonsInput.length)
