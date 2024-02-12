@@ -958,7 +958,9 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
             ? '\n' + url
             : ' ' + url)
         })
-        screenshotsStr = `[center]${screenshotsStr}[/center]\n`
+        screenshotsStr = site.unsupportedTags.includes('center')
+          ? `${screenshotsStr}\n`
+          : `[center]${screenshotsStr}[/center]\n`
       }
       textToConsume = textToConsume.substring(0, starts) +
         screenshotsStr +
