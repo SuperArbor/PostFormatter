@@ -1224,7 +1224,7 @@ function processDescription (siteName, description) {
         // decompose description (and generate comparison screenshots)
         ;[textToConsume, torrentInfo.mediainfo, torrentInfo.torrentTitle] = await decomposeDescription(siteName, textToConsume, mediainfoStr, torrentInfo.torrentTitle)
         torrentInfo.audioInfo = {
-          dtsX: false, atmos: false, chineseDub: false, cantoneseDub: false, commentary: false
+          dtsX: false, atmos: false, chineseDub: false, foreignDub: false, cantoneseDub: false, commentary: false
         }
         torrentInfo.videoInfo = {
           bit10: false, hdr10: false, hdr10plus: false, dovi: false, container: ''
@@ -1238,9 +1238,9 @@ function processDescription (siteName, description) {
           if (infoKey.match(/text( #\d+)?/i)) {
             // subtitle
             let matchLang = false
-            const language = infoValue.Language || infoValue.Title
+            const language = [infoValue.Language || '', infoValue.Title || ''].join(' ')
             if (language.match(/chinese/i)) {
-              if (language.match(/cht|(chinese( |_)traditional)|(traditional( |_)chinese)/i)) {
+              if (language.match(/cht|traditional/i)) {
                 torrentInfo.subtitleInfo.chinese_traditional = true
               } else {
                 torrentInfo.subtitleInfo.chinese_simplified = true
@@ -1251,6 +1251,7 @@ function processDescription (siteName, description) {
                 if (language.match(RegExp(escapeRegExp(lang), 'i')) || language.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
                   torrentInfo.subtitleInfo[lang] = true
                   matchLang = true
+                  return
                 }
               })
             }
@@ -1266,14 +1267,15 @@ function processDescription (siteName, description) {
             if (title.match(/commentary/i)) {
               torrentInfo.audioInfo.commentary = true
             }
-            if (title.match(/cantonese/i) || language.match(/cantonese/i)) {
+            if (title.match(/cantonese|粤语|广东话|粤配/i) || language.match(/cantonese|粤语|广东话|粤配/i)) {
               torrentInfo.audioInfo.cantoneseDub = true
               console.log('Cantonese dub')
-            } else if (title.match(/chinese|mandarin/i) || language.match(/chinese|mandarin/i)) {
+            } else if (title.match(/chinese|mandarin|国语|普通话|国配/i) || language.match(/chinese|mandarin|国语|普通话|国配/i)) {
               torrentInfo.audioInfo.chineseDub = true
               console.log('Chinese Mandarin dub')
             } else {
-              console.log('Other dub')
+              torrentInfo.audioInfo.foreignDub = true
+              console.log('Foreign dub')
             }
             const commecialName = infoValue['Commercial name']
             if (commecialName) {
@@ -1901,7 +1903,8 @@ function processDescription (siteName, description) {
             if (torrentInfo.audioInfo) {
               site.audioInfo.dtsX.checked = torrentInfo.audioInfo.dtsX
               site.audioInfo.atmos.checked = torrentInfo.audioInfo.atmos
-              site.audioInfo.chineseDub.checked = torrentInfo.audioInfo.chineseDub
+              // GPW的国语配音作为特色属性，特指外语片的译制音轨
+              site.audioInfo.chineseDub.checked = torrentInfo.audioInfo.chineseDub && torrentInfo.audioInfo.foreignDub
             }
             // container info
             if (Object.values(site.containerInfo).includes(torrentInfo.videoInfo.container)) {
