@@ -281,7 +281,7 @@ const siteInfoMap = {
     boxSupportDescr: false,
     quoteStyle: 'writer',
     boxNeedBreakLine: false,
-    unsupportedTags: ['align'],
+    unsupportedTags: ['align', 'center'],
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $("input[type='text'][name='name']"), nameBoxEdit: $("input[type='text'][name='name']"),
     descrBox: $('textarea[name="descr"]'), smallDescBox: $("input[type='text'][name='subtitle']"), subtitleBox: $("input[type='text'][name='highlight']"),
@@ -1218,7 +1218,7 @@ function processDescription (siteName, description) {
           torrentInfo.torrentTitle = formatTorrentName(inputFile)
         }
         //= ========================================================================================================
-        let mediainfoStr = site.mediainfoBox.val()
+        let mediainfoStr = site.mediainfoBox ? site.mediainfoBox.val() : ''
         // decompose description (and generate comparison screenshots)
         ;[textToConsume, torrentInfo.mediainfo, torrentInfo.torrentTitle] = await decomposeDescription(siteName, textToConsume, mediainfoStr, torrentInfo.torrentTitle)
         torrentInfo.audioInfo = {
