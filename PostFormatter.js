@@ -1096,7 +1096,10 @@ function processDescription (siteName, description) {
     .replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, matches => {
       return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
     })
+    // 去除头尾空白
     .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')
+    // 至多两个换行
+    .replace(/(\r?\n){3,}/g, '\n\n')
     // for pterclub
     .replace(/\[(\/?img)\d+\]/g, '[$1]')
   if (siteName === GPW) {
