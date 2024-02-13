@@ -954,7 +954,7 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
     // 若简介中无mediainfo信息，读取mediainfoStr
     mediainfo = string2Mediainfo(mediainfoStr)
   }
-  if (!torrentTitle && mediainfo && mediainfo.General) {
+  if (mediainfo && mediainfo.General) {
     torrentTitle = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
     if (torrentTitle) {
       torrentTitle = torrentTitle.replace(/.*?([^\\]+)$/, '$1')
