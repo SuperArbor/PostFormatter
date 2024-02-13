@@ -915,17 +915,40 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
   const regexMIStr = site.boxSupportDescr
     ? '\\[(' + tagForMediainfo + '|quote)\\s*=\\s*mediainfo\\]\\s*(General\\s+Unique ID[^\\0]+?)\\[\\/\\1\\]'
     : '\\[(' + tagForMediainfo + '|quote)\\]\\s*(General\\s+Unique ID[^\\0]+?)\\[\\/\\1\\]'
-  const regexMI = RegExp(regexMIStr, 'im')
-  const mediainfoArray = textToConsume.match(regexMI)
-  if (mediainfoArray) {
+  // 如果存在多个mediainfo，一般是因为简介中包含了Source MediaInfo，多为remux
+  let regexMi = RegExp(regexMIStr, 'gim')
+  let mediainfoArray = []
+  let results = []
+  // eslint-disable-next-line no-cond-assign
+  while (mediainfoArray = regexMi.exec(textToConsume)) {
     let miStr = mediainfoArray[2]
       .replace(/^\s*\[\w+(\s*=[^\]]+)?\]/g, '')
       .replace(/\s*\[\/\w+\]\s*$/g, '')
-    mediainfo = string2Mediainfo(miStr)
+    let mi = string2Mediainfo(miStr)
+    let completeName = mi.General
+      ? mi.General['Complete name'] || mi.General['Movie name'] || ''
+      : ''
+    results.push({ 'mediainfo': mi, 'index': mediainfoArray.index, 'length': mediainfoArray[0].length, 'completeName': completeName })
+  }
+  if (results.length) {
+    let encodeResult = { 'mediainfo': {}, 'index': 0, 'length': 0, 'completeName': '' }
+    if (results.length === 1) {
+      // 匹配到单个mediainfo
+      encodeResult = results[0]
+    } else {
+      // 如果匹配到多个mediainfo，一般是因为其中有Source mediainfo，多为remux
+      results.forEach(result => {
+        if (!result.completeName.match(/\bremux\b/i)) {
+          encodeResult = result
+          return
+        }
+      })
+    }
+    mediainfo = encodeResult.mediainfo
     // if the site has a place to fill out the mediainfo, remove it in the description box
-    if (site.mediainfoBox) {
-      textToConsume = textToConsume.substring(0, mediainfoArray.index) +
-        textToConsume.substring(mediainfoArray.index + mediainfoArray[0].length)
+    if (site.mediainfoBox && encodeResult.length) {
+      textToConsume = textToConsume.substring(0, encodeResult.index) +
+        textToConsume.substring(encodeResult.index + encodeResult.length)
     }
   } else {
     // 若简介中无mediainfo信息，读取mediainfoStr
