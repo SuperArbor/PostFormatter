@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info
-// @version      1.3.2.7
+// @version      1.3.2.8
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -64,38 +64,33 @@ const regexScreenshotsImages = RegExp(
 // complex regexes
 // compare with comparison (GPW style)
 const regexScreenshotsComparison = RegExp(
-  '\\[comparison=(' +
-  regexTeam.source + '(?:\\s*(,)\\s*' + regexTeam.source + `){1,${maxTeamsInComparison-1}})\\](\\s*(?:` +
-  regexImageUrl.source + '(?:\\s+|\\s*,)\\s*)+' + regexImageUrl.source +
-  ')\\s*\\[\\/comparison\\]',
+  '\\[comparison=(' + regexTeam.source + '(?:\\s*(,)\\s*' + regexTeam.source + `){1,${maxTeamsInComparison-1}})\\]` +
+  '(\\s*(?:' + regexImageUrl.source + '(?:\\s+|\\s*,)\\s*)+' + regexImageUrl.source + ')\\s*\\[\\/comparison\\]',
   'mig')
 // 截图模式:包含[box|hide|expand|spoiler|quote=]标签，封装的是缩略图
 const regexScreenshotsThumbsBoxed = RegExp(
-  '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
-  regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
-  regexTeam.source + '(?:\\s*\\3\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}})\\s*\\]` +
-  '((?:\\s*' + regexScreenshotsThumbs.source + '\\s*)+)\\[\\/\\1\\]',
+  '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' + regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
+  regexTeam.source + '(?:\\s*\\3\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}}` +
+  ')\\s*\\]((?:\\s*' + regexScreenshotsThumbs.source + '\\s*)+)\\[\\/\\1\\]',
   'mig')
 // 截图模式：不包含[box|hide|expand|spoiler|quote=]标签，封装的是缩略图，要求Source, Encode与截图之间至少有一个换行符
 const regexScreenshotsThumbsTitled = RegExp(
-  '\\b(' +
-  regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
-  regexTeam.source + '(?:\\s*\\2\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}})[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*` +
-  '((?:\\s*' + regexScreenshotsThumbs.source + '\\s*)+)',
+  '\\b(' + regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
+  regexTeam.source + '(?:\\s*\\2\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}}` +
+  `)[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*((?:\\s*` + regexScreenshotsThumbs.source + '\\s*)+)',
   'mig')
 // 截图模式:包含[box|hide|expand|spoiler|quote=]标签，封装的是图片链接
 const regexScreenshotsImagesBoxed = RegExp(
   '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
   regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
-  regexTeam.source + '(?:\\s*\\3\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}})\\s*\\]` +
-  '((?:\\s*' + regexScreenshotsImages.source + '\\s*)+)\\[\\/\\1\\]',
+  regexTeam.source + '(?:\\s*\\3\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}}` +
+  ')\\s*\\]((?:\\s*' + regexScreenshotsImages.source + '\\s*)+)\\[\\/\\1\\]',
   'mig')
 // 截图模式：不包含[box|hide|expand|spoiler|quote=]标签，封装的是图片链接，要求Source, Encode与截图之间至少有一个换行符
 const regexScreenshotsImagesTitled = RegExp(
-  '\\b(' +
-  regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
-  regexTeam.source + '(?:\\s*\\2\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}})[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*` +
-  '((?:\\s*' + regexScreenshotsImages.source + '\\s*)+)',
+  '\\b(' + regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
+  regexTeam.source + '(?:\\s*\\2\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}}` +
+  `)[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*((?:\\s*` + regexScreenshotsImages.source + '\\s*)+)',
   'mig')
 // 对比图相关正则表达式信息，由于可能不止一个会被匹配到，注意排序
 const regexInfo = [
