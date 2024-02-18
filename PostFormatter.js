@@ -72,41 +72,41 @@ const regexScreenshotsComparison = RegExp(
 // 截图模式:包含[box|hide|expand|spoiler|quote=]标签，封装的是缩略图
 const regexScreenshotsThumbsBoxed = RegExp(
   '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
-  regexTeam.source + '(\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
-  regexTeam.source + '(?:\\3' + regexTeam.source + `){0,${maxTeamsInComparison-2}})\\s*\\]` +
+  regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
+  regexTeam.source + '(?:\\s*\\3\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}})\\s*\\]` +
   '((?:\\s*' + regexScreenshotsThumbs.source + '\\s*)+)\\[\\/\\1\\]',
   'mig')
 // 截图模式：不包含[box|hide|expand|spoiler|quote=]标签，封装的是缩略图，要求Source, Encode与截图之间至少有一个换行符
 const regexScreenshotsThumbsTitled = RegExp(
   '\\b(' +
-  regexTeam.source + '(\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
-  regexTeam.source + '(?:\\2' + regexTeam.source + `){0,${maxTeamsInComparison-2}})[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*` +
+  regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
+  regexTeam.source + '(?:\\s*\\2\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}})[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*` +
   '((?:\\s*' + regexScreenshotsThumbs.source + '\\s*)+)',
   'mig')
 // 截图模式:包含[box|hide|expand|spoiler|quote=]标签，封装的是图片链接
 const regexScreenshotsImagesBoxed = RegExp(
   '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
-  regexTeam.source + '(\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
-  regexTeam.source + '(?:\\3' + regexTeam.source + `){0,${maxTeamsInComparison-2}})\\s*\\]` +
+  regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
+  regexTeam.source + '(?:\\s*\\3\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}})\\s*\\]` +
   '((?:\\s*' + regexScreenshotsImages.source + '\\s*)+)\\[\\/\\1\\]',
   'mig')
 // 截图模式：不包含[box|hide|expand|spoiler|quote=]标签，封装的是图片链接，要求Source, Encode与截图之间至少有一个换行符
 const regexScreenshotsImagesTitled = RegExp(
   '\\b(' +
-  regexTeam.source + '(\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
-  regexTeam.source + '(?:\\2' + regexTeam.source + `){0,${maxTeamsInComparison-2}})[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*` +
+  regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
+  regexTeam.source + '(?:\\s*\\2\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}})[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*` +
   '((?:\\s*' + regexScreenshotsImages.source + '\\s*)+)',
   'mig')
 // 对比图相关正则表达式信息，由于可能不止一个会被匹配到，注意排序
 const regexInfo = [
   // [box=team1, team2, team3][url=...][img]https://1.png[/img][/url] [url=...][img]https://2.png[/img][/url] [url=...][img]https://3.png[/img][/url][/box]
-  { regex: regexScreenshotsThumbsBoxed, groupForTeams: 2, groupForTeamSplitter: 4, groupForUrls: 5, containerStyle: 'boxed', urlType: 'thumbsBbCode' },
+  { regex: regexScreenshotsThumbsBoxed, groupForTeams: 2, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'boxed', urlType: 'thumbsBbCode' },
   // team1 | team2 | team3\n[url=...][img]https://1.png[/img][/url] [url=...][img]https://2.png[/img][/url] [url=...][img]https://3.png[/img][/url]
-  { regex: regexScreenshotsThumbsTitled, groupForTeams: 1, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'titled', urlType: 'thumbsBbCode' },
+  { regex: regexScreenshotsThumbsTitled, groupForTeams: 1, groupForTeamSplitter: 2, groupForUrls: 3, containerStyle: 'titled', urlType: 'thumbsBbCode' },
   // [box=team1, team2, team3][img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img][/box]
-  { regex: regexScreenshotsImagesBoxed, groupForTeams: 2, groupForTeamSplitter: 4, groupForUrls: 5, containerStyle: 'boxed', urlType: 'imagesBbCode' },
+  { regex: regexScreenshotsImagesBoxed, groupForTeams: 2, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'boxed', urlType: 'imagesBbCode' },
   // team1 | team2 | team3\n[img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img]
-  { regex: regexScreenshotsImagesTitled, groupForTeams: 1, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'titled', urlType: 'imagesBbCode' },
+  { regex: regexScreenshotsImagesTitled, groupForTeams: 1, groupForTeamSplitter: 2, groupForUrls: 3, containerStyle: 'titled', urlType: 'imagesBbCode' },
   // [comparison=team1, team2, team3]https://1.png https://2.png https://3.png[/comparison]
   { regex: regexScreenshotsComparison, groupForTeams: 1, groupForTeamSplitter: 2, groupForUrls: 3, containerStyle: 'comparison', urlType: 'images' }
 ]
