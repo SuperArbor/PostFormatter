@@ -2009,28 +2009,25 @@ function processDescription (siteName, description) {
         const abbrLangInSub = pathSub.replace(/.*\.([^.]+)\.[^.]+$/i, '$1') || ''
         if (site.languageSelSubtitle) {
           let langSelected = site.subtitleInfo.default
-            if (site.subtitleInfo.other && abbrLangInSub.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || abbrLangInSub.match(/.+( |&)?(chs|cht|cn|zh)/)) {
-              langSelected = site.subtitleInfo.other
-            }
-            else {
-              Object.entries(subtitleLanguages).forEach(([languageInAll, abbrLang]) => {
-                if (abbrLangInSub.match(RegExp(abbrLang, 'i'))) {
-                  langSelected = site.subtitleInfo[languageInAll] || site.subtitleInfo.default
-                  return
-                }
-              })
-            }
-            site.languageSelSubtitle.val(langSelected)
+          if (site.subtitleInfo.other && abbrLangInSub.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || abbrLangInSub.match(/.+( |&)?(chs|cht|cn|zh)/)) {
+            langSelected = site.subtitleInfo.other
+          } else {
+            Object.entries(subtitleLanguages).forEach(([languageInAll, abbrLang]) => {
+              if (abbrLangInSub.match(RegExp(abbrLang, 'i'))) {
+                langSelected = site.subtitleInfo[languageInAll] || site.subtitleInfo.default
+                return
+              }
+            })
+          }
+          site.languageSelSubtitle.val(langSelected)
         } else if (siteName === GPW) {
           Object.entries(subtitleLanguages).forEach(([languageInAll, abbrLang]) => {
-            if (abbrLangInSub.match(RegExp(abbrLang, 'i'))) {
-              if (site.subtitleInfo[languageInAll]) {
-                Object.keys(site.subtitleInfo).forEach(lang => {
-                  if (site.subtitleInfo[lang]) {
-                    site.subtitleInfo[lang].checked = languageInAll === lang
-                  }
-                })
-              }
+            if (abbrLangInSub.match(RegExp(abbrLang, 'i')) && site.subtitleInfo[languageInAll]) {
+              Object.keys(site.subtitleInfo).forEach(lang => {
+                if (site.subtitleInfo[lang]) {
+                  site.subtitleInfo[lang].checked = languageInAll === lang
+                }
+              })
               return
             }
           })
