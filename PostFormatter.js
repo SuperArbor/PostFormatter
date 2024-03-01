@@ -1357,7 +1357,7 @@ function processDescription (siteName, description) {
           // edition
           torrentInfo.editionInfo.criterionCollection = torrentInfo.torrentTitle.match(/\bcc|criterion\b/i)
           torrentInfo.editionInfo.mastersOfCinema = torrentInfo.torrentTitle.match(/\bmoc\b/i)
-          torrentInfo.editionInfo.directorCut = torrentInfo.torrentTitle.match(/\bdc\b/i)
+          torrentInfo.editionInfo.directorCut = torrentInfo.torrentTitle.match(/\bdc|director('?s)? cut\b/i)
           torrentInfo.editionInfo.unrated = torrentInfo.torrentTitle.match(/\bunrated\b/i)
           torrentInfo.editionInfo.uncut = torrentInfo.torrentTitle.match(/\buncut\b/i)
           torrentInfo.editionInfo.theatrical = torrentInfo.torrentTitle.match(/\btheatrical\b/i)
