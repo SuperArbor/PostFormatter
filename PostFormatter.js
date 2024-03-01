@@ -501,6 +501,13 @@ const imageHostInfoMap = {
   [KSHARE]: {
     images2Thumbs: null,
     thumbs2Images: null
+  },
+  [TTG]: {
+    images2Thumbs: null,
+    thumbs2Images: {
+      pattern: /\[url=([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.png\]\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\]\s*\[\/url\]/gi,
+      replacement: '$1.png'
+    }
   }
 }
 //= ========================================================================================================
