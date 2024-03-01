@@ -323,7 +323,7 @@ const siteInfoMap = {
       criterionCollection: $('a[onclick*="the_criterion_collection"]')[0],
       mastersOfCinema: $('a[onclick*="masters_of_cinema"]')[0],
       withCommentary: $('a[onclick*="with_commentary"]')[0],
-      directorCut: $('a[onclick*="director_s_cut"]')[0],
+      directorsCut: $('a[onclick*="director_s_cut"]')[0],
       theatrical: $('a[onclick*="theatrical_cut"]')[0],
       uncut: $('a[onclick*="uncut"]')[0],
       unrated: $('a[onclick*="unrated"]')[0],
@@ -419,7 +419,7 @@ const siteInfoMap = {
       remaster4k: $('a:contains("4K Remaster")')[0],
       restoration4k: $('a:contains("4K Restoration")')[0],
       bAndWVersion: $('a:contains("B & W Version")')[0],
-      directorCut: $('a:contains("Director\'s Cut")')[0],
+      directorsCut: $('a:contains("Director\'s Cut")')[0],
       extras: $('a:contains("Extras")')[0],
       theatrical: $('a:contains("Theatrical")')[0],
       extended: $('a:contains("Extended")')[0],
@@ -1367,7 +1367,7 @@ function processDescription (siteName, description) {
           // edition
           torrentInfo.editionInfo.criterionCollection = torrentInfo.torrentTitle.match(/\bcc|criterion\b/i)
           torrentInfo.editionInfo.mastersOfCinema = torrentInfo.torrentTitle.match(/\bmoc\b/i)
-          torrentInfo.editionInfo.directorCut = torrentInfo.torrentTitle.match(/\bdc|director('?s)? cut\b/i)
+          torrentInfo.editionInfo.directorsCut = torrentInfo.torrentTitle.match(/\bdc|director('?s)? cut\b/i)
           torrentInfo.editionInfo.unrated = torrentInfo.torrentTitle.match(/\bunrated\b/i)
           torrentInfo.editionInfo.uncut = torrentInfo.torrentTitle.match(/\buncut\b/i)
           torrentInfo.editionInfo.theatrical = torrentInfo.torrentTitle.match(/\btheatrical\b/i)
@@ -1900,7 +1900,7 @@ function processDescription (siteName, description) {
               site.movieEditionCheck.click()
               if (torrentInfo.editionInfo.criterionCollection) { site.movieEditionInfo.criterionCollection.click() }
               if (torrentInfo.editionInfo.mastersOfCinema) { site.movieEditionInfo.mastersOfCinema.click() }
-              if (torrentInfo.editionInfo.directorCut) { site.movieEditionInfo.directorCut.click() }
+              if (torrentInfo.editionInfo.directorsCut) { site.movieEditionInfo.directorsCut.click() }
               if (torrentInfo.editionInfo.unrated) { site.movieEditionInfo.unrated.click() }
               if (torrentInfo.editionInfo.uncut) { site.movieEditionInfo.uncut.click() }
               if (torrentInfo.editionInfo.theatrical) { site.movieEditionInfo.theatrical.click() }
@@ -1945,7 +1945,7 @@ function processDescription (siteName, description) {
             // movie edition
             if (torrentInfo.editionInfo) {
               if (torrentInfo.editionInfo.criterionCollection) { site.movieEditionInfo.criterionCollection.click() }
-              if (torrentInfo.editionInfo.directorCut) { site.movieEditionInfo.directorCut.click() }
+              if (torrentInfo.editionInfo.directorsCut) { site.movieEditionInfo.directorsCut.click() }
               if (torrentInfo.editionInfo.unrated) { site.movieEditionInfo.unrated.click() }
               if (torrentInfo.editionInfo.uncut) { site.movieEditionInfo.uncut.click() }
               if (torrentInfo.editionInfo.theatrical) { site.movieEditionInfo.theatrical.click() }
