@@ -1365,9 +1365,9 @@ function processDescription (siteName, description) {
         torrentInfo.codecInfo = {}
         if (torrentInfo.torrentTitle) {
           // edition
-          torrentInfo.editionInfo.criterionCollection = torrentInfo.torrentTitle.match(/\bcc|criterion\b/i)
+          torrentInfo.editionInfo.criterionCollection = torrentInfo.torrentTitle.match(/\b(cc|criterion)\b/i)
           torrentInfo.editionInfo.mastersOfCinema = torrentInfo.torrentTitle.match(/\bmoc\b/i)
-          torrentInfo.editionInfo.directorsCut = torrentInfo.torrentTitle.match(/\bdc|director('?s)? cut\b/i)
+          torrentInfo.editionInfo.directorsCut = torrentInfo.torrentTitle.match(/\b(dc|director('?s)? cut)\b/i)
           torrentInfo.editionInfo.unrated = torrentInfo.torrentTitle.match(/\bunrated\b/i)
           torrentInfo.editionInfo.uncut = torrentInfo.torrentTitle.match(/\buncut\b/i)
           torrentInfo.editionInfo.theatrical = torrentInfo.torrentTitle.match(/\btheatrical\b/i)
@@ -1381,7 +1381,7 @@ function processDescription (siteName, description) {
           torrentInfo.editionInfo.imax = torrentInfo.torrentTitle.match(/\bimax\b/i)
           torrentInfo.editionInfo.tvCut = torrentInfo.torrentTitle.match(/\btv ?cut\b/i)
           // source
-          torrentInfo.sourceInfo.remux = torrentInfo.torrentTitle.match(/\b(remux)\b/i)
+          torrentInfo.sourceInfo.remux = torrentInfo.torrentTitle.match(/\bremux\b/i)
           torrentInfo.sourceInfo.encode = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip|dvdrip|webrip)\b/i)
           torrentInfo.sourceInfo.bluray = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip)\b/i)
           torrentInfo.sourceInfo.hdtv = torrentInfo.torrentTitle.match(/\bhdtv(rip)?\b/i)
@@ -1404,9 +1404,9 @@ function processDescription (siteName, description) {
           torrentInfo.processingInfo.remux = torrentInfo.torrentTitle.match(/\bremux\b/i)
           // codec
           torrentInfo.codecInfo.h264 = torrentInfo.torrentTitle.match(/\bh\.?264\b/i)
-          torrentInfo.codecInfo.x264 = torrentInfo.torrentTitle.match(/\bavc|x264\b/i)
+          torrentInfo.codecInfo.x264 = torrentInfo.torrentTitle.match(/\b(avc|x264)\b/i)
           torrentInfo.codecInfo.h265 = torrentInfo.torrentTitle.match(/\bh\.?265\b/i)
-          torrentInfo.codecInfo.x265 = torrentInfo.torrentTitle.match(/\bhevc|x265\b/i)
+          torrentInfo.codecInfo.x265 = torrentInfo.torrentTitle.match(/\b(hevc|x265)\b/i)
           torrentInfo.codecInfo.x266 = torrentInfo.torrentTitle.match(/\bx266\b/i)
           torrentInfo.codecInfo.vc1 = torrentInfo.torrentTitle.match(/\bvc-1\b/i)
           torrentInfo.codecInfo.av1 = torrentInfo.torrentTitle.match(/\bav1\b/i)
