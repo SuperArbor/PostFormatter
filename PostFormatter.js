@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info
-// @version      1.3.2.8
+// @version      1.3.2.9
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -323,7 +323,7 @@ const siteInfoMap = {
       criterionCollection: $('a[onclick*="the_criterion_collection"]')[0],
       mastersOfCinema: $('a[onclick*="masters_of_cinema"]')[0],
       withCommentary: $('a[onclick*="with_commentary"]')[0],
-      directorCut: $('a[onclick*="director_cut"]')[0],
+      directorCut: $('a[onclick*="director_s_cut"]')[0],
       theatrical: $('a[onclick*="theatrical_cut"]')[0],
       uncut: $('a[onclick*="uncut"]')[0],
       unrated: $('a[onclick*="unrated"]')[0],
