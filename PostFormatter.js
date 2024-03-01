@@ -503,7 +503,10 @@ const imageHostInfoMap = {
     thumbs2Images: null
   },
   [TTG]: {
-    images2Thumbs: null,
+    images2Thumbs: {
+      pattern: /([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.png/gi,
+      replacement: '[url=$1.png][img]$1_thumb.png[/img][/url]'
+    },
     thumbs2Images: {
       pattern: /\[url=([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.png\]\s*\[img\][A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\[\/img\]\s*\[\/url\]/gi,
       replacement: '$1.png'
