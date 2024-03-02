@@ -39,10 +39,13 @@ const subtitleLanguages = {chinese_simplified: 'chs|zh', chinese_traditional: 'c
   ukrainian: 'ukr|uk', persian: 'per|fas|fa', arabic: 'ara|ar', brazilian_port: 'bra', czech: 'cze|ces|cs', idonesian: 'ido', serbian: 'srp|sr'
 }
 const weirdTeamsStr = weirdTeams.map(team => `(?:${escapeRegExp(team)})`).join('|')
+// 用于提取截图对比的多个压制组
 const regexTeam = RegExp('\\b(?:(?:' + weirdTeamsStr + '|\\w[\\w-. ]+)) ?(?:(?:\\([\\w. ]+\\)|<[\\w. ]+>|\\[[\\w. ]+\\]) ?(?:[\\w. ]+)?)?', 'i')
 // const regexTeamsSplitter = /\||,|\/|(?<!D)-(?=Z0N3)|(?<=D)-(?!Z0N3)|(?<!WEB)-(?=DL)|(?<=WEB)-(?!DL)|(?<!WEB|D)-(?!DL|Z0N3)| v\.?s\.? |>\s*v\.?s\.?\s*</i
 const allTeamSplitters = [',', '|', '/', '-', ' vs ', ' v.s ', ' v.s. ', '> vs <']
 const [regexTeamsSplitter] = getTeamSplitterRegex(weirdTeams, allTeamSplitters, 'i')
+// 用于提取单个压制组
+const regexTeamExtraction = RegExp('\\b(?:' + weirdTeamsStr + '|(?:[^\\s-@]+(@[^\\s-]+)?))$', 'i')
 // max comparison teams in a comparison, must be larger than 1
 const maxTeamsInComparison = 8
 const maxNonWordsInTitled = 20
@@ -1007,7 +1010,7 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
     let teamEncode = ''
     let screenshots = ''
     let currentScreenshots = 0
-    const teamArray = torrentTitle.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
+    const teamArray = torrentTitle.match(regexTeamExtraction)
     if (teamArray) {
       teamEncode = teamArray[0]
     }
@@ -1416,7 +1419,7 @@ function processDescription (siteName, description) {
           torrentInfo.codecInfo.flac = torrentInfo.torrentTitle.match(/\bflac\b/i)
           torrentInfo.codecInfo.ape = torrentInfo.torrentTitle.match(/\bape\b/i)
           // team
-          const teamArray = torrentInfo.torrentTitle.match(/\b(D-Z0N3)|(([^\s-@]*)(@[^\s-]+)?)$/)
+          const teamArray = torrentInfo.torrentTitle.match(regexTeamExtraction)
           torrentInfo.team = teamArray ? teamArray[0] : ''
         }
         //= ========================================================================================================
