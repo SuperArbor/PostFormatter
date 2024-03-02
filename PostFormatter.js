@@ -45,7 +45,7 @@ const regexTeam = RegExp('\\b(?:(?:' + weirdTeamsStr + '|\\w[\\w-. ]+)) ?(?:(?:\
 const allTeamSplitters = [',', '|', '/', '-', ' vs ', ' v.s ', ' v.s. ', '> vs <']
 const [regexTeamsSplitter] = getTeamSplitterRegex(weirdTeams, allTeamSplitters, 'i')
 // 用于提取单个压制组
-const regexTeamExtraction = RegExp('\\b(?:' + weirdTeamsStr + '|(?:[^\\s-@]+(?:@[^\\s-]+)?))$', 'i')
+const regexTeamExtraction = RegExp('\\b(?:' + weirdTeamsStr + '|(?:[^\\s-@.]+(?:@[^\\s-@.]+)?))$', 'i')
 // max comparison teams in a comparison, must be larger than 1
 const maxTeamsInComparison = 8
 const maxNonWordsInTitled = 20
