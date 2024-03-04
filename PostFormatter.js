@@ -1269,7 +1269,7 @@ function processDescription (siteName, description) {
         })
         // info from mediainfo
         Object.entries(torrentInfo.mediainfo).forEach(([infoKey, infoValue]) => {
-          if (infoKey.match(/text( #\d+)?/i)) {
+          if (infoKey.match(/^text( #\d+)?/i)) {
             // subtitle
             let matchLang = false
             const language = [infoValue.Language || '', infoValue.Title || ''].join(' ')
@@ -1294,7 +1294,7 @@ function processDescription (siteName, description) {
             } else {
               console.log(`Other sub ${language}`)
             }
-          } else if (infoKey.match(/audio( #\d+)?/i)) {
+          } else if (infoKey.match(/^audio( #\d+)?/i)) {
             // audio
             const title = infoValue.Title || ''
             const language = infoValue.Language || ''
@@ -1321,7 +1321,7 @@ function processDescription (siteName, description) {
                 console.log('DTS:X')
               }
             }
-          } else if (infoKey.match(/video/i)) {
+          } else if (infoKey.match(/^video/i)) {
             // video
             const hdrFormat = infoValue['HDR format']
             const bitDepth = infoValue['Bit depth']
@@ -1341,7 +1341,7 @@ function processDescription (siteName, description) {
               torrentInfo.videoInfo.bit10 = true
               console.log('10 bits')
             }
-          } else if (infoKey.match(/general/i)) {
+          } else if (infoKey.match(/^general$/i)) {
             // general
             if (infoValue.Format === 'Matroska') {
               torrentInfo.videoInfo.container = 'MKV'
@@ -2020,13 +2020,18 @@ function processDescription (siteName, description) {
           site.titleBoxSubtitle.val(fileName)
         }
         const abbrLangInSub = pathSub.replace(/.*\.([^.]+)\.[^.]+$/i, '$1') || ''
+        let subtitleInfo = {}
+        Object.entries(subtitleLanguages).forEach(([languageInAll, abbrLang]) => {
+          subtitleInfo[languageInAll] = abbrLangInSub.match(RegExp('\\b' + abbrLang + '\\b', 'i'))
+        })
         if (site.languageSelSubtitle) {
           let langSelected = site.subtitleInfo.default
-          if (site.subtitleInfo.other && abbrLangInSub.match(/(chs|cht|cn|zh)\s*( |&)?.+/) || abbrLangInSub.match(/.+( |&)?(chs|cht|cn|zh)/)) {
+          if (site.subtitleInfo.other && Object.values(subtitleInfo).filter(lang => lang).length > 1) {
+            // 多语字幕
             langSelected = site.subtitleInfo.other
           } else {
-            Object.entries(subtitleLanguages).forEach(([languageInAll, abbrLang]) => {
-              if (abbrLangInSub.match(RegExp(abbrLang, 'i'))) {
+            Object.entries(subtitleInfo).forEach(([languageInAll, present]) => {
+              if (present) {
                 langSelected = site.subtitleInfo[languageInAll] || site.subtitleInfo.default
                 return
               }
@@ -2034,14 +2039,9 @@ function processDescription (siteName, description) {
           }
           site.languageSelSubtitle.val(langSelected)
         } else if (siteName === GPW) {
-          Object.entries(subtitleLanguages).forEach(([languageInAll, abbrLang]) => {
-            if (abbrLangInSub.match(RegExp(abbrLang, 'i')) && site.subtitleInfo[languageInAll]) {
-              Object.keys(site.subtitleInfo).forEach(lang => {
-                if (site.subtitleInfo[lang]) {
-                  site.subtitleInfo[lang].checked = languageInAll === lang
-                }
-              })
-              return
+          Object.entries(subtitleInfo).forEach(([languageInAll, present]) => {
+            if (site.subtitleInfo[languageInAll]) {
+              site.subtitleInfo[languageInAll].checked = present
             }
           })
         }
