@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info
-// @version      1.3.2.9
+// @version      1.3.2.10
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -965,7 +965,7 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
   if (mediainfo && mediainfo.General) {
     torrentTitle = mediainfo.General['Complete name'] || mediainfo.General['Movie name']
     if (torrentTitle) {
-      torrentTitle = torrentTitle.replace(/.*?([^\\]+)$/, '$1')
+      torrentTitle = torrentTitle.replace(/.*?([^\\/]+)$/, '$1')
       torrentTitle = formatTorrentName(torrentTitle)
     }
   }
@@ -1250,7 +1250,7 @@ function processDescription (siteName, description) {
         torrentInfo.torrentTitle = nameBox ? nameBox.val() : ''
         // 再读取inpuFile
         if (!torrentInfo.torrentTitle) {
-          let inputFile = (site.inputFile.val() || '').replace(/.*?([^\\]+)$/, '$1')
+          let inputFile = (site.inputFile.val() || '').replace(/.*?([^\\/]+)$/, '$1')
           torrentInfo.torrentTitle = formatTorrentName(inputFile)
         }
         //= ========================================================================================================
@@ -1429,8 +1429,8 @@ function processDescription (siteName, description) {
         if (site.construct === NEXUSPHP) {
           torrentInfo.movieInfo = { areaInfo: {} }
           // area
-          const areaArray = textToConsume.match(/产\s*地\s*(.*)\s*/)
-          const area = areaArray ? areaArray[1] : ''
+          const areaArray = textToConsume.match(/产\s*地\s+(.+)$/m)
+          const area = areaArray ? areaArray[1].trim() : ''
           if (area.match(/中国大陆/)) {
             torrentInfo.movieInfo.areaInfo.cnMl = true
           } else if (area.match(/香港/)) {
@@ -1450,45 +1450,47 @@ function processDescription (siteName, description) {
             }
           }
           // title
-          const translatedTitleArray = textToConsume.match(/译\s*名\s*([^/\n]+)(?:\/|\n)/)
-          const originalTitleArray = textToConsume.match(/片\s*名\s*([^/\n]+)(?:\/|\n)/)
-          if (translatedTitleArray && originalTitleArray) {
-            torrentInfo.movieInfo.translatedTitle = translatedTitleArray[1].trim()
+          const originalTitleArray = textToConsume.match(/片\s*名\s+(.+)$/m)
+          if (originalTitleArray) {
             torrentInfo.movieInfo.originalTitle = originalTitleArray[1].trim()
+          }
+          const translatedTitlesArray = textToConsume.match(/译\s*名\s+(.+)$/m)
+          if (translatedTitlesArray) {
+            torrentInfo.movieInfo.translatedTitles = translatedTitlesArray[1].trim().split(/\s*\/\s*/).filter(title => title)
           }
           // festival
           const festivalArray = textToConsume.match(/(\d{4})-\d{2}-\d{2}\((\S+电影节)\)/)
           torrentInfo.movieInfo.festival = festivalArray ? (festivalArray[1] + festivalArray[2]).trim() : ''
           // category
-          const genresArray = textToConsume.match(/类\s*别\s+([^\n]*)\s*\n/)
+          const genresArray = textToConsume.match(/类\s*别\s+(.+)$/m)
           torrentInfo.movieInfo.genres = genresArray
-            ? genresArray[1].replace(/([^ ])\/([^ ])/g, '$1 / $2')
+            ? genresArray[1].trim().split(/\s*\/\s*/).filter(genre => genre).join(' / ')
             : ''
           torrentInfo.movieInfo.category = torrentInfo.movieInfo.genres.match('纪录')
             ? categoryDocumentary
             : torrentInfo.movieInfo.genres.match('动画')
               ? categoryAnimation
-              : textToConsume.match(/集\s*数\s+/g)
+              : textToConsume.match(/集\s*数\s+\d+/)
                 ? categoryTvSeries
                 : torrentInfo.movieInfo.genres.match('秀')
                   ? categoryTvShow
                   : categoryMovie
           // douban and imdb score in small_desc
-          const doubanScoreArray = textToConsume.match(/豆\s*瓣\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/)
+          const doubanScoreArray = textToConsume.match(/豆\s*瓣\s*评\s*分\s+(\d(?:\.\d))\/10\sfrom\s((?:\d+,)*\d+)\susers/)
           if (doubanScoreArray) {
             torrentInfo.movieInfo.doubanScore = doubanScoreArray[1]
             torrentInfo.movieInfo.doubanScoreRatingNumber = doubanScoreArray[2]
           }
-          const imdbScoreArray = textToConsume.match(/IMDb\s*评\s*分\s+(\d\.\d)\/10\sfrom\s((?:\d+,)*\d+)\susers/i)
+          const imdbScoreArray = textToConsume.match(/IMDb\s*评\s*分\s+(\d(?:\.\d))\/10\sfrom\s((?:\d+,)*\d+)\susers/i)
           if (imdbScoreArray) {
             torrentInfo.movieInfo.imdbScore = imdbScoreArray[1]
             torrentInfo.movieInfo.imdbRatingNumber = imdbScoreArray[2]
           }
           // director
-          const directorArray = textToConsume.match(/导\s*演\s+([^\w\n\s]*)\s*/)
-          torrentInfo.movieInfo.director = directorArray ? directorArray[1] : ''
+          const directorArray = textToConsume.match(/导\s*演\s+(.+)$/m)
+          torrentInfo.movieInfo.director = directorArray ? directorArray[1].split(/\s*\/\s*/)[0] : ''
           // douban link
-          const doubanLinkArray = textToConsume.match(/豆瓣\s*链\s*接.+(https?:\/\/movie\.douban\.com\/subject\/(\d+)\/?)/)
+          const doubanLinkArray = textToConsume.match(/豆\s*瓣\s*链\s*接.+(https?:\/\/movie\.douban\.com\/subject\/(\d+)\/?)/)
           torrentInfo.movieInfo.doubanLink = doubanLinkArray ? doubanLinkArray[1] : ''
           torrentInfo.movieInfo.doubanId = doubanLinkArray ? doubanLinkArray[2] : ''
           // imdb link
@@ -1506,13 +1508,13 @@ function processDescription (siteName, description) {
           torrentInfo.infoInSite.torrentTitle = torrentInfo.torrentTitle
           if (site.translatedChineseNameInTitle) {
             if (torrentInfo.movieInfo.areaInfo.cnMl) {
-              torrentInfo.infoInSite.torrentTitle = torrentInfo.torrentTitle.match(torrentInfo.movieInfo.originalTitle)
+              torrentInfo.infoInSite.torrentTitle = torrentInfo.torrentTitle.match(RegExp(escapeRegExp(torrentInfo.movieInfo.originalTitle), 'i'))
                 ? torrentInfo.torrentTitle
                 : `[${torrentInfo.movieInfo.originalTitle}] ${torrentInfo.torrentTitle}`
-            } else {
-              torrentInfo.infoInSite.torrentTitle = torrentInfo.torrentTitle.match(torrentInfo.movieInfo.translatedTitle)
+            } else if (torrentInfo.movieInfo.translatedTitles.length) {
+              torrentInfo.infoInSite.torrentTitle = torrentInfo.torrentTitle.match(RegExp(escapeRegExp(torrentInfo.movieInfo.translatedTitles[0]), 'i'))
                 ? torrentInfo.torrentTitle
-                : `[${torrentInfo.movieInfo.translatedTitle}] ${torrentInfo.torrentTitle}`
+                : `[${torrentInfo.movieInfo.translatedTitles[0]}] ${torrentInfo.torrentTitle}`
             }
           } else {
             torrentInfo.infoInSite.torrentTitle = torrentInfo.torrentTitle
@@ -1520,19 +1522,21 @@ function processDescription (siteName, description) {
           nameBox.val(torrentInfo.infoInSite.torrentTitle)
         }
         // small description
-        if (site.smallDescBox && torrentInfo.movieInfo && (torrentInfo.movieInfo.doubanLink || torrentInfo.movieInfo.imdbLink)) {
+        if (torrentInfo.movieInfo && (torrentInfo.movieInfo.doubanLink || torrentInfo.movieInfo.imdbLink)) {
           // container for small_desc(副标题) fields
           const smallDescrArray = []
-          if (torrentInfo.movieInfo.originalTitle && torrentInfo.movieInfo.translatedTitle) {
-            if (!site.translatedChineseNameInTitle) {
-              if (torrentInfo.movieInfo.areaInfo.cnMl) {
-                smallDescrArray.push(torrentInfo.torrentTitle.match(torrentInfo.movieInfo.originalTitle)
-                  ? torrentInfo.movieInfo.translatedTitle
-                  : torrentInfo.movieInfo.originalTitle)
-              } else {
-                smallDescrArray.push(torrentInfo.movieInfo.translatedTitle)
-              }
+          if (torrentInfo.movieInfo.originalTitle && torrentInfo.movieInfo.translatedTitles) {
+            let titles = []
+            let torrentTitle = torrentInfo.infoInSite.torrentTitle || torrentInfo.torrentTitle
+            if (!torrentTitle.match(RegExp(escapeRegExp(torrentInfo.movieInfo.originalTitle)), 'i')) {
+              titles.push(torrentInfo.movieInfo.originalTitle)
             }
+            torrentInfo.movieInfo.translatedTitles.forEach(title => {
+              if (!torrentTitle.match(RegExp(escapeRegExp(title), 'i'))) {
+                titles.push(title)
+              }
+            })
+            smallDescrArray.push(titles.join(' / '))
           }
           if (torrentInfo.movieInfo.festival) {
             smallDescrArray.push(torrentInfo.movieInfo.festival)
@@ -1552,8 +1556,14 @@ function processDescription (siteName, description) {
             smallDescrArray.push(torrentInfo.movieInfo.director)
           }
           // complete small_descr
-          torrentInfo.infoInSite.smallDescr = smallDescrArray.join(' | ')
-          site.smallDescBox.val(torrentInfo.infoInSite.smallDescr)
+          if (site.smallDescBox) {
+            torrentInfo.infoInSite.smallDescr = smallDescrArray.join(' | ')
+            site.smallDescBox.val(torrentInfo.infoInSite.smallDescr)
+          }
+          // TTG的edit页面，smallDescr的内容需要附加到nameBox中
+          if (siteName === TTG && page === 'edit') {
+            nameBox.val(nameBox.val() + ` [${smallDescrArray.join(' | ')}]`)
+          }
         }
         // douban link
         if (site.doubanLinkBox && torrentInfo.movieInfo && torrentInfo.movieInfo.doubanLink) {
@@ -2014,7 +2024,7 @@ function processDescription (siteName, description) {
         site.anonymousCheckSubtitle.checked = ANONYMOUS
       }
       const pathSub = site.inputFileSubtitle.val()
-      const fileName = pathSub.replace(/.*?([^\\]+)$/, '$1')
+      const fileName = pathSub.replace(/.*?([^\\/]+)$/, '$1')
       if (fileName) {
         if (site.titleBoxSubtitle) {
           site.titleBoxSubtitle.val(fileName)
