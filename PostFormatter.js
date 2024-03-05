@@ -683,11 +683,9 @@ function formatTorrentName (torrentName) {
   } else {
     return (
       torrentName
-        .replace(/(\.torrent)+$/, '')
         .replace(/^\s?(\[.*?\]\s?)+/gi, '')
-        .replace(/\s?(\(\d+\)\s?)+$/gi, '')
-        .replace(/(\.(mkv|mp4|avi|ts|wmv|mpg|torrent))+$/, '')
-        .replace(/\bh\.(26[45])\b/gi, 'H/$1')
+        .replace(/((\s*\(\d+\)\s*)?\.(mkv|mp4|avi|ts|wmv|mpg|torrent))+$/, '')
+        .replace(/\bh\.(26[456])\b/gi, 'H/$1')
         .replace(/(\b[a-zA-Z]*\d{1,2})\.(\d{1,2}\b)/g, function (_, p1, p2) {
           return p1 + '/' + p2
         })
@@ -701,8 +699,10 @@ function formatTorrentName (torrentName) {
         .replace(/\b(480|720|1080|2160)([PI])\b/g, function (_, p1, p2) {
           return p1 + p2.toLowerCase()
         })
-        .replace(/\bx\.?(26[45])\b/gi, 'x$1')
-        .replace(/((?<!\d{1,2})\.)|(\.(?!\d\b))/g, ' ')//点号前面是数字（一至两位），后面是单个数字的情况不替换（DDP5.1）
+        .replace(/\bx\.?(26[456])\b/gi, 'x$1')
+        // 点号前面是数字（一至两位），后面是单个数字的情况不替换（DDP5.1）
+        // 点号后面是空格（The Talented Mr. Ripley 1999 1080p BluRay DD+5.1 x264-HiDt）或者点号的时候不替换（The.Talented.Mr..Ripley.1999.1080p.BluRay.DD+5.1.x264-HiDt）
+        .replace(/((?<!\d{1,2})\.(?!( |\.)))|(\.(?!(\d| |\.)\b))/g, ' ')
         .replace(/\//g, '.')
         .trim()
     )
@@ -1429,7 +1429,7 @@ function processDescription (siteName, description) {
         if (site.construct === NEXUSPHP) {
           torrentInfo.movieInfo = { areaInfo: {} }
           // area
-          const areaArray = textToConsume.match(/产\s*地\s+(.+)$/m)
+          const areaArray = textToConsume.match(/(?:产\s*地|国\s*家)\s+(.+)$/m)
           const area = areaArray ? areaArray[1].trim() : ''
           if (area.match(/中国大陆/)) {
             torrentInfo.movieInfo.areaInfo.cnMl = true
@@ -2064,7 +2064,8 @@ function processDescription (siteName, description) {
 // Conditionally export for unit testing
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    collectComparisons, decomposeDescription, processDescription, mediainfo2String, string2Mediainfo, processTags, getTeamSplitterCombinations: getTeamSplitterRegex,
+    collectComparisons, decomposeDescription, processDescription,
+    mediainfo2String, string2Mediainfo, processTags, getTeamSplitterRegex, formatTorrentName,
     NHD, PTERCLUB, GPW, MTEAM, TTG, PUTAO, UHD, siteInfoMap
   }
 }

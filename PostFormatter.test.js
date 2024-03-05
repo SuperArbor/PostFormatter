@@ -1,6 +1,7 @@
 // module imports
 const {
-  collectComparisons, decomposeDescription, processDescription, mediainfo2String, string2Mediainfo, processTags, getTeamSplitterCombinations,
+  collectComparisons, decomposeDescription, processDescription,
+  mediainfo2String, string2Mediainfo, processTags, getTeamSplitterRegex, formatTorrentName,
   NHD, GPW, PUTAO, TTG, PTERCLUB, MTEAM, UHD} = require('./PostFormatter')
 const fs = require('fs')
 const path = require('path')
@@ -493,6 +494,19 @@ const teamSplitterTests = [{
     '(?<=D-Z0N3),(?!Z0N4)', '(?<!D-Z0N3),(?=Z0N4)', '(?<!D-Z0N3),(?!Z0N4)'
   ]
 }]
+const formatTorrentNameTests = [{
+  input: '[PuTao][TTG] Emma. 2020 1080p BluRay DD+5.1 x264-VietHD.mkv (12).torrent',
+  output: 'Emma. 2020 1080p BluRay DD+5.1 x264-VietHD'
+}, {
+  input: 'The Talented Mr. Ripley 1999 1080p BluRay DD+5.1 x264-HiDt',
+  output: 'The Talented Mr. Ripley 1999 1080p BluRay DD+5.1 x264-HiDt'
+}, {
+  input: 'The.Talented.Mr..Ripley.1999.1080p.BluRay.DD+5.1.x264-HiDt',
+  output: 'The Talented Mr. Ripley 1999 1080p BluRay DD+5.1 x264-HiDt'
+}, {
+  input: 'Some Like It Hot 1959 1080p UHD BluRay DD+5.1 DoVi x265-c0kE',
+  output: 'Some Like It Hot 1959 1080p UHD BluRay DD+5.1 DoVi x265-c0kE'
+}]
 
 test ('test tags', () => {
   processTagsTests.forEach(test => {
@@ -602,7 +616,18 @@ test('test teamSplitter regex', () => {
     let teams = test.teams
     let splitters = test.splitters
     let expectedOutput = test.patterns
-    let actualOutput = getTeamSplitterCombinations(teams, splitters)[1]
+    let actualOutput = getTeamSplitterRegex(teams, splitters)[1]
     expect(JSON.stringify(expectedOutput)).toBe(JSON.stringify(actualOutput))
+  }
+})
+test('test formatTorrentName', () => {
+  for (let test of formatTorrentNameTests) {
+    let input = test.input
+    let expectedOutput = test.output
+    let actualOutput = formatTorrentName(input)
+    if (actualOutput !== expectedOutput) {
+      console.error(`expected output: ${expectedOutput}, actual output: ${actualOutput}`)
+    }
+    expect(actualOutput).toBe(expectedOutput)
   }
 })
