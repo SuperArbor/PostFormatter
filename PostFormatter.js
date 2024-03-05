@@ -689,15 +689,15 @@ function formatTorrentName (torrentName) {
         .replace(/(\b[a-zA-Z]*\d{1,2})\.(\d{1,2}\b)/g, function (_, p1, p2) {
           return p1 + '/' + p2
         })
-        .replace(/\b\((\d{4})\)\b/g, '$1')
+        .replace(/\((\d{4})\)/g, '$1')
         .replace(/\bWEB(?!-DL)\b/gi, 'WEB-DL')
         .replace(/\bweb-?rip\b/gi, 'WEBRip')
         .replace(/\bblu-?ray\b/gi, 'BluRay')
         .replace(/\bdvd(rip)?\b/gi, function (_, p1) {
           return 'DVD' + (p1 ? 'Rip' : '')
         })
-        .replace(/\b(480|720|1080|2160)([PI])\b/g, function (_, p1, p2) {
-          return p1 + p2.toLowerCase()
+        .replace(/\b((?:480|720|1080|2160)[PI])\b/g, function (_, p1) {
+          return p1.toLowerCase()
         })
         .replace(/\bx\.?(26[456])\b/gi, 'x$1')
         // 点号前面是数字（一至两位），后面是单个数字的情况不替换（DDP5.1）

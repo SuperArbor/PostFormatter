@@ -495,7 +495,7 @@ const teamSplitterTests = [{
   ]
 }]
 const formatTorrentNameTests = [{
-  input: '[PuTao][TTG] Emma. 2020 1080p BluRay DD+5.1 x264-VietHD.mkv (12).torrent',
+  input: '[PuTao][TTG] Emma. 2020 1080p Blu-Ray DD+5.1 x.264-VietHD.mkv (12).torrent',
   output: 'Emma. 2020 1080p BluRay DD+5.1 x264-VietHD'
 }, {
   input: 'The Talented Mr. Ripley 1999 1080p BluRay DD+5.1 x264-HiDt',
@@ -506,6 +506,9 @@ const formatTorrentNameTests = [{
 }, {
   input: 'Some Like It Hot 1959 1080p UHD BluRay DD+5.1 DoVi x265-c0kE',
   output: 'Some Like It Hot 1959 1080p UHD BluRay DD+5.1 DoVi x265-c0kE'
+}, {
+  input: "Where.Is.The.Friend's.Home.(1987).720P.BluRay.AAC2.0.x264-DON",
+  output: "Where Is The Friend's Home 1987 720p BluRay AAC2.0 x264-DON"
 }]
 
 test ('test tags', () => {
