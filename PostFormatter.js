@@ -753,21 +753,22 @@ async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
 }
 // https://1.png -> [url=...][img]...[/img][/url]
 async function images2ThumbUrls (imageUrls, numTeams, siteName) {
+  const site = siteInfoMap[siteName]
+  const size = getThumbSize(numTeams, siteName)
   imageUrls = imageUrls.trim()
   const imageHostName = Object.keys(imageHostInfoMap).find(ih => imageUrls.match(RegExp(escapeRegExp(ih), 'i'))) || ''
   const imageHost = imageHostInfoMap[imageHostName]
-  if (!imageHost) {
-    return []
+  let pattern = ''
+  let replacement = ''
+  if (imageHost) {
+    pattern = imageHost.images2Thumbs ? imageHost.images2Thumbs.pattern: ''
+    replacement = imageHost.images2Thumbs ? imageHost.images2Thumbs.replacement: ''
   }
-  let pattern = imageHost.images2Thumbs ? imageHost.images2Thumbs.pattern: ''
-  let replacement = imageHost.images2Thumbs ? imageHost.images2Thumbs.replacement: ''
-  const site = siteInfoMap[siteName]
-  const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
   const supportPixhost = site.supportedImageHosts ? site.supportedImageHosts.includes(PIXHOST) : true
-  const size = getThumbSize(numTeams, siteName)
   let thumbUrls = []
   if (pattern) {
     const matches = imageUrls.match(pattern)
+    const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
     if (supportCurrentImageHost) {
       thumbUrls = matches
         ? matches.map(matched => {
