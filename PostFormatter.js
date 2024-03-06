@@ -1273,7 +1273,7 @@ function processDescription (siteName, description) {
             let language = ''
             const languageRaw = [infoValue.Language || '', infoValue.Title || ''].join(' ')
             if (languageRaw.match(/chinese/i)) {
-              if (languageRaw.match(/cht|traditional/i)) {
+              if (languageRaw.match(/cht|traditional|繁體|繁体/i)) {
                 language = 'chinese_traditional'
               } else {
                 language = 'chinese_simplified'
@@ -1295,7 +1295,7 @@ function processDescription (siteName, description) {
             const title = infoValue.Title || ''
             const languageRaw = infoValue.Language || ''
             audio.commentary = title.match(/commentary/i) ? true : false
-            if (title.match(/cantonese|粤语|广东话|粤配/i) || languageRaw.match(/cantonese|粤语|广东话|粤配/i)) {
+            if (title.match(/cantonese|广东|粤|廣東/i) || languageRaw.match(/cantonese|广东|粤|廣東/i)) {
               audio.language = 'cantonese'
             } else if (title.match(/chinese|mandarin|国语|普通话|国配/i) || languageRaw.match(/chinese|mandarin|国语|普通话|国配/i)) {
               audio.language = 'mandarin'
