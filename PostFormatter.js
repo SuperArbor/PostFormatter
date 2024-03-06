@@ -31,7 +31,7 @@ const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
 const ANONYMOUS = true
 // medianinfo 键长（方便格式化）
 const mediainfoKeyLength = 31
-const languageMap = {chinese_simplified: 'chs|zh', chinese_traditional: 'cht', mandarion: 'mandarin', cantonsese: 'canto|cant|can', japanese: 'jp|jpn|jap|ja', korean: 'kor|ko', english: 'en|eng',
+const languageMap = {chinese_simplified: 'chs|zh', chinese_traditional: 'cht', mandarin: 'mandarin', cantonese: 'canto|cant|can', japanese: 'jp|jpn|jap|ja', korean: 'kor|ko', english: 'en|eng',
   french: 'fre|fra|fr', german: 'ger|deu|de', italian: 'ita|it', polish: 'pol|pl', romanian: 'rum|ron|ro', russian: 'ru|rus', spanish: 'spa|es', thai: 'tai',
   turkish: 'tur|tr', vietnamese: 'vi|vie', hindi: 'hin|hi', greek: 'gre|ell|el', swedish: 'swe|sv', azerbaijani: 'aze|az', bulgarian: 'bul|bg', danish: 'dan|da',
   estonian: 'est|et', finnish: 'fin|fi', hebrew: 'heb|he', croatian: 'hrv|hr', hungarian: 'hun|hu', icelandic: 'ice|isl|is', latvian: 'lav|lv', lithuanian: 'lit|lt',
@@ -1296,7 +1296,7 @@ function processDescription (siteName, description) {
             const languageRaw = infoValue.Language || ''
             audio.commentary = title.match(/commentary/i) ? true : false
             if (title.match(/cantonese|粤语|广东话|粤配/i) || languageRaw.match(/cantonese|粤语|广东话|粤配/i)) {
-              audio.language = 'cantonsese'
+              audio.language = 'cantonese'
             } else if (title.match(/chinese|mandarin|国语|普通话|国配/i) || languageRaw.match(/chinese|mandarin|国语|普通话|国配/i)) {
               audio.language = 'mandarin'
             } else {
