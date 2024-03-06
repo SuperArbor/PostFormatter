@@ -42,7 +42,7 @@ const weirdTeamsStr = weirdTeams.map(team => `(?:${escapeRegExp(team)})`).join('
 // 用于提取截图对比的多个压制组
 const regexTeam = RegExp('\\b(?:(?:' + weirdTeamsStr + '|\\w[\\w-. ]+)) ?(?:(?:\\([\\w. ]+\\)|<[\\w. ]+>|\\[[\\w. ]+\\]) ?(?:[\\w. ]+)?)?', 'i')
 // const regexTeamsSplitter = /\||,|\/|(?<!D)-(?=Z0N3)|(?<=D)-(?!Z0N3)|(?<!WEB)-(?=DL)|(?<=WEB)-(?!DL)|(?<!WEB|D)-(?!DL|Z0N3)| v\.?s\.? |>\s*v\.?s\.?\s*</i
-const allTeamSplitters = [',', '|', '/', '-', ' vs ', ' v.s ', ' v.s. ', '> vs <']
+const allTeamSplitters = [',', '|', '/', '-', ' vs ', ' vs. ', ' v.s ', ' v.s. ', '> vs <']
 const [regexTeamsSplitter] = getTeamSplitterRegex(weirdTeams, allTeamSplitters, 'i')
 // 用于提取单个压制组
 const regexTeamExtraction = RegExp('\\b(?:' + weirdTeamsStr + '|(?:[^\\s-@.]+(?:@[^\\s-@.]+)?))$', 'i')
