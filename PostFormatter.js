@@ -67,8 +67,8 @@ const regexScreenshotsImages = RegExp(
 // complex regexes
 // compare with comparison (GPW style)
 const regexScreenshotsComparison = RegExp(
-  '\\[comparison=(' + regexTeam.source + '(?:\\s*(,)\\s*' + regexTeam.source + `){1,${maxTeamsInComparison-1}})\\]` +
-  '(\\s*(?:' + regexImageUrl.source + '(?:\\s+|\\s*,)\\s*)+' + regexImageUrl.source + ')\\s*\\[\\/comparison\\]',
+  '\\[(comparison|box|hide|expand|spoiler|quote)=(' + regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source +')\\s*' + regexTeam.source + `){1,${maxTeamsInComparison-1}})\\]` +
+  '(\\s*(?:' + regexImageUrl.source + '(?:\\s+|\\s*,)\\s*)+' + regexImageUrl.source + ')\\s*\\[\\/\\1\\]',
   'mig')
 // 截图模式:包含[box|hide|expand|spoiler|quote=]标签，封装的是缩略图
 const regexScreenshotsThumbsBoxed = RegExp(
@@ -106,7 +106,7 @@ const regexInfo = [
   // team1 | team2 | team3\n[img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img]
   { regex: regexScreenshotsImagesTitled, groupForTeams: 1, groupForTeamSplitter: 2, groupForUrls: 3, containerStyle: 'titled', urlType: 'imagesBbCode' },
   // [comparison=team1, team2, team3]https://1.png https://2.png https://3.png[/comparison]
-  { regex: regexScreenshotsComparison, groupForTeams: 1, groupForTeamSplitter: 2, groupForUrls: 3, containerStyle: 'comparison', urlType: 'images' }
+  { regex: regexScreenshotsComparison, groupForTeams: 2, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'comparison', urlType: 'images' }
 ]
 const siteInfoMap = {
   // bracket makes the value of the string 'nexushd' the true key or instead the string 'NHD' will be used as key

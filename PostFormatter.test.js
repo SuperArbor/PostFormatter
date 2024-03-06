@@ -47,6 +47,18 @@ const simpleScreenshotsTests = [{
     length: 540
   }]
 }, {
+  text: `[/quote]
+  [box=Source | Encode]https://img61.pixhost.to/images/119/238035749_237889334_1.png https://img61.pixhost.to/images/119/238035750_237889336_1a.png https://img61.pixhost.to/images/119/238035751_237889339_2.png https://img61.pixhost.to/images/119/238035752_237889340_2a.png https://img61.pixhost.to/images/119/238035753_237889342_3.png https://img61.pixhost.to/images/119/238035754_237889345_3a.png https://img61.pixhost.to/images/119/238035755_237889377_8.png https://img61.pixhost.to/images/119/238035756_237889380_8a.png[/box]
+  [b]Screenshots[/b]
+  [img]https://img61.pixhost.to/images/119/238035750_237889336_1a.png[/img] [img]https://img61.pixhost.to/images/119/238035752_237889340_2a.png[/img] [img]https://img61.pixhost.to/images/119/238035754_237889345_3a.png[/img] [img]https://img61.pixhost.to/images/119/238035756_237889380_8a.png[/img]`,
+  result: [{
+    teams: ['Source', 'Encode'],
+    numUrls: 8,
+    urlType: 'images',
+    containerStyle: 'comparison',
+    length: 526
+  }]
+},{
   text: `
   Both cuts maintain a constant aspect ratio of 2.4:1, overall the US Cut overcrops on all sides and stretches the picture; the CAN has much more picture in that regard, however it also sports a black bar on the right side. Scenes toward the end which LaBeouf and Wasikowska share, share the same aspect ratio and crop across both cuts
   
