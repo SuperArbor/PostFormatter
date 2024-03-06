@@ -321,21 +321,23 @@ const siteInfoMap = {
       atmos: $('input[type="checkbox"][id="dolby_atmos"]')[0],
       chineseDub: $('input[type="checkbox"][id="chinese_dubbed"]')[0]
     },
-    movieEditionCheck: $('input[type="checkbox"][id="movie_edition_information"]')[0],
+    movieEditionContainer: $('#movie_edition_information_container'),
+    showMovieEditionCheck: $('input[type="checkbox"][id="movie_edition_information"]')[0],
+    movieEditionSelected: $('input[id="remaster_title_hide"]'),
     movieEditionInfo: {
-      criterionCollection: $('a[onclick*="the_criterion_collection"]')[0],
-      mastersOfCinema: $('a[onclick*="masters_of_cinema"]')[0],
-      withCommentary: $('a[onclick*="with_commentary"]')[0],
-      directorsCut: $('a[onclick*="director_s_cut"]')[0],
-      theatrical: $('a[onclick*="theatrical_cut"]')[0],
-      uncut: $('a[onclick*="uncut"]')[0],
-      unrated: $('a[onclick*="unrated"]')[0],
-      extended: $('a[onclick*="extended_edition"]')[0],
-      remaster4k: $('a[onclick*="4k_remaster"]')[0],
-      remaster: $('a[onclick*="remaster"]')[0],
-      dualAudio: $('a[onclick*="dual_audio"]')[0],
-      restoration4k: $('a[onclick*="4k_restoration"]')[0],
-      twoInOne: $('a[onclick*="2_in_1"]')[0]
+      criterionCollection: 'the_criterion_collection',
+      mastersOfCinema: 'masters_of_cinema',
+      withCommentary: 'with_commentary',
+      directorsCut: 'director_s_cut',
+      theatrical: 'theatrical_cut',
+      uncut: 'uncut',
+      unrated: 'unrated',
+      extended: 'extended_edition',
+      remaster4k: 'extended_edition',
+      remaster: 'remaster',
+      dualAudio: 'dual_audio',
+      restoration4k: '4k_restoration',
+      twoInOne: '2_in_1'
     },
     mixedSubCheck: $('input[type="radio"][id="mixed_subtitles"]')[0],
     noSubCheck: $('input[type="radio"][id="no_subtitles"]')[0],
@@ -415,24 +417,25 @@ const siteInfoMap = {
     sourceSel: $('select[id="media"]'), codecSel: $('select[id="codec"]'), standardSel: $('select[id="format"]'), teamBox: $('input[type="text"][id="team"]'),
     categorySel: $('select[id="categories"]'), anonymousControl: $('input[type="checkbox"][id="anonymous"]')[0],
     hdrSel: $('select[id="hdr"]'), seasonSel: $('select[id="season"]'),
+    movieEditionSelected: $('input[type="text"][id="Version"]'),
     movieEditionInfo: {
-      criterionCollection: $('a:contains("Criterion")')[0],
-      twoInOne: $('a:contains("2in1")')[0],
-      threeInOne: $('a:contains("3in1")')[0],
-      bit10: $('a:contains("10-bit")')[0],
-      remaster4k: $('a:contains("4K Remaster")')[0],
-      restoration4k: $('a:contains("4K Restoration")')[0],
-      bAndWVersion: $('a:contains("B & W Version")')[0],
-      directorsCut: $('a:contains("Director\'s Cut")')[0],
-      extras: $('a:contains("Extras")')[0],
-      theatrical: $('a:contains("Theatrical")')[0],
-      extended: $('a:contains("Extended")')[0],
-      hybrid: $('a:contains("Hybrid")')[0],
-      imax: $('a:contains("IMAX")')[0],
-      remaster: $('a:contains("Remastered")')[0],
-      uncut: $('a:contains("Uncut")')[0],
-      tvCut: $('a:contains("TV Cut")')[0],
-      unrated: $('a:contains("Unrated")')[0],
+      criterionCollection: 'Criterion',
+      twoInOne: '2in1',
+      threeInOne: '3in1',
+      bit10: '10-bit',
+      remaster4k: '4K Remaster',
+      restoration4k: '4K Restoration',
+      bAndWVersion: 'B & W Version',
+      directorsCut: 'Director\'s Cut',
+      extras: 'Extras',
+      theatrical: 'Theatrical',
+      extended: 'Extended',
+      hybrid: 'Hybrid',
+      imax: 'IMAX',
+      remaster: 'Remastered',
+      uncut: 'Uncut',
+      tvCut: 'TV Cut',
+      unrated: 'Unrated'
     },
 
     pullMovieScore: true, translatedChineseNameInTitle: false,
@@ -1419,6 +1422,19 @@ function processDescription (siteName, description) {
           const teamArray = torrentInfo.torrentTitle.match(regexTeamExtraction)
           torrentInfo.team = teamArray ? teamArray[0] : ''
         }
+        if (torrentInfo.audioInfo) {
+          // edition from audioInfo (for GPW)
+          torrentInfo.editionInfo.withCommentary = torrentInfo.audioInfo.some(audio => audio.commentary)
+          // 计算非评论音轨的语言种类，用于判定“双音轨”标签
+          let dubs = torrentInfo.audioInfo
+            .map(audio => audio.commentary ? '' : audio.language)
+            .filter((x, i, a) => x && a.indexOf(x) == i )
+          torrentInfo.editionInfo.dualAudio = dubs.length === 2
+        }
+        if (torrentInfo.videoInfo) {
+          // edition from videoInfo (for UHD)
+          torrentInfo.editionInfo.bit10 = torrentInfo.videoInfo.bit10
+        }
         //= ========================================================================================================
         // info from douban / imdb
         const categoryMovie = 'Movie'; const categoryTvSeries = 'TV Series'; const categoryAnimation = 'Animation'
@@ -1915,20 +1931,17 @@ function processDescription (siteName, description) {
           if (siteName === GPW) {
             // movie edition
             if (torrentInfo.editionInfo) {
-              site.movieEditionCheck.click()
-              if (torrentInfo.editionInfo.criterionCollection) { site.movieEditionInfo.criterionCollection.click() }
-              if (torrentInfo.editionInfo.mastersOfCinema) { site.movieEditionInfo.mastersOfCinema.click() }
-              if (torrentInfo.editionInfo.directorsCut) { site.movieEditionInfo.directorsCut.click() }
-              if (torrentInfo.editionInfo.unrated) { site.movieEditionInfo.unrated.click() }
-              if (torrentInfo.editionInfo.uncut) { site.movieEditionInfo.uncut.click() }
-              if (torrentInfo.editionInfo.theatrical) { site.movieEditionInfo.theatrical.click() }
-              if (torrentInfo.editionInfo.extended) { site.movieEditionInfo.extended.click() }
-              if (torrentInfo.editionInfo.remaster4k) { site.movieEditionInfo.remaster4k.click() }
-              if (torrentInfo.editionInfo.remaster) { site.movieEditionInfo.remaster.click() }
-              if (torrentInfo.editionInfo.restoration4k) { site.movieEditionInfo.restoration4k.click() }
-              if (torrentInfo.editionInfo.twoInOne) { site.movieEditionInfo.twoInOne.click() }
-              if (torrentInfo.audioInfo && torrentInfo.audioInfo.some(audio => audio.commentary)) { site.movieEditionInfo.withCommentary.click() }
-              if (torrentInfo.audioInfo && torrentInfo.audioInfo.filter(audio => audio.language && !audio.commentary).length === 2) { site.movieEditionInfo.dualAudio.click() }
+              if (site.movieEditionContainer.css("display") === 'none') {
+                site.showMovieEditionCheck.click()
+              }
+              Object.entries(site.movieEditionInfo).forEach(([tagKey, tag]) => {
+                let selectedTags = site.movieEditionSelected.val().trim().split(/\s*\/\s*/i)
+                let toSelect = !!torrentInfo.editionInfo[tagKey]
+                let checker = $(`a[onclick*="${tag}"]`)[0]
+                if (toSelect !== selectedTags.includes(tag)) {
+                  checker.click()
+                }
+              })
             }
             // subtitles
             const subbed = torrentInfo.subtitleInfo.length > 0
@@ -1965,23 +1978,13 @@ function processDescription (siteName, description) {
           } else if (siteName === UHD) {
             // movie edition
             if (torrentInfo.editionInfo) {
-              if (torrentInfo.editionInfo.criterionCollection) { site.movieEditionInfo.criterionCollection.click() }
-              if (torrentInfo.editionInfo.directorsCut) { site.movieEditionInfo.directorsCut.click() }
-              if (torrentInfo.editionInfo.unrated) { site.movieEditionInfo.unrated.click() }
-              if (torrentInfo.editionInfo.uncut) { site.movieEditionInfo.uncut.click() }
-              if (torrentInfo.editionInfo.theatrical) { site.movieEditionInfo.theatrical.click() }
-              if (torrentInfo.editionInfo.extended) { site.movieEditionInfo.extended.click() }
-              if (torrentInfo.editionInfo.remaster4k) { site.movieEditionInfo.remaster4k.click() }
-              if (torrentInfo.editionInfo.remaster) { site.movieEditionInfo.remaster.click() }
-              if (torrentInfo.editionInfo.restoration4k) { site.movieEditionInfo.restoration4k.click() }
-              if (torrentInfo.editionInfo.twoInOne) { site.movieEditionInfo.twoInOne.click() }
-              if (torrentInfo.editionInfo.threeInOne) { site.movieEditionInfo.threeInOne.click() }
-              if (torrentInfo.editionInfo.hybrid) { site.movieEditionInfo.hybrid.click() }
-              if (torrentInfo.editionInfo.imax) { site.movieEditionInfo.imax.click() }
-              if (torrentInfo.editionInfo.tvCut) { site.movieEditionInfo.tvCut.click() }
-              if (torrentInfo.videoInfo && (torrentInfo.videoInfo.bit10 || torrentInfo.videoInfo.hdr10 || torrentInfo.videoInfo.hdr10plus || torrentInfo.videoInfo.dovi)) {
-                site.movieEditionInfo.bit10.click()
-              }
+              let tags = []
+              Object.entries(site.movieEditionInfo).forEach(([tagKey, tag]) => {
+                if (torrentInfo.editionInfo[tagKey]) {
+                  tags.push(tag)
+                }
+              })
+              site.movieEditionSelected.val(tags.join(' / '))
             }
             // hdr info
             if (torrentInfo.videoInfo) {
