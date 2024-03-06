@@ -31,7 +31,7 @@ const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
 const ANONYMOUS = true
 // medianinfo 键长（方便格式化）
 const mediainfoKeyLength = 31
-const subtitleLanguages = {chinese_simplified: 'chs|zh', chinese_traditional: 'cht', japanese: 'jp|jpn|jap|ja', korean: 'kor|ko', english: 'en|eng',
+const languageMap = {chinese_simplified: 'chs|zh', chinese_traditional: 'cht', mandarion: 'mandarin', cantonsese: 'canto|cant|can', japanese: 'jp|jpn|jap|ja', korean: 'kor|ko', english: 'en|eng',
   french: 'fre|fra|fr', german: 'ger|deu|de', italian: 'ita|it', polish: 'pol|pl', romanian: 'rum|ron|ro', russian: 'ru|rus', spanish: 'spa|es', thai: 'tai',
   turkish: 'tur|tr', vietnamese: 'vi|vie', hindi: 'hin|hi', greek: 'gre|ell|el', swedish: 'swe|sv', azerbaijani: 'aze|az', bulgarian: 'bul|bg', danish: 'dan|da',
   estonian: 'est|et', finnish: 'fin|fi', hebrew: 'heb|he', croatian: 'hrv|hr', hungarian: 'hun|hu', icelandic: 'ice|isl|is', latvian: 'lav|lv', lithuanian: 'lit|lt',
@@ -333,6 +333,7 @@ const siteInfoMap = {
       extended: $('a[onclick*="extended_edition"]')[0],
       remaster4k: $('a[onclick*="4k_remaster"]')[0],
       remaster: $('a[onclick*="remaster"]')[0],
+      dualAudio: $('a[onclick*="dual_audio"]')[0],
       restoration4k: $('a[onclick*="4k_restoration"]')[0],
       twoInOne: $('a[onclick*="2_in_1"]')[0]
     },
@@ -1258,70 +1259,63 @@ function processDescription (siteName, description) {
         let mediainfoStr = site.mediainfoBox ? site.mediainfoBox.val() : ''
         // decompose description (and generate comparison screenshots)
         ;[textToConsume, torrentInfo.mediainfo, torrentInfo.torrentTitle] = await decomposeDescription(siteName, textToConsume, mediainfoStr, torrentInfo.torrentTitle)
-        torrentInfo.audioInfo = {
-          dtsX: false, atmos: false, chineseDub: false, foreignDub: false, cantoneseDub: false, commentary: false
-        }
+        // dtsX: false, atmos: false, commentary: false, language: 'chinese'
+        torrentInfo.audioInfo = []
         torrentInfo.videoInfo = {
           bit10: false, hdr10: false, hdr10plus: false, dovi: false, container: ''
         }
-        torrentInfo.subtitleInfo = {}
-        Object.keys(subtitleLanguages).forEach(lang => {
-          torrentInfo.subtitleInfo[lang] = false
-        })
+        // from languageMap
+        torrentInfo.subtitleInfo = []
         // info from mediainfo
         Object.entries(torrentInfo.mediainfo).forEach(([infoKey, infoValue]) => {
           if (infoKey.match(/^text( #\d+)?/i)) {
             // subtitle
-            let matchLang = false
-            const language = [infoValue.Language || '', infoValue.Title || ''].join(' ')
-            if (language.match(/chinese/i)) {
-              if (language.match(/cht|traditional/i)) {
-                torrentInfo.subtitleInfo.chinese_traditional = true
+            let language = ''
+            const languageRaw = [infoValue.Language || '', infoValue.Title || ''].join(' ')
+            if (languageRaw.match(/chinese/i)) {
+              if (languageRaw.match(/cht|traditional/i)) {
+                language = 'chinese_traditional'
               } else {
-                torrentInfo.subtitleInfo.chinese_simplified = true
+                language = 'chinese_simplified'
               }
-              matchLang = true
             } else {
-              Object.keys(torrentInfo.subtitleInfo).forEach(lang => {
-                if (language.match(RegExp(escapeRegExp(lang), 'i')) || language.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
-                  torrentInfo.subtitleInfo[lang] = true
-                  matchLang = true
+              Object.keys(languageMap).forEach(lang => {
+                if (languageRaw.match(RegExp(escapeRegExp(lang), 'i')) || languageRaw.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
+                  language = lang
                   return
                 }
               })
             }
-            if (matchLang) {
-              console.log(`Match sub ${language}`)
-            } else {
-              console.log(`Other sub ${language}`)
+            if (language) {
+              torrentInfo.subtitleInfo.push(language)
             }
           } else if (infoKey.match(/^audio( #\d+)?/i)) {
             // audio
+            let audio = {language: '', commentary: false, atmos: false, dtsX: false}
             const title = infoValue.Title || ''
-            const language = infoValue.Language || ''
-            if (title.match(/commentary/i)) {
-              torrentInfo.audioInfo.commentary = true
-            }
-            if (title.match(/cantonese|粤语|广东话|粤配/i) || language.match(/cantonese|粤语|广东话|粤配/i)) {
-              torrentInfo.audioInfo.cantoneseDub = true
-              console.log('Cantonese dub')
-            } else if (title.match(/chinese|mandarin|国语|普通话|国配/i) || language.match(/chinese|mandarin|国语|普通话|国配/i)) {
-              torrentInfo.audioInfo.chineseDub = true
-              console.log('Chinese Mandarin dub')
+            const languageRaw = infoValue.Language || ''
+            audio.commentary = title.match(/commentary/i) ? true : false
+            if (title.match(/cantonese|粤语|广东话|粤配/i) || languageRaw.match(/cantonese|粤语|广东话|粤配/i)) {
+              audio.language = 'cantonsese'
+            } else if (title.match(/chinese|mandarin|国语|普通话|国配/i) || languageRaw.match(/chinese|mandarin|国语|普通话|国配/i)) {
+              audio.language = 'mandarin'
             } else {
-              torrentInfo.audioInfo.foreignDub = true
-              console.log('Foreign dub')
+              Object.keys(languageMap).forEach(lang => {
+                if (languageRaw.match(RegExp(lang, 'i'))) {
+                  audio.language = lang
+                  return
+                }
+              })
             }
             const commecialName = infoValue['Commercial name']
             if (commecialName) {
               if (commecialName.match(/Dolby Atmos/i)) {
-                torrentInfo.audioInfo.atmos = true
-                console.log('Dolby Atmos')
+                audio.atmos = true
               } else if (commecialName.match(/DTS-HD Master Audio/i)) {
-                torrentInfo.audioInfo.dtsX = true
-                console.log('DTS:X')
+                audio.dtsX = true
               }
             }
+            torrentInfo.audioInfo.push(audio)
           } else if (infoKey.match(/^video/i)) {
             // video
             const hdrFormat = infoValue['HDR format']
@@ -1329,18 +1323,14 @@ function processDescription (siteName, description) {
             if (hdrFormat) {
               if (hdrFormat.match(/HDR10\+/i)) {
                 torrentInfo.videoInfo.hdr10plus = true
-                console.log('HDR10+')
               } else if (hdrFormat.match(/HDR10/i)) {
                 torrentInfo.videoInfo.hdr10 = true
-                console.log('HDR10')
               }
               if (hdrFormat.match(/Dolby Vision/i)) {
                 torrentInfo.videoInfo.dovi = true
-                console.log('Dolby Vision')
               }
             } else if (bitDepth.match(/10 bits/i)) {
               torrentInfo.videoInfo.bit10 = true
-              console.log('10 bits')
             }
           } else if (infoKey.match(/^general$/i)) {
             // general
@@ -1353,13 +1343,19 @@ function processDescription (siteName, description) {
             } else {
               torrentInfo.videoInfo.container = infoValue.Format.trim()
             }
-            console.log(torrentInfo.videoInfo.container)
             // 如果 torrentInfo.torrentTitle 尚未被赋值，直接使用mediainfo 中的值
             torrentInfo.torrentTitle = torrentInfo.torrentTitle ||
               formatTorrentName(infoValue['Complete name']) ||
               formatTorrentName(infoValue['Movie name'])
           }
         })
+        console.log(`video: { 10 bits: ${torrentInfo.videoInfo.bit10}, HDR10: ${torrentInfo.videoInfo.hdr10}, HDR10+: ${torrentInfo.videoInfo.hdr10plus}, Dolby Vision: ${torrentInfo.videoInfo.dovi}, container: ${torrentInfo.videoInfo.container} }`)
+        torrentInfo.audioInfo.forEach(audio => {
+          console.log(`audio: { language: ${audio.language}, commentary: ${audio.commentary}, Atmos: ${audio.atmos}, DtsX: ${audio.dtsX} }`)
+        })
+        if (torrentInfo.subtitleInfo.length) {
+          console.log(`subtitle(s): [${torrentInfo.subtitleInfo.join(', ')}]`)
+        }
         //= ========================================================================================================
         // info from title
         torrentInfo.editionInfo = {}
@@ -1886,24 +1882,32 @@ function processDescription (siteName, description) {
         }
         // site-specific
         if (site.construct === NEXUSPHP) {
-          if (siteName === PTERCLUB && torrentInfo.subtitleInfo && torrentInfo.audioInfo) {
-            if (site.chsubCheck && site.englishSubCheck && site.chdubCheck && site.cantodubCheck) {
-              site.chsubCheck.checked = torrentInfo.subtitleInfo.chinese_simplified || torrentInfo.subtitleInfo.chinese_traditional
-              site.englishSubCheck.checked = torrentInfo.subtitleInfo.english
-              site.chdubCheck.checked = torrentInfo.audioInfo.chineseDub
-              site.cantodubCheck.checked = torrentInfo.audioInfo.cantoneseDub
+          if (siteName === PTERCLUB) {
+            if (site.chsubCheck) {
+              site.chsubCheck.checked = torrentInfo.subtitleInfo.includes('chinese_simplified') || torrentInfo.subtitleInfo.includes('chinese_traditional')
             }
-          } else if (siteName === MTEAM && torrentInfo.subtitleInfo && torrentInfo.audioInfo) {
-            if (site.chsubCheck && site.chdubCheck) {
-              site.chsubCheck.checked = torrentInfo.subtitleInfo.chinese_simplified || torrentInfo.subtitleInfo.chinese_traditional
-              site.chdubCheck.checked = torrentInfo.audioInfo.chineseDub
+            if (site.englishSubCheck) {
+              site.englishSubCheck.checked = torrentInfo.subtitleInfo.includes('english')
             }
-          } else if (siteName === TTG && torrentInfo.subtitleInfo) {
-            if (torrentInfo.subtitleInfo.chinese_simplified && torrentInfo.subtitleInfo.chinese_traditional) {
+            if (site.chdubCheck) {
+              site.chdubCheck.checked = torrentInfo.audioInfo.some(audio => audio.language === 'mandarin' && !audio.commentary)
+            }
+            if (site.cantodubCheck) {
+              site.cantodubCheck.checked = torrentInfo.audioInfo.some(audio => audio.language === 'cantonese' && !audio.commentary)
+            }
+          } else if (siteName === MTEAM) {
+            if (site.chsubCheck) {
+              site.chsubCheck.checked = torrentInfo.subtitleInfo.includes('chinese_simplified') || torrentInfo.subtitleInfo.includes('chinese_traditional')
+            }
+            if (site.chdubCheck) {
+              site.chdubCheck.checked = torrentInfo.audioInfo.some(audio => audio.language === 'mandarin' && !audio.commentary)
+            }
+          } else if (siteName === TTG) {
+            if (torrentInfo.subtitleInfo.includes('chinese_simplified') && torrentInfo.subtitleInfo.includes('chinese_traditional')) {
               site.subtitleBox.val('* 内封简繁字幕')
-            } else if (torrentInfo.subtitleInfo.chinese_simplified) {
+            } else if (torrentInfo.subtitleInfo.includes('chinese_simplified')) {
               site.subtitleBox.val('* 内封简体字幕')
-            } else if (torrentInfo.subtitleInfo.chinese_traditional) {
+            } else if (torrentInfo.subtitleInfo.includes('chinese_traditional')) {
               site.subtitleBox.val('* 内封繁体字幕')
             }
           }
@@ -1923,17 +1927,18 @@ function processDescription (siteName, description) {
               if (torrentInfo.editionInfo.remaster) { site.movieEditionInfo.remaster.click() }
               if (torrentInfo.editionInfo.restoration4k) { site.movieEditionInfo.restoration4k.click() }
               if (torrentInfo.editionInfo.twoInOne) { site.movieEditionInfo.twoInOne.click() }
-              if (torrentInfo.audioInfo && torrentInfo.audioInfo.commentary) { site.movieEditionInfo.withCommentary.click() }
+              if (torrentInfo.audioInfo && torrentInfo.audioInfo.some(audio => audio.commentary)) { site.movieEditionInfo.withCommentary.click() }
+              if (torrentInfo.audioInfo && torrentInfo.audioInfo.filter(audio => audio.language && !audio.commentary).length === 2) { site.movieEditionInfo.dualAudio.click() }
             }
             // subtitles
-            const subbed = Object.values(torrentInfo.subtitleInfo).some(x => x)
+            const subbed = torrentInfo.subtitleInfo.length > 0
             site.noSubCheck.checked = !subbed
             site.mixedSubCheck.checked = subbed
             if (subbed) {
               site.otherSubtitlesDiv.removeClass('hidden')
-              Object.keys(torrentInfo.subtitleInfo).forEach(lang => {
+              Object.keys(languageMap).forEach(lang => {
                 if (site.subtitleInfo[lang]) {
-                  site.subtitleInfo[lang].checked = torrentInfo.subtitleInfo[lang]
+                  site.subtitleInfo[lang].checked = torrentInfo.subtitleInfo.includes(lang)
                 }
               })
             }
@@ -1946,10 +1951,12 @@ function processDescription (siteName, description) {
             }
             // audio info
             if (torrentInfo.audioInfo) {
-              site.audioInfo.dtsX.checked = torrentInfo.audioInfo.dtsX
-              site.audioInfo.atmos.checked = torrentInfo.audioInfo.atmos
+              site.audioInfo.dtsX.checked = torrentInfo.audioInfo.some(audio => audio.dtsX)
+              site.audioInfo.atmos.checked = torrentInfo.audioInfo.some(audio => audio.atmos)
               // GPW的国语配音作为特色属性，特指外语片的译制音轨
-              site.audioInfo.chineseDub.checked = torrentInfo.audioInfo.chineseDub && torrentInfo.audioInfo.foreignDub
+              site.audioInfo.chineseDub.checked = 
+                torrentInfo.audioInfo.some(audio => audio.language === 'mandarin' && !audio.commentary) &&
+                torrentInfo.audioInfo.some(audio => audio.language !== 'mandarin' && !audio.commentary)
             }
             // container info
             if (Object.values(site.containerInfo).includes(torrentInfo.videoInfo.container)) {
@@ -2032,7 +2039,7 @@ function processDescription (siteName, description) {
         }
         const abbrLangInSub = pathSub.replace(/.*\.([^.]+)\.[^.]+$/i, '$1') || ''
         let subtitleInfo = {}
-        Object.entries(subtitleLanguages).forEach(([languageInAll, abbrLang]) => {
+        Object.entries(languageMap).forEach(([languageInAll, abbrLang]) => {
           subtitleInfo[languageInAll] = abbrLangInSub.match(RegExp('\\b' + abbrLang + '\\b', 'i'))
         })
         if (site.languageSelSubtitle) {
