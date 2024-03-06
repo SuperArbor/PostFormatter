@@ -1944,7 +1944,7 @@ function processDescription (siteName, description) {
               site.otherSubtitlesDiv.removeClass('hidden')
               Object.keys(languageMap).forEach(lang => {
                 if (site.subtitleInfo[lang]) {
-                  site.subtitleInfo[lang].checked = torrentInfo.subtitleInfo.some(sub => sub.language === lang && ! sub.commentary )
+                  site.subtitleInfo[lang].checked = torrentInfo.subtitleInfo.some(sub => sub.language === lang && !sub.commentary )
                 }
               })
             }
