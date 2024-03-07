@@ -1541,7 +1541,7 @@ function processDescription (siteName, description) {
           if (torrentInfo.movieInfo.originalTitle && torrentInfo.movieInfo.translatedTitles) {
             let titles = []
             let torrentTitle = torrentInfo.infoInSite.torrentTitle || torrentInfo.torrentTitle
-            if (!torrentTitle.match(RegExp(escapeRegExp(torrentInfo.movieInfo.originalTitle)), 'i')) {
+            if (!torrentTitle.match(RegExp(escapeRegExp(torrentInfo.movieInfo.originalTitle), 'i'))) {
               titles.push(torrentInfo.movieInfo.originalTitle)
             }
             torrentInfo.movieInfo.translatedTitles.forEach(title => {
