@@ -458,7 +458,7 @@ const siteInfoMap = {
 const imageHostInfoMap = {
   [PIXHOST]: {
     images2Thumbs: {
-      pattern: /https:\/\/img(\d+)\.pixhost\.to\/images\/([\w/]+)\.png/gi,
+      pattern: /https:\/\/img(\d+)\.pixhost\.to\/images\/([A-Za-z0-9\-._~!$&'()*+;=:@/?]+)\.png/gi,
       replacement: '[url=https://pixhost.to/show/$2.png][img]https://t$1.pixhost.to/thumbs/$2.png[/img][/url]'
     },
     thumbs2Images: {
