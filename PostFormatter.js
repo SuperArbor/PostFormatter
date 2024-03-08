@@ -38,6 +38,7 @@ const languageMap = {chinese_simplified: 'chs|zh', chinese_traditional: 'cht', m
   dutch: 'dut|nld|nl', norwegian: 'nor|no', portuguese: 'por|pt', slovenian: 'slv|sl', slovak: 'slo|slk|sk', latin: 'lat|la',
   ukrainian: 'ukr|uk', persian: 'per|fas|fa', arabic: 'ara|ar', brazilian_port: 'bra', czech: 'cze|ces|cs', idonesian: 'ido', serbian: 'srp|sr'
 }
+const invalidImageAnchor = 'NA'
 const weirdTeamsStr = weirdTeams.map(team => `(?:${escapeRegExp(team)})`).join('|')
 // 用于提取截图对比的多个压制组
 const regexTeam = RegExp('\\b(?:(?:' + weirdTeamsStr + '|\\w[\\w-. ]+)) ?(?:(?:\\([\\w. ]+\\)|<[\\w. ]+>|\\[[\\w. ]+\\]) ?(?:[\\w. ]+)?)?', 'i')
@@ -726,31 +727,68 @@ function getThumbSize(numTeams, siteName) {
 }
 // decode [url=...][img]...[/img][/url] -> https://1.png
 async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
-  thumbUrls = thumbUrls.trim()
-  const imageHostName = Object.keys(imageHostInfoMap).find(ih => thumbUrls.match(RegExp(escapeRegExp(ih), 'i'))) || ''
-  const imageHost = imageHostInfoMap[imageHostName]
-  if (!imageHost) {
-    return []
+  const site = siteInfoMap[siteName]
+  const size = getThumbSize(numTeams, siteName)
+  const supportPixhost = site.supportedImageHosts ? site.supportedImageHosts.includes(PIXHOST) : true
+  let imageUrls = Array(thumbUrls.length).fill('')
+  let indicesForPixhost = []
+  for (const [i, thumb] of thumbUrls.entries()) {
+    const imageHostName = Object.keys(imageHostInfoMap).find(ih => thumb.match(RegExp(escapeRegExp(ih), 'i'))) || ''
+    const imageHost = imageHostInfoMap[imageHostName]
+    if (!imageHost) {
+      continue
+    }
+    let pattern = imageHost.thumbs2Images ? imageHost.thumbs2Images.pattern : ''
+    let replacement = imageHost.thumbs2Images ? imageHost.thumbs2Images.replacement : ''
+    if (pattern) {
+      const match = thumb.match(RegExp(pattern.source, 'i'))
+      if (match) {
+        const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
+        imageUrls[i] = match[0].replace(pattern, replacement)
+        // 确保转换图床的都是有效url
+        if (!supportCurrentImageHost) {
+          indicesForPixhost.push(i)
+        }
+      }
+    }
   }
-  let pattern = imageHost.thumbs2Images ? imageHost.thumbs2Images.pattern : ''
-  let replacement = imageHost.thumbs2Images ? imageHost.thumbs2Images.replacement : ''
-  let imageUrls = []
-  if (pattern) {
-    const matches = thumbUrls.match(pattern)
-    const site = siteInfoMap[siteName]
-    const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
-    const supportPixhost = site.supportedImageHosts ? site.supportedImageHosts.includes(PIXHOST) : true
-    let imageUrlsTest = matches
-      ? matches.map(matched => {
-        return matched.replace(pattern, replacement)
-      })
-      : []
-    if (supportCurrentImageHost) {
-      imageUrls = imageUrlsTest
-    } else if (supportPixhost) {
-      const size = getThumbSize(numTeams, siteName)
-      thumbUrls = await sendImagesToPixhost(imageUrlsTest, size)
-      imageUrls = await thumbs2ImageUrls(thumbUrls.join(' '), numTeams, siteName)
+  // 条件supportPixhost 确保了递归调用时supportCurrentImageHost===true，indicesForPixhost必为空（否则可能导致无限循环）
+  if (indicesForPixhost.length && supportPixhost) {
+    const urlsForPixhost = imageUrls.filter((_, index) => indicesForPixhost.includes(index))
+    const thumbUrlsFromPixhost = await sendImagesToPixhost(urlsForPixhost, size)
+    const imageUrlsFromPixhost = await thumbs2ImageUrls(thumbUrlsFromPixhost, numTeams, siteName)
+    for (let i = 0; i < indicesForPixhost.length; i++) {
+      imageUrls[indicesForPixhost[i]] = imageUrlsFromPixhost[i]
+    }
+  }
+  return imageUrls
+}
+// https://1.png -> https://1.png, change imagehost if necessary
+async function images2images (imageUrls, numTeams, siteName) {
+  // const imageUrlsJoined = imageUrls.map(image => image.trim()).join(' ')
+  const site = siteInfoMap[siteName]
+  const supportPixhost = site.supportedImageHosts ? site.supportedImageHosts.includes(PIXHOST) : true
+  const size = getThumbSize(numTeams, siteName)
+  let indicesForPixhost = []
+  for (const [i, image] of imageUrls.entries()) {
+    const imageHostName = Object.keys(imageHostInfoMap).find(ih => image.match(RegExp(escapeRegExp(ih), 'i'))) || ''
+    const match = image.match(RegExp(regexImageUrl.source, 'i'))
+    if (match) {
+      const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
+      imageUrls[i] = match[0]
+      if (!supportCurrentImageHost) {
+        indicesForPixhost.push(i)
+      }
+    } else {
+      imageUrls[i] = ''
+    }
+  }
+  if (indicesForPixhost.length && supportPixhost) {
+    const urlsForPixhost = imageUrls.filter((_, index) => indicesForPixhost.includes(index))
+    const thumbUrlsFromPixhost = await sendImagesToPixhost(urlsForPixhost, size)
+    const imageUrlsFromPixhost = await thumbs2ImageUrls(thumbUrlsFromPixhost, numTeams, siteName)
+    for (let i = 0; i < indicesForPixhost.length; i++) {
+      imageUrls[indicesForPixhost[i]] = imageUrlsFromPixhost[i]
     }
   }
   return imageUrls
@@ -759,38 +797,44 @@ async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
 async function images2ThumbUrls (imageUrls, numTeams, siteName) {
   const site = siteInfoMap[siteName]
   const size = getThumbSize(numTeams, siteName)
-  imageUrls = imageUrls.trim()
-  const imageHostName = Object.keys(imageHostInfoMap).find(ih => imageUrls.match(RegExp(escapeRegExp(ih), 'i'))) || ''
-  const imageHost = imageHostInfoMap[imageHostName]
-  let pattern = ''
-  let replacement = ''
-  if (imageHost) {
-    pattern = imageHost.images2Thumbs ? imageHost.images2Thumbs.pattern: ''
-    replacement = imageHost.images2Thumbs ? imageHost.images2Thumbs.replacement: ''
-  }
   const supportPixhost = site.supportedImageHosts ? site.supportedImageHosts.includes(PIXHOST) : true
-  let thumbUrls = []
-  if (pattern) {
-    const matches = imageUrls.match(pattern)
-    const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
-    if (supportCurrentImageHost) {
-      thumbUrls = matches
-        ? matches.map(matched => {
-          return matched.replace(pattern, replacement)
-        })
-        : []
-    } else {
-      thumbUrls = matches && supportPixhost
-        ? await sendImagesToPixhost(matches, size)
-        : []
+  let thumbUrls = Array(imageUrls.length).fill('')
+  let indicesForPixhost = []
+  // const imageUrlsJoined = imageUrls.map(image => image.trim()).join(' ')
+  for (const [i, image] of imageUrls.entries()) {
+    const imageHostName = Object.keys(imageHostInfoMap).find(ih => image.match(RegExp(escapeRegExp(ih), 'i'))) || ''
+    const imageHost = imageHostInfoMap[imageHostName]
+    let pattern = ''
+    let replacement = ''
+    if (imageHost) {
+      pattern = imageHost.images2Thumbs ? imageHost.images2Thumbs.pattern: ''
+      replacement = imageHost.images2Thumbs ? imageHost.images2Thumbs.replacement: ''
     }
-  } else {
-    // 不可从图片链接解析缩略图的图床（如PTPIMG），发送至Pixhost
-    pattern = /(https?:[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+?\.(png|jpg))/gi
-    const matches = imageUrls.match(pattern)
-    thumbUrls = matches && supportPixhost
-      ? await sendImagesToPixhost(matches, size)
-      : []
+    if (pattern) {
+      const match = image.match(RegExp(pattern.source, 'i'))
+      if (match) {
+        const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
+        thumbUrls[i] = match[0].replace(pattern, replacement)
+        // 不支持当前图床，发送至Pixhost
+        if (!supportCurrentImageHost) {
+          indicesForPixhost.push(i)
+        }
+      }
+    } else {
+      // 不可从图片链接解析缩略图的图床（如PTPIMG），发送至Pixhost
+      const match = image.match(RegExp(regexImageUrl.source, 'i'))
+      if (match) {
+        imageUrls[i] = match[0]
+        indicesForPixhost.push(i)
+      }
+    }
+  }
+  if (indicesForPixhost.length && supportPixhost) {
+    const urlsForPixhost = imageUrls.filter((_, index) => indicesForPixhost.includes(index))
+    const thumbUrlsFromPixhost = await sendImagesToPixhost(urlsForPixhost, size)
+    for (let i = 0; i < indicesForPixhost.length; i++) {
+      thumbUrls[indicesForPixhost[i]] = thumbUrlsFromPixhost[i]
+    }
   }
   return thumbUrls
 }
@@ -840,6 +884,7 @@ function string2Mediainfo (mediainfoStr) {
   })
   return mi
 }
+// 发送到PixHost，返回的是带链接的缩略图。返回的Array长度与输入一致，如果有生成失败的缩略图，返回的Array对应元素的值为 ""
 async function sendImagesToPixhost (urls, size) {
   const hostname = 'https://pixhost.to/remote/'
   const data = encodeURI(`imgs=${urls.join('\r\n')}&content_type=0&max_th_size=${size}`)
@@ -859,12 +904,28 @@ async function sendImagesToPixhost (urls, size) {
         if (response.status !== 200) {
           reject(response.status)
         } else {
-          const data = response.responseText.match(/(upload_results = )({.*})(;)/)
-          if (data && data.length) {
-            const imgResultList = JSON.parse(data[2]).images
-            resolve(imgResultList.map(item => {
-              return `[url=${item.show_url}][img]${item.th_url}[/img][/url]`
-            }))
+          const upload_results_array = response.responseText.match(/upload_results = ({.*});/)
+          if (upload_results_array && upload_results_array.length) {
+            const upload_results = JSON.parse(upload_results_array[1])
+            const resultList = upload_results.images
+            const notices = upload_results.notices
+            if (notices) {
+              notices.forEach(notice => console.error(notice))
+            }
+            const outputImageNames = resultList.map(item => item.name)
+            let thumbUrls = []
+            let numFailed = 0
+            for (const [i, url] of urls.entries()) {
+              let inputImageName = url.replace(/.*?([^/]+)$/, '$1')
+              if (outputImageNames.includes(inputImageName)) {
+                let result = resultList[i - numFailed]
+                thumbUrls.push(`[url=${result.show_url}][img]${result.th_url}[/img][/url]`)
+              } else {
+                thumbUrls.push('')
+                numFailed++
+              }
+            }
+            resolve(thumbUrls)
           } else {
             console.log(response)
             reject(new Error('Failed to upload'))
@@ -981,15 +1042,16 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
     for (let { starts, ends, teams, urls, containerStyle, urlType } of comparisons) {
       // convert to titled style no matter what the original style is
       if (urlType === 'images') {
-        urls = await images2ThumbUrls(urls.join(' '), teams.length, siteName)
+        urls = await images2ThumbUrls(urls, teams.length, siteName)
       } else if (urlType === 'imagesBbCode') {
         urls = urls.map(url => url.replace(/\[img\](.+?)\[\/img\]/, '$1'))
-        urls = await images2ThumbUrls(urls.join(' '), teams.length, siteName)
+        urls = await images2ThumbUrls(urls, teams.length, siteName)
       }
       let screenshotsStr = ''
       if (urls.length > 0) {
         screenshotsStr = `[b]${teams.join(' | ')}[/b]`
         urls.forEach((url, i) => {
+          url = url || invalidImageAnchor
           screenshotsStr += (i % teams.length === 0
             ? '\n' + url
             : ' ' + url)
@@ -1025,16 +1087,17 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
     for (let { starts, ends, teams, urls, containerStyle, urlType } of comparisons) {
       let screenshotsStr = ''
       if (containerStyle === 'comparison') {
-        screenshotsStr = textToConsume.substring(starts, ends)
+        urls = await images2images(urls, teams.length, siteName)
       } else if (containerStyle === 'boxed' || containerStyle === 'titled') {
         if (urlType === 'thumbsBbCode') {
-          urls = await thumbs2ImageUrls(urls.join(' '), teams.length, siteName)
+          urls = await thumbs2ImageUrls(urls, teams.length, siteName)
         } else if (urlType === 'imagesBbCode') {
           urls = urls.map(url => url.replace(/\[img\](.+?)\[\/img\]/, '$1'))
         }
-        if (urls.length > 0) {
-          screenshotsStr = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
-        }
+      }
+      if (urls.length > 0) {
+        urls = urls.map(url => url || invalidImageAnchor)
+        screenshotsStr = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
       }
       screenshotsStrAll = `${screenshotsStr}\n${screenshotsStrAll}`
       // 如果之前没有获取到teamEncode，直接用Encode赋值，避免后续'includes'判断错误（string.includes('') === true）
