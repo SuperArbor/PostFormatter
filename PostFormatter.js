@@ -65,7 +65,7 @@ const regexScreenshotsImages = RegExp(
   '\\[img\\]' + regexImageUrl.source + '\\[\\/img\\]',
   'ig')
 // complex regexes
-// compare with comparison (GPW style)
+// compare with comparison (GPW style)，封装的是纯图片链接
 const regexScreenshotsComparison = RegExp(
   '\\[(comparison|box|hide|expand|spoiler|quote)=(' + regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source +')\\s*' + regexTeam.source + `){1,${maxTeamsInComparison-1}})\\]` +
   '(\\s*(?:' + regexImageUrl.source + '(?:\\s+|\\s*,)\\s*)+' + regexImageUrl.source + ')\\s*\\[\\/\\1\\]',
@@ -82,9 +82,9 @@ const regexScreenshotsThumbsTitled = RegExp(
   regexTeam.source + '(?:\\s*\\2\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}}` +
   `)[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*((?:\\s*` + regexScreenshotsThumbs.source + '\\s*)+)',
   'mig')
-// 截图模式:包含[box|hide|expand|spoiler|quote=]标签，封装的是图片链接
+// 截图模式:包含[box|hide|expand|spoiler|quote=]标签，封装的是图片链接BBCode
 const regexScreenshotsImagesBoxed = RegExp(
-  '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
+  '\\[(comparison|box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
   regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
   regexTeam.source + '(?:\\s*\\3\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}}` +
   ')\\s*\\]((?:\\s*' + regexScreenshotsImages.source + '\\s*)+)\\[\\/\\1\\]',
@@ -893,7 +893,7 @@ function collectComparisons (text) {
           let teamSplitter = match[type.groupForTeamSplitter]
           result.teams = match[type.groupForTeams]
             .split(teamSplitter)
-            .map(ele => { return ele.trim() })
+            .map(ele => ele.trim())
         }
         if (type.groupForUrls >= 0) {
           const urls = match[type.groupForUrls]
@@ -1005,8 +1005,8 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
     if (site.quoteStyle === 'writer') {
       [description] = processTags(
         textToConsume, 'quote',
-        matchLeft => { return matchLeft.replace(/\[quote(?:=([^\]]+))\]/g, '[b]$1[/b]\n[quote]') },
-        matchRight => { return matchRight },
+        matchLeft => matchLeft.replace(/\[quote(?:=([^\]]+))\]/g, '[b]$1[/b]\n[quote]'),
+        matchRight => matchRight,
         true)
     } else {
       description = textToConsume
@@ -1068,17 +1068,15 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
     }
     let [quotes, remained] = processTags(
       textToConsume, 'quote',
-      matchLeft => {
-        return site.quoteStyle === 'writer'
-          ? matchLeft.replace(/\[quote(?:=([^\]]+))\]/g, '[b]$1[/b]\n[quote]')
-          : matchLeft
-      },
-      matchRight => { return matchRight },
+      matchLeft => site.quoteStyle === 'writer'
+        ? matchLeft.replace(/\[quote(?:=([^\]]+))\]/g, '[b]$1[/b]\n[quote]')
+        : matchLeft,
+      matchRight => matchRight,
       false)
     // 只是为了提取出 boxes
     let [boxes] = processTags(remained, site.targetBoxTag,
-      matchLeft => { return matchLeft },
-      matchRight => { return matchRight },
+      matchLeft => matchLeft,
+      matchRight =>matchRight,
       false)
     description = `${quotes}${boxes}\n${screenshotsStrAll}`
   }
@@ -1126,12 +1124,8 @@ function processDescription (siteName, description) {
         : `[/${replaceTag}]`)
     // 不支持的标签
     .replace(RegExp('\\[\\/?(' + unsupportedTagsStr + ')(=[^\\]]+)?\\]', 'g'), '\n')
-    .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => {
-      return p1 + p2.toLowerCase() + p3
-    })
-    .replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, matches => {
-      return (matches.replace(/\[align(=\w*)?\]/g, '\n'))
-    })
+    .replace(/(\[\/?)(\w+)((?:=(?:[^\r\n\t\f\v [\]])+)?\])/g, (_, p1, p2, p3) => p1 + p2.toLowerCase() + p3)
+    .replace(/(?:(?:\[\/(url|flash|flv))|^)(?:(?!\[(url|flash|flv))[\s\S])*(?:(?:\[(url|flash|flv))|$)/g, matches => matches.replace(/\[align(=\w*)?\]/g, '\n'))
     // 去除头尾空白
     .replace(/^\s*([\s\S]*\S)\s*$/g, '$1')
     // 至多两个换行
