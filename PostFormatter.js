@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info
-// @version      1.3.2.10
+// @version      1.3.2.11
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -68,7 +68,7 @@ const regexScreenshotsImages = RegExp(
 // complex regexes
 // compare with comparison (GPW style)，封装的是纯图片链接
 const regexScreenshotsComparison = RegExp(
-  '\\[(comparison|box|hide|expand|spoiler|quote)=(' + regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source +')\\s*' + regexTeam.source + `){1,${maxTeamsInComparison-1}})\\]` +
+  '\\[(comparison|box|hide|expand|spoiler|quote)=\\s*(' + regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source +')\\s*' + regexTeam.source + `){1,${maxTeamsInComparison-1}})\\]` +
   '(\\s*(?:' + regexImageUrl.source + '(?:\\s+|\\s*,)\\s*)+' + regexImageUrl.source + ')\\s*\\[\\/\\1\\]',
   'mig')
 // 截图模式:包含[box|hide|expand|spoiler|quote=]标签，封装的是缩略图
@@ -334,7 +334,7 @@ const siteInfoMap = {
       uncut: 'uncut',
       unrated: 'unrated',
       extended: 'extended_edition',
-      remaster4k: 'extended_edition',
+      remaster4k: '4k_remaster',
       remaster: 'remaster',
       dualAudio: 'dual_audio',
       restoration4k: '4k_restoration',
