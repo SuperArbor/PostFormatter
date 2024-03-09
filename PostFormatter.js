@@ -1463,10 +1463,10 @@ function processDescription (siteName, description) {
           torrentInfo.processingInfo.encode = !torrentInfo.processingInfo.raw
           torrentInfo.processingInfo.remux = torrentInfo.torrentTitle.match(/\bremux\b/i)
           // codec
-          torrentInfo.codecInfo.h264 = torrentInfo.torrentTitle.match(/\bh\.?264\b/i)
-          torrentInfo.codecInfo.x264 = torrentInfo.torrentTitle.match(/\b(avc|x264)\b/i)
-          torrentInfo.codecInfo.h265 = torrentInfo.torrentTitle.match(/\bh\.?265\b/i)
-          torrentInfo.codecInfo.x265 = torrentInfo.torrentTitle.match(/\b(hevc|x265)\b/i)
+          torrentInfo.codecInfo.h264 = torrentInfo.torrentTitle.match(/\b(avc|h\.?264)\b/i)
+          torrentInfo.codecInfo.x264 = torrentInfo.torrentTitle.match(/\bx264\b/i)
+          torrentInfo.codecInfo.h265 = torrentInfo.torrentTitle.match(/\b(hevc|h\.?265)\b/i)
+          torrentInfo.codecInfo.x265 = torrentInfo.torrentTitle.match(/\bx265\b/i)
           torrentInfo.codecInfo.x266 = torrentInfo.torrentTitle.match(/\bx266\b/i)
           torrentInfo.codecInfo.vc1 = torrentInfo.torrentTitle.match(/\bvc-1\b/i)
           torrentInfo.codecInfo.av1 = torrentInfo.torrentTitle.match(/\bav1\b/i)
