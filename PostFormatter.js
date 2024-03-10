@@ -1103,6 +1103,7 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
         }
       } else if (urlType === 'imagesBbCode') {
         urls = await images2images(urls, 2, siteName)
+        urls = urls.map(url => `[img]${url}[/img]`)
         if (urls.length > 0) {
           screenshotsConsumed = urls.join('\n')
           screenshotsEncode = screenshotsConsumed
