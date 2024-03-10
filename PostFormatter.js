@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info
-// @version      1.3.2.11
+// @version      1.3.2.12
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -50,6 +50,7 @@ const regexTeamExtraction = RegExp('\\b(?:' + weirdTeamsStr + '|(?:[^\\s-@.]+(?:
 // max comparison teams in a comparison, must be larger than 1
 const maxTeamsInComparison = 8
 const maxNonWordsInTitled = 20
+const minScreenshotsNonComparison = 3
 // simple regexes
 const regexNormalUrl = /https?:[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
 const regexImageUrl = RegExp(
@@ -96,6 +97,10 @@ const regexScreenshotsImagesTitled = RegExp(
   regexTeam.source + '(?:\\s*\\2\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}}` +
   `)[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*((?:\\s*` + regexScreenshotsImages.source + '\\s*)+)',
   'mig')
+// 3张以上的纯截图
+const regexScreenshotsImagesNonComparison = RegExp(
+  '(' + regexScreenshotsImages.source + `\\s*){${minScreenshotsNonComparison},}`,
+  'mig')
 // 对比图相关正则表达式信息，由于可能不止一个会被匹配到，注意排序
 const regexInfo = [
   // [box=team1, team2, team3][url=...][img]https://1.png[/img][/url] [url=...][img]https://2.png[/img][/url] [url=...][img]https://3.png[/img][/url][/box]
@@ -107,7 +112,9 @@ const regexInfo = [
   // team1 | team2 | team3\n[img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img]
   { regex: regexScreenshotsImagesTitled, groupForTeams: 1, groupForTeamSplitter: 2, groupForUrls: 3, containerStyle: 'titled', urlType: 'imagesBbCode' },
   // [comparison=team1, team2, team3]https://1.png https://2.png https://3.png[/comparison]
-  { regex: regexScreenshotsComparison, groupForTeams: 2, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'comparison', urlType: 'images' }
+  { regex: regexScreenshotsComparison, groupForTeams: 2, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'comparison', urlType: 'images' },
+  // [img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img]
+  { regex: regexScreenshotsImagesNonComparison, groupForTeams: -1, groupForTeamSplitter: -1, groupForUrls: 0, containerStyle: 'none', urlType: 'imagesBbCode' }
 ]
 const siteInfoMap = {
   // bracket makes the value of the string 'nexushd' the true key or instead the string 'NHD' will be used as key
@@ -743,8 +750,8 @@ async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
     if (pattern) {
       const match = thumb.match(RegExp(pattern.source, 'i'))
       if (match) {
-        const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
         imageUrls[i] = match[0].replace(pattern, replacement)
+        const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
         // 确保转换图床的都是有效url
         if (!supportCurrentImageHost) {
           indicesForPixhost.push(i)
@@ -764,6 +771,7 @@ async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
   return imageUrls
 }
 // https://1.png -> https://1.png, change imagehost if necessary
+// 同时[img]https://1.png[/img] -> https://1.png
 async function images2images (imageUrls, numTeams, siteName) {
   // const imageUrlsJoined = imageUrls.map(image => image.trim()).join(' ')
   const site = siteInfoMap[siteName]
@@ -774,8 +782,8 @@ async function images2images (imageUrls, numTeams, siteName) {
     const imageHostName = Object.keys(imageHostInfoMap).find(ih => image.match(RegExp(escapeRegExp(ih), 'i'))) || ''
     const match = image.match(RegExp(regexImageUrl.source, 'i'))
     if (match) {
-      const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
       imageUrls[i] = match[0]
+      const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
       if (!supportCurrentImageHost) {
         indicesForPixhost.push(i)
       }
@@ -813,8 +821,8 @@ async function images2ThumbUrls (imageUrls, numTeams, siteName) {
     if (pattern) {
       const match = image.match(RegExp(pattern.source, 'i'))
       if (match) {
-        const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
         thumbUrls[i] = match[0].replace(pattern, replacement)
+        const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
         // 不支持当前图床，发送至Pixhost
         if (!supportCurrentImageHost) {
           indicesForPixhost.push(i)
@@ -942,27 +950,27 @@ function collectComparisons (text) {
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const currentIndex = lastIndex
-    for (let type of regexInfo) {
-      const regex = type.regex
+    for (let item of regexInfo) {
+      const regex = item.regex
       regex.lastIndex = lastIndex
       const match = regex.exec(text)
       if (match) {
         const result = { starts: 0, ends: 0, teams: [], urls: [], containerStyle: '', urlType: '', text: '' }
-        result.containerStyle = type.containerStyle
-        result.urlType = type.urlType
-        if (type.groupForTeams >= 0 && type.groupForTeamSplitter >= 0) {
-          let teamSplitter = match[type.groupForTeamSplitter]
-          result.teams = match[type.groupForTeams]
+        result.containerStyle = item.containerStyle
+        result.urlType = item.urlType
+        if (item.groupForTeams >= 0 && item.groupForTeamSplitter >= 0) {
+          let teamSplitter = match[item.groupForTeamSplitter]
+          result.teams = match[item.groupForTeams]
             .split(teamSplitter)
             .map(ele => ele.trim())
         }
-        if (type.groupForUrls >= 0) {
-          const urls = match[type.groupForUrls]
-          if (type.urlType === 'thumbsBbCode') {
+        if (item.groupForUrls >= 0) {
+          const urls = match[item.groupForUrls]
+          if (item.urlType === 'thumbsBbCode') {
             result.urls = urls.match(regexScreenshotsThumbs)
-          } else if (type.urlType === 'imagesBbCode') {
+          } else if (item.urlType === 'imagesBbCode') {
             result.urls = urls.match(regexScreenshotsImages)
-          } else if (type.urlType === 'images') {
+          } else if (item.urlType === 'images') {
             result.urls = urls.match(regexImageUrl)
           }
         }
@@ -1044,7 +1052,7 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
       if (urlType === 'images') {
         urls = await images2ThumbUrls(urls, teams.length, siteName)
       } else if (urlType === 'imagesBbCode') {
-        urls = urls.map(url => url.replace(/\[img\](.+?)\[\/img\]/, '$1'))
+        urls = await images2images(urls, teams.length, siteName)
         urls = await images2ThumbUrls(urls, teams.length, siteName)
       }
       let screenshotsStr = ''
@@ -1064,84 +1072,86 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
         screenshotsStr +
         textToConsume.substring(ends)
     }
-    if (site.quoteStyle === 'writer') {
-      [description] = processTags(
-        textToConsume, 'quote',
-        matchLeft => matchLeft.replace(/\[quote(?:=([^\]]+))\]/g, '[b]$1[/b]\n[quote]'),
-        matchRight => matchRight,
-        true)
-    } else {
-      description = textToConsume
-    }
   } else if (site.screenshotsStyle === 'comparison') {
-    let teamEncode = ''
-    let screenshots = ''
-    let currentScreenshots = 0
-    const teamArray = torrentTitle.match(regexTeamExtraction)
-    if (teamArray) {
-      teamEncode = teamArray[0]
-    }
-    let screenshotsStrAll = ''
     const comparisons = collectComparisons(textToConsume)
+      // 倒序，以保证在替换textToConsume中的内容时，comparison中的starts和ends的有效性
       .sort((a, b) => b.starts - a.starts)
+    // 3张以上截图
+    let screenshotsEncode = ''
+    let comparisonsProcessed = []
     for (let { starts, ends, teams, urls, containerStyle, urlType } of comparisons) {
-      let screenshotsStr = ''
-      if (containerStyle === 'comparison') {
-        urls = await images2images(urls, teams.length, siteName)
-      } else if (containerStyle === 'boxed' || containerStyle === 'titled') {
-        if (urlType === 'thumbsBbCode') {
-          urls = await thumbs2ImageUrls(urls, teams.length, siteName)
-        } else if (urlType === 'imagesBbCode') {
-          urls = urls.map(url => url.replace(/\[img\](.+?)\[\/img\]/, '$1'))
+      let screenshotsConsumed = ''
+      if (containerStyle == 'none' && urlType === 'imagesBbCode') {
+        urls = await images2images(urls, 2, siteName)
+        urls = urls.map(url => `[img]${url}[/img]`)
+        if (urls.length > 0) {
+          screenshotsConsumed = urls.join('\n')
+          screenshotsEncode = screenshotsConsumed
+        }
+      } else {
+        if (containerStyle === 'comparison') {
+          urls = await images2images(urls, teams.length, siteName)
+        } else if (containerStyle === 'boxed' || containerStyle === 'titled') {
+          if (urlType === 'thumbsBbCode') {
+            urls = await thumbs2ImageUrls(urls, teams.length, siteName)
+          } else if (urlType === 'imagesBbCode') {
+            urls = urls.map(url => url.replace(/\[img\](.+?)\[\/img\]/, '$1'))
+          }
+        }
+        if (urls.length > 0) {
+          urls = urls.map(url => url || invalidImageAnchor)
+          screenshotsConsumed = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
+          comparisonsProcessed.push({teams: teams, urls: urls})
         }
       }
-      if (urls.length > 0) {
-        urls = urls.map(url => url || invalidImageAnchor)
-        screenshotsStr = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
-      }
-      screenshotsStrAll = `${screenshotsStr}\n${screenshotsStrAll}`
+      textToConsume = textToConsume.substring(0, starts) +
+        screenshotsConsumed +
+        textToConsume.substring(ends)
+    }
+    if (!screenshotsEncode && comparisonsProcessed.length) {
+      const teamArray = torrentTitle.match(regexTeamExtraction)
       // 如果之前没有获取到teamEncode，直接用Encode赋值，避免后续'includes'判断错误（string.includes('') === true）
-      teamEncode = teamEncode || 'Encode'
-      if (urls.length > 0 && urls.length % teams.length === 0) {
+      let teamEncode = teamArray ? teamArray[0] : 'Encode'
+      let currentScreenshots = 0
+      for (const item of comparisonsProcessed) {
+        let teams = item.teams
+        let urls = item.urls
         if (!teams.find(team => team.toLowerCase() === teamEncode.toLowerCase() || team.toLowerCase() === 'encode')) {
           // 截图对比描述中可能会多一些内容，如 Source vs TayTO<Shout Factory> vs CRiSC<MGM>
           teamEncode = teams.find(team => team.toLowerCase().includes(teamEncode.toLowerCase()) || team.toLowerCase().includes('encode'))
         }
-        if (teamEncode && !screenshots && urls.length / teams.length >= site.minScreenshots) {
+        if (teamEncode && urls.length / teams.length >= site.minScreenshots) {
           for (let i = 0; i < urls.length; i++) {
             let image = urls[i]
             const teamCurrent = teams[i % teams.length]
             if (currentScreenshots < site.maxScreenshots && (teamCurrent.toLowerCase() === 'encode' || teamCurrent.toLowerCase() === teamEncode.toLowerCase())) {
-              if (image.match(/\[img\].+?\[\/img\]/)) {
-                screenshots += image
+              if (image.match(regexScreenshotsImages)) {
+                screenshotsEncode += image
               } else {
-                screenshots += `[img]${image}[/img]`
+                screenshotsEncode += `[img]${image}[/img]`
               }
               currentScreenshots += 1
             }
           }
+          if (currentScreenshots >= site.minScreenshots){
+            break
+          }
         }
       }
-      textToConsume = textToConsume.substring(0, starts) +
-        screenshotsStr +
-        textToConsume.substring(ends)
+      if (screenshotsEncode) {
+        textToConsume += `\n${screenshotsEncode}`
+      }
     }
-    if (screenshots) {
-      screenshotsStrAll += `[b]Screenshots[/b]\n${screenshots}`
-    }
-    let [quotes, remained] = processTags(
+  }
+  // [xxx write ...] -> [b]xxx[/b] [...]
+  if (site.quoteStyle === 'writer') {
+    [description] = processTags(
       textToConsume, 'quote',
-      matchLeft => site.quoteStyle === 'writer'
-        ? matchLeft.replace(/\[quote(?:=([^\]]+))\]/g, '[b]$1[/b]\n[quote]')
-        : matchLeft,
+      matchLeft => matchLeft.replace(/\[quote(?:=([^\]]+))\]/g, '[b]$1[/b]\n[quote]'),
       matchRight => matchRight,
-      false)
-    // 只是为了提取出 boxes
-    let [boxes] = processTags(remained, site.targetBoxTag,
-      matchLeft => matchLeft,
-      matchRight => matchRight,
-      false)
-    description = `${quotes}${boxes}\n${screenshotsStrAll}`
+      true)
+  } else {
+    description = textToConsume
   }
   return [description, mediainfo, torrentTitle]
 }
