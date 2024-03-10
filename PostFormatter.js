@@ -1043,65 +1043,69 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
       torrentTitle = formatTorrentName(torrentTitle)
     }
   }
+  const comparisons = collectComparisons(textToConsume)
+    // 倒序，以保证在替换textToConsume中的内容时，comparison中的starts和ends的有效性
+    .sort((a, b) => b.starts - a.starts)
   if (site.screenshotsStyle === 'conventional') {
-    const comparisons = collectComparisons(textToConsume)
-      .sort((a, b) => b.starts - a.starts)
-    // eslint-disable-next-line no-unused-vars
     for (let { starts, ends, teams, urls, containerStyle, urlType } of comparisons) {
       // convert to titled style no matter what the original style is
-      if (urlType === 'images') {
-        urls = await images2ThumbUrls(urls, teams.length, siteName)
-      } else if (urlType === 'imagesBbCode') {
-        urls = await images2images(urls, teams.length, siteName)
-        urls = await images2ThumbUrls(urls, teams.length, siteName)
-      }
-      let screenshotsStr = ''
-      if (urls.length > 0) {
-        screenshotsStr = `[b]${teams.join(' | ')}[/b]`
-        urls.forEach((url, i) => {
-          url = url || invalidImageAnchor
-          screenshotsStr += (i % teams.length === 0
-            ? '\n' + url
-            : ' ' + url)
-        })
-        screenshotsStr = site.unsupportedTags.includes('center')
-          ? `${screenshotsStr}\n`
-          : `[center]${screenshotsStr}[/center]\n`
+      let screenshotsConsumed = ''
+      if (containerStyle !== 'none') {
+        if (urlType === 'images') {
+          urls = await images2ThumbUrls(urls, teams.length, siteName)
+        } else if (urlType === 'imagesBbCode') {
+          urls = await images2images(urls, teams.length, siteName)
+          urls = await images2ThumbUrls(urls, teams.length, siteName)
+        }
+        if (urls.length > 0) {
+          screenshotsConsumed = `[b]${teams.join(' | ')}[/b]`
+          urls.forEach((url, i) => {
+            url = url || invalidImageAnchor
+            screenshotsConsumed += (i % teams.length === 0
+              ? '\n' + url
+              : ' ' + url)
+          })
+          screenshotsConsumed = site.unsupportedTags.includes('center')
+            ? `${screenshotsConsumed}\n`
+            : `[center]${screenshotsConsumed}[/center]\n`
+        }
+      } else {
+        urls = await images2images(urls, 2, siteName)
+        urls = urls.map(url => `[img]${url}[/img]`)
+        if (urls.length > 0) {
+          screenshotsConsumed = urls.join('\n')
+        }
       }
       textToConsume = textToConsume.substring(0, starts) +
-        screenshotsStr +
+        screenshotsConsumed +
         textToConsume.substring(ends)
     }
   } else if (site.screenshotsStyle === 'comparison') {
-    const comparisons = collectComparisons(textToConsume)
-      // 倒序，以保证在替换textToConsume中的内容时，comparison中的starts和ends的有效性
-      .sort((a, b) => b.starts - a.starts)
     // 3张以上截图
     let screenshotsEncode = ''
     let comparisonsProcessed = []
     for (let { starts, ends, teams, urls, containerStyle, urlType } of comparisons) {
       let screenshotsConsumed = ''
-      if (containerStyle == 'none' && urlType === 'imagesBbCode') {
-        urls = await images2images(urls, 2, siteName)
-        urls = urls.map(url => `[img]${url}[/img]`)
-        if (urls.length > 0) {
-          screenshotsConsumed = urls.join('\n')
-          screenshotsEncode = screenshotsConsumed
-        }
-      } else {
+      if (containerStyle !== 'none') {
         if (containerStyle === 'comparison') {
           urls = await images2images(urls, teams.length, siteName)
         } else if (containerStyle === 'boxed' || containerStyle === 'titled') {
           if (urlType === 'thumbsBbCode') {
             urls = await thumbs2ImageUrls(urls, teams.length, siteName)
           } else if (urlType === 'imagesBbCode') {
-            urls = urls.map(url => url.replace(/\[img\](.+?)\[\/img\]/, '$1'))
+            urls = await images2images(urls, teams.length, siteName)
           }
         }
         if (urls.length > 0) {
           urls = urls.map(url => url || invalidImageAnchor)
           screenshotsConsumed = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
           comparisonsProcessed.push({teams: teams, urls: urls})
+        }
+      } else if (urlType === 'imagesBbCode') {
+        urls = await images2images(urls, 2, siteName)
+        if (urls.length > 0) {
+          screenshotsConsumed = urls.join('\n')
+          screenshotsEncode = screenshotsConsumed
         }
       }
       textToConsume = textToConsume.substring(0, starts) +

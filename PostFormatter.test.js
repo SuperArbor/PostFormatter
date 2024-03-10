@@ -45,6 +45,12 @@ const simpleScreenshotsTests = [{
     urlType: 'images',
     containerStyle: 'comparison',
     length: 540
+  }, {
+    teams: [],
+    numUrls: 4,
+    urlType: 'imagesBbCode',
+    containerStyle: 'none',
+    length: 295
   }]
 }, {
   text: `[/quote]
@@ -57,6 +63,12 @@ const simpleScreenshotsTests = [{
     urlType: 'images',
     containerStyle: 'comparison',
     length: 526
+  }, {
+    teams: [],
+    numUrls: 4,
+    urlType: 'imagesBbCode',
+    containerStyle: 'none',
+    length: 295
   }]
 },{
   text: `
