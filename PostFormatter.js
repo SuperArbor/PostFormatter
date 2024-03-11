@@ -964,6 +964,8 @@ function collectComparisons (text) {
           result.teams = match[item.groupForTeams]
             .split(teamSplitter)
             .map(ele => ele.trim())
+        } else {
+          result.teams = []
         }
         if (item.groupForUrls >= 0) {
           const urls = match[item.groupForUrls]

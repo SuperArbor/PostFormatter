@@ -217,6 +217,24 @@ const simpleScreenshotsTests = [{
     containerStyle: 'titled',
     length: 4495
   }]
+}, {
+  text: `[img]https://img61.pixhost.to/images/119/238035750_237889336_1a.png[/img] [img]https://img61.pixhost.to/images/119/238035752_237889340_2a.png[/img] [img]https://img61.pixhost.to/images/119/238035754_237889345_3a.png[/img] [img]https://img61.pixhost.to/images/119/238035756_237889380_8a.png[/img]
+
+  [box=Source vs SA89 vs D-Z0N3]
+  [url=http://imgbox.com/nuev0hIZ][img]https://thumbs2.imgbox.com/9e/31/nuev0hIZ_t.png[/img][/url] [url=http://imgbox.com/dUkK8F8I][img]https://thumbs2.imgbox.com/d7/82/dUkK8F8I_t.png[/img][/url] [url=http://imgbox.com/Pv21A211][img]https://thumbs2.imgbox.com/8e/2b/Pv21A211_t.png[/img][/url] [url=http://imgbox.com/6QnVQZwF][img]https://thumbs2.imgbox.com/5f/d0/6QnVQZwF_t.png[/img][/url] [url=http://imgbox.com/DxmxAOm2][img]https://thumbs2.imgbox.com/c7/cc/DxmxAOm2_t.png[/img][/url] [url=http://imgbox.com/zLSPYX4g][img]https://thumbs2.imgbox.com/e1/f1/zLSPYX4g_t.png[/img][/url] [url=http://imgbox.com/Z0t95QEJ][img]https://thumbs2.imgbox.com/66/ca/Z0t95QEJ_t.png[/img][/url] [url=http://imgbox.com/01xFPk8U][img]https://thumbs2.imgbox.com/0a/1f/01xFPk8U_t.png[/img][/url] [url=http://imgbox.com/NCOpuwsc][img]https://thumbs2.imgbox.com/f1/2e/NCOpuwsc_t.png[/img][/url] [url=http://imgbox.com/SWvUtub8][img]https://thumbs2.imgbox.com/63/8d/SWvUtub8_t.png[/img][/url] [url=http://imgbox.com/TyQeel8Z][img]https://thumbs2.imgbox.com/59/1d/TyQeel8Z_t.png[/img][/url] [url=http://imgbox.com/tDOzetUt][img]https://thumbs2.imgbox.com/f5/7c/tDOzetUt_t.png[/img][/url] [url=http://imgbox.com/Ne3LyAS2][img]https://thumbs2.imgbox.com/a9/c7/Ne3LyAS2_t.png[/img][/url] [url=http://imgbox.com/vkWmPlNR][img]https://thumbs2.imgbox.com/77/ee/vkWmPlNR_t.png[/img][/url] [url=http://imgbox.com/swffa2aQ][img]https://thumbs2.imgbox.com/11/96/swffa2aQ_t.png[/img][/url][/box]`,
+  result: [{
+    teams: [],
+    numUrls: 4,
+    urlType: 'imagesBbCode',
+    containerStyle: 'none',
+    length: 295
+  }, {
+    teams: ['Source', 'SA89', 'D-Z0N3'],
+    numUrls: 15,
+    urlType: 'thumbsBbCode',
+    containerStyle: 'boxed',
+    length: 1493
+  }]
 }]
 const descriptionTests = {
   [NHD]: [ {
