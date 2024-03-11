@@ -1443,56 +1443,56 @@ function processDescription (siteName, description) {
         torrentInfo.codecInfo = {}
         if (torrentInfo.torrentTitle) {
           // edition
-          torrentInfo.editionInfo.criterionCollection = torrentInfo.torrentTitle.match(/\b(cc|criterion)\b/i)
-          torrentInfo.editionInfo.mastersOfCinema = torrentInfo.torrentTitle.match(/\bmoc\b/i)
-          torrentInfo.editionInfo.directorsCut = torrentInfo.torrentTitle.match(/\b(dc|director('?s)? cut)\b/i)
-          torrentInfo.editionInfo.unrated = torrentInfo.torrentTitle.match(/\bunrated\b/i)
-          torrentInfo.editionInfo.uncut = torrentInfo.torrentTitle.match(/\buncut\b/i)
-          torrentInfo.editionInfo.theatrical = torrentInfo.torrentTitle.match(/\btheatrical\b/i)
-          torrentInfo.editionInfo.extended = torrentInfo.torrentTitle.match(/\bextended\b/i)
-          torrentInfo.editionInfo.remaster4k = torrentInfo.torrentTitle.match(/\b4k remaster\b/i)
-          torrentInfo.editionInfo.remaster = !torrentInfo.editionInfo.remaster4k && torrentInfo.torrentTitle.match(/\bremaster\b/i)
-          torrentInfo.editionInfo.restoration4k = torrentInfo.torrentTitle.match(/\b4k restoration\b/i)
-          torrentInfo.editionInfo.twoInOne = torrentInfo.torrentTitle.match(/\b2in1\b/i)
-          torrentInfo.editionInfo.threeInOne = torrentInfo.torrentTitle.match(/\b3in1\b/i)
-          torrentInfo.editionInfo.hybrid = torrentInfo.torrentTitle.match(/\bhybrid\b/i)
-          torrentInfo.editionInfo.imax = torrentInfo.torrentTitle.match(/\bimax\b/i)
-          torrentInfo.editionInfo.tvCut = torrentInfo.torrentTitle.match(/\btv ?cut\b/i)
-          // source
-          torrentInfo.sourceInfo.remux = torrentInfo.torrentTitle.match(/\bremux\b/i)
-          torrentInfo.sourceInfo.encode = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip|dvdrip|webrip)\b/i)
-          torrentInfo.sourceInfo.bluray = torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip)\b/i)
-          torrentInfo.sourceInfo.hdtv = torrentInfo.torrentTitle.match(/\bhdtv(rip)?\b/i)
-          torrentInfo.sourceInfo.hdrip = torrentInfo.torrentTitle.match(/\bhdrip\b/i)
-          torrentInfo.sourceInfo.webdl = torrentInfo.torrentTitle.match(/\bweb-?dl\b/i)
-          torrentInfo.sourceInfo.webrip = torrentInfo.torrentTitle.match(/\bwebrip\b/i)
-          torrentInfo.sourceInfo.web = torrentInfo.sourceInfo.webdl || torrentInfo.sourceInfo.webrip
-          torrentInfo.sourceInfo.dvd = torrentInfo.torrentTitle.match(/\bdvd(rip)?/i)
-          torrentInfo.sourceInfo.hddvd = torrentInfo.torrentTitle.match(/\bhddvd\b/i)
-          // resolution
-          torrentInfo.standardInfo.res1080p = torrentInfo.torrentTitle.match(/\b1080p\b/i)
-          torrentInfo.standardInfo.res1080i = torrentInfo.torrentTitle.match(/\b1080i\b/i)
-          torrentInfo.standardInfo.res720p = torrentInfo.torrentTitle.match(/\b720p\b/i)
-          torrentInfo.standardInfo.res2160p = torrentInfo.torrentTitle.match(/\b2160p|4k\b/i)
-          torrentInfo.standardInfo.sd = torrentInfo.torrentTitle.match(/\b480p\b/i) || torrentInfo.sourceInfo.dvd
-          torrentInfo.standardInfo.mhd = torrentInfo.torrentTitle.match(/\bmhd\b/i)
+          torrentInfo.editionInfo.criterionCollection = !!torrentInfo.torrentTitle.match(/\b(cc|criterion)\b/i)
+          torrentInfo.editionInfo.mastersOfCinema =     !!torrentInfo.torrentTitle.match(/\bmoc\b/i)
+          torrentInfo.editionInfo.directorsCut =        !!torrentInfo.torrentTitle.match(/\b(dc|director('?s)? cut)\b/i)
+          torrentInfo.editionInfo.unrated =             !!torrentInfo.torrentTitle.match(/\bunrated\b/i)
+          torrentInfo.editionInfo.uncut =               !!torrentInfo.torrentTitle.match(/\buncut\b/i)
+          torrentInfo.editionInfo.theatrical =          !!torrentInfo.torrentTitle.match(/\btheatrical\b/i)
+          torrentInfo.editionInfo.extended =            !!torrentInfo.torrentTitle.match(/\bextended\b/i)
+          torrentInfo.editionInfo.remaster4k =          !!torrentInfo.torrentTitle.match(/\b4k remaster\b/i)
+          torrentInfo.editionInfo.remaster =            !torrentInfo.editionInfo.remaster4k && !!torrentInfo.torrentTitle.match(/\bremaster\b/i)
+          torrentInfo.editionInfo.restoration4k =       !!torrentInfo.torrentTitle.match(/\b4k restoration\b/i)
+          torrentInfo.editionInfo.twoInOne =            !!torrentInfo.torrentTitle.match(/\b2in1\b/i)
+          torrentInfo.editionInfo.threeInOne =          !!torrentInfo.torrentTitle.match(/\b3in1\b/i)
+          torrentInfo.editionInfo.hybrid =              !!torrentInfo.torrentTitle.match(/\bhybrid\b/i)
+          torrentInfo.editionInfo.imax =                !!torrentInfo.torrentTitle.match(/\bimax\b/i)
+          torrentInfo.editionInfo.tvCut =               !!torrentInfo.torrentTitle.match(/\btv ?cut\b/i)
           // processing
-          torrentInfo.processingInfo.raw = torrentInfo.torrentTitle.match(/\b(remux|web-?dl|(bd|dvd)?iso)\b/i)
-          torrentInfo.processingInfo.encode = !torrentInfo.processingInfo.raw
-          torrentInfo.processingInfo.remux = torrentInfo.torrentTitle.match(/\bremux\b/i)
+          torrentInfo.processingInfo.raw =              !!torrentInfo.torrentTitle.match(/\b(remux|web-?dl|(bd|dvd)?iso)\b/i)
+          torrentInfo.processingInfo.encode =           !torrentInfo.processingInfo.raw
+          torrentInfo.processingInfo.remux =            !!torrentInfo.torrentTitle.match(/\bremux\b/i)
+          // source
+          torrentInfo.sourceInfo.remux =                torrentInfo.processingInfo.remux
+          torrentInfo.sourceInfo.encode =               torrentInfo.processingInfo.encode
+          torrentInfo.sourceInfo.bluray =               !!torrentInfo.torrentTitle.match(/\b(blu-?ray|bdrip|uhd)\b/i)
+          torrentInfo.sourceInfo.hdtv =                 !!torrentInfo.torrentTitle.match(/\bhdtv(rip)?\b/i)
+          torrentInfo.sourceInfo.hdrip =                !!torrentInfo.torrentTitle.match(/\bhdrip\b/i)
+          torrentInfo.sourceInfo.webdl =                !!torrentInfo.torrentTitle.match(/\bweb-?dl\b/i)
+          torrentInfo.sourceInfo.webrip =               !!torrentInfo.torrentTitle.match(/\bwebrip\b/i)
+          torrentInfo.sourceInfo.web =                  torrentInfo.sourceInfo.webdl || torrentInfo.sourceInfo.webrip
+          torrentInfo.sourceInfo.dvd =                  !!torrentInfo.torrentTitle.match(/\bdvd(rip)?/i)
+          torrentInfo.sourceInfo.hddvd =                !!torrentInfo.torrentTitle.match(/\bhddvd\b/i)
+          // resolution
+          torrentInfo.standardInfo.res1080p =           !!torrentInfo.torrentTitle.match(/\b1080p\b/i)
+          torrentInfo.standardInfo.res1080i =           !!torrentInfo.torrentTitle.match(/\b1080i\b/i)
+          torrentInfo.standardInfo.res720p =            !!torrentInfo.torrentTitle.match(/\b720p\b/i)
+          torrentInfo.standardInfo.res2160p =           !!torrentInfo.torrentTitle.match(/\b2160p|4k\b/i)
+          torrentInfo.standardInfo.sd =                 !!torrentInfo.torrentTitle.match(/\b480p\b/i) || torrentInfo.sourceInfo.dvd
+          torrentInfo.standardInfo.mhd =                !!torrentInfo.torrentTitle.match(/\bmhd\b/i)
           // codec
-          torrentInfo.codecInfo.h264 = torrentInfo.torrentTitle.match(/\b(avc|h\.?264)\b/i)
-          torrentInfo.codecInfo.x264 = torrentInfo.torrentTitle.match(/\bx264\b/i)
-          torrentInfo.codecInfo.h265 = torrentInfo.torrentTitle.match(/\b(hevc|h\.?265)\b/i)
-          torrentInfo.codecInfo.x265 = torrentInfo.torrentTitle.match(/\bx265\b/i)
-          torrentInfo.codecInfo.x266 = torrentInfo.torrentTitle.match(/\bx266\b/i)
-          torrentInfo.codecInfo.vc1 = torrentInfo.torrentTitle.match(/\bvc-1\b/i)
-          torrentInfo.codecInfo.av1 = torrentInfo.torrentTitle.match(/\bav1\b/i)
-          torrentInfo.codecInfo.mpeg2 = torrentInfo.torrentTitle.match(/\bmpeg-2\b/i)
-          torrentInfo.codecInfo.xvid = torrentInfo.torrentTitle.match(/\bxvid\b/i)
-          torrentInfo.codecInfo.divx = torrentInfo.torrentTitle.match(/\bdivx\b/i)
-          torrentInfo.codecInfo.flac = torrentInfo.torrentTitle.match(/\bflac\b/i)
-          torrentInfo.codecInfo.ape = torrentInfo.torrentTitle.match(/\bape\b/i)
+          torrentInfo.codecInfo.h264 =                  !!torrentInfo.torrentTitle.match(/\b(avc|h\.?264)\b/i)
+          torrentInfo.codecInfo.x264 =                  !!torrentInfo.torrentTitle.match(/\bx264\b/i)
+          torrentInfo.codecInfo.h265 =                  !!torrentInfo.torrentTitle.match(/\b(hevc|h\.?265)\b/i)
+          torrentInfo.codecInfo.x265 =                  !!torrentInfo.torrentTitle.match(/\bx265\b/i)
+          torrentInfo.codecInfo.x266 =                  !!torrentInfo.torrentTitle.match(/\bx266\b/i)
+          torrentInfo.codecInfo.vc1 =                   !!torrentInfo.torrentTitle.match(/\bvc-1\b/i)
+          torrentInfo.codecInfo.av1 =                   !!torrentInfo.torrentTitle.match(/\bav1\b/i)
+          torrentInfo.codecInfo.mpeg2 =                 !!torrentInfo.torrentTitle.match(/\bmpeg-2\b/i)
+          torrentInfo.codecInfo.xvid =                  !!torrentInfo.torrentTitle.match(/\bxvid\b/i)
+          torrentInfo.codecInfo.divx =                  !!torrentInfo.torrentTitle.match(/\bdivx\b/i)
+          torrentInfo.codecInfo.flac =                  !!torrentInfo.torrentTitle.match(/\bflac\b/i)
+          torrentInfo.codecInfo.ape =                   !!torrentInfo.torrentTitle.match(/\bape\b/i)
           // team
           const teamArray = torrentInfo.torrentTitle.match(regexTeamExtraction)
           torrentInfo.team = teamArray ? teamArray[0] : ''
@@ -2004,7 +2004,7 @@ function processDescription (siteName, description) {
               }
               Object.entries(site.movieEditionInfo).forEach(([tagKey, tag]) => {
                 let selectedTags = site.movieEditionSelected.val().trim().split(/\s*\/\s*/i)
-                let toSelect = !!torrentInfo.editionInfo[tagKey]
+                let toSelect = torrentInfo.editionInfo[tagKey]
                 let checker = $(`a[onclick*="${tag}"]`)[0]
                 if (toSelect !== selectedTags.includes(tag)) {
                   checker.click()
