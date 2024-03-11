@@ -945,17 +945,18 @@ async function sendImagesToPixhost (urls, size) {
 }
 // 提取全部对比图信息
 function collectComparisons (text) {
-  const replacements = []
+  const comparisons = []
   let lastIndex = 0
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    const currentIndex = lastIndex
+    let closestMatchIndex = text.length
+    const result = { starts: 0, ends: 0, teams: [], urls: [], containerStyle: '', urlType: '', text: '' }
     for (let item of regexInfo) {
       const regex = item.regex
       regex.lastIndex = lastIndex
       const match = regex.exec(text)
-      if (match) {
-        const result = { starts: 0, ends: 0, teams: [], urls: [], containerStyle: '', urlType: '', text: '' }
+      if (match && match.index < closestMatchIndex) {
+        closestMatchIndex = match.index
         result.containerStyle = item.containerStyle
         result.urlType = item.urlType
         if (item.groupForTeams >= 0 && item.groupForTeamSplitter >= 0) {
@@ -977,13 +978,13 @@ function collectComparisons (text) {
         result.starts = match.index
         result.ends = match.index + match[0].length
         result.text = match[0]
-        replacements.push(result)
-        lastIndex = result.ends
-        break
       }
     }
-    if (lastIndex === currentIndex) {
-      return replacements
+    if (result.ends === 0) {
+      return comparisons
+    } else {
+      lastIndex = result.ends
+      comparisons.push(result)
     }
   }
 }
