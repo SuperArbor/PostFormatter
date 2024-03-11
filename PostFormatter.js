@@ -57,14 +57,12 @@ const regexImageUrl = RegExp(
   regexNormalUrl.source + '?\\.(?:png|jpg)',
   'ig')
 // compare with thumbs
-const regexScreenshotsThumbs = RegExp(
-  '\\[url=' +
-  regexNormalUrl.source + '\\]\\s*\\[img\\]' +
-  regexImageUrl.source + '\\[\\/img\\]\\s*\\[\\/url\\]',
+const regexScreenshotsImages = RegExp(
+  '(?:\\[img\\]' + regexImageUrl.source + '\\[\\/img\\]|\\[img=' + regexImageUrl.source + '\\])',
   'ig')
 // compare with thumbs
-const regexScreenshotsImages = RegExp(
-  '\\[img\\]' + regexImageUrl.source + '\\[\\/img\\]',
+const regexScreenshotsThumbs = RegExp(
+  '\\[url=' + regexNormalUrl.source + '\\]\\s*' + regexScreenshotsImages.source + '\\s*\\[\\/url\\]',
   'ig')
 // complex regexes
 // compare with comparison (GPW style)，封装的是纯图片链接
