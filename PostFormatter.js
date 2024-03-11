@@ -923,9 +923,11 @@ async function sendImagesToPixhost (urls, size) {
             const outputImageNames = resultList.map(item => item.name)
             let thumbUrls = []
             let numFailed = 0
+            // 由于原链接图片失效等原因，输出的链接数量可能小于输入的数量，需要对齐并找出失效图片的位置
             for (const [i, url] of urls.entries()) {
-              let inputImageName = url.replace(/.*?([^/]+)$/, '$1')
-              if (outputImageNames.includes(inputImageName)) {
+              // 输入url的最后一个'/'之后的内容作lowercase，得到outputImageName
+              let inputImageName = url.replace(/.*?([^/]+)$/, '$1').toLowerCase()
+              if (inputImageName === outputImageNames[i - numFailed]) {
                 let result = resultList[i - numFailed]
                 thumbUrls.push(`[url=${result.show_url}][img]${result.th_url}[/img][/url]`)
               } else {
