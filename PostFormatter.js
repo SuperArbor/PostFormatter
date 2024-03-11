@@ -893,7 +893,7 @@ function string2Mediainfo (mediainfoStr) {
 // 发送到PixHost，返回的是带链接的缩略图。返回的Array长度与输入一致，如果有生成失败的缩略图，返回的Array对应元素的值为 ""
 async function sendImagesToPixhost (urls, size) {
   const hostname = 'https://pixhost.to/remote/'
-  const data = encodeURI(`imgs=${urls.join('\r\n')}&content_type=0&max_th_size=${size}`)
+  const data = encodeURI(`imgs=${urls.join('\n')}&content_type=0&max_th_size=${size}`)
   const headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
     Accept: 'application/json',
@@ -976,6 +976,8 @@ function collectComparisons (text) {
           } else if (item.urlType === 'images') {
             result.urls = urls.match(regexImageUrl)
           }
+        } else {
+          result.urls = []
         }
         result.starts = match.index
         result.ends = match.index + match[0].length
