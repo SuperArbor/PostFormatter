@@ -1520,7 +1520,7 @@ function processDescription (siteName, description) {
           torrentInfo.movieInfo = { areaInfo: {} }
           // area
           const areaArray = textToConsume.match(/(?:产\s*地|国\s*家)\s+(.+)$/m)
-          const area = areaArray ? areaArray[1].trim() : ''
+          const area = areaArray ? areaArray[1].split(/\s*\/\s*/)[0].trim() : ''
           if (area.match(/中国大陆/)) {
             torrentInfo.movieInfo.areaInfo.cnMl = true
           } else if (area.match(/香港/)) {
