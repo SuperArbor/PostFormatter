@@ -724,15 +724,25 @@ function formatTorrentName (torrentName) {
 }
 // eslint-disable-next-line no-unused-vars
 function getThumbSize(numTeams, siteName) {
-  return numTeams === 2
+  return numTeams === 1
+    ? 350
+    : numTeams === 2
       ? 300
       : numTeams === 3
         ? 250
         : numTeams === 4
-          ? 190
+          ? 187
           : numTeams === 5
             ? 150
             : 150
+}
+function getInvalidImageAnchor(numTeams, siteName) {
+  let thumbPixels = getThumbSize(numTeams, siteName)
+  let pixelsPerChar = 4
+  let numCharHalf = Math.ceil((thumbPixels / pixelsPerChar - invalidImageAnchor.length) / 2)
+  numCharHalf = Math.max(numCharHalf, 0)
+  let charsHalf = Array(numCharHalf).fill(' ').join('')
+  return charsHalf + invalidImageAnchor + charsHalf
 }
 // decode [url=...][img]...[/img][/url] -> https://1.png
 async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
@@ -1072,7 +1082,7 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
         if (urls.length > 0) {
           screenshotsConsumed = `[b]${teams.join(' | ')}[/b]`
           urls.forEach((url, i) => {
-            url = url || invalidImageAnchor
+            url = url || getInvalidImageAnchor(teams.length, siteName)
             screenshotsConsumed += (i % teams.length === 0
               ? '\n' + url
               : ' ' + url)
@@ -1108,7 +1118,7 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
           urls = []
         }
         if (urls.length > 0) {
-          urls = urls.map(url => url || invalidImageAnchor)
+          urls = urls.map(url => url || getInvalidImageAnchor(teams.length, siteName))
           screenshotsConsumed = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
           comparisonsProcessed.push({teams: teams, urls: urls})
         }
