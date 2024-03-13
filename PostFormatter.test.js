@@ -2,7 +2,11 @@
 const {
   collectComparisons, decomposeDescription, processDescription,
   mediainfo2String, string2Mediainfo, processTags, getTeamSplitterRegex, formatTorrentName,
-  NHD, GPW, PUTAO, TTG, PTERCLUB, MTEAM, UHD} = require('./PostFormatter')
+  NHD, GPW, PUTAO, TTG, PTERCLUB, MTEAM, UHD
+} = require('./PostFormatter')
+const {
+  Bencode
+} = require('./TorrentParser')
 const fs = require('fs')
 const path = require('path')
 const glob = require('glob')
@@ -674,5 +678,18 @@ test('test formatTorrentName', () => {
       console.error(`expected output: ${expectedOutput}, actual output: ${actualOutput}`)
     }
     expect(actualOutput).toBe(expectedOutput)
+  }
+})
+test('test torrent parser', async () => {
+  try {
+    const pathsinput = await glob.glob('./test files/torrents/*.torrent')
+    for (const pathTorrent of pathsinput) {
+      console.log(`Parsing torrent file ${pathTorrent}:`)
+      let data = fs.readFileSync(pathTorrent, { encoding: "binary", flag: "r" })
+      let encoded = Bencode.decode(data)
+      console.log(`file number: ${encoded.info.files.length}`)
+    }
+  } catch (e) {
+      console.log(e.message)
   }
 })
