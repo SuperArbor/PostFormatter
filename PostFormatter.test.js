@@ -17,7 +17,7 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'EbP', 'NTb (different source)'],
     numUrls: 15,
-    urlType: 'thumbsBbCode',
+    urlType: 'thumbBbcode',
     containerStyle: 'boxed',
     length: 1952
   }]
@@ -30,7 +30,7 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'Filtered', 'c0kE', 'PTER', 'HANDJOB'],
     numUrls: 20,
-    urlType: 'thumbsBbCode',
+    urlType: 'thumbBbcode',
     containerStyle: 'titled',
     length: 2729
   }]
@@ -42,13 +42,13 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'Encode'],
     numUrls: 8,
-    urlType: 'images',
-    containerStyle: 'comparison',
+    urlType: 'image',
+    containerStyle: 'boxed',
     length: 540
   }, {
     teams: [],
     numUrls: 4,
-    urlType: 'imagesBbCode',
+    urlType: 'imageBbcode',
     containerStyle: 'none',
     length: 295
   }]
@@ -60,13 +60,13 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'Encode'],
     numUrls: 8,
-    urlType: 'images',
-    containerStyle: 'comparison',
+    urlType: 'image',
+    containerStyle: 'boxed',
     length: 526
   }, {
     teams: [],
     numUrls: 4,
-    urlType: 'imagesBbCode',
+    urlType: 'imageBbcode',
     containerStyle: 'none',
     length: 295
   }]
@@ -86,7 +86,7 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'EbP', 'NTb (different source)'],
     numUrls: 15,
-    urlType: 'thumbsBbCode',
+    urlType: 'thumbBbcode',
     containerStyle: 'boxed',
     length: 1948
   }]
@@ -131,13 +131,13 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'c0kE', 'POH'],
     numUrls: 24,
-    urlType: 'thumbsBbCode',
+    urlType: 'thumbBbcode',
     containerStyle: 'titled',
     length: 2808
   }, {
     teams: ['Source', 'c0kE'],
     numUrls: 24,
-    urlType: 'thumbsBbCode',
+    urlType: 'thumbBbcode',
     containerStyle: 'titled',
     length: 2814
   }]
@@ -148,7 +148,7 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'iFT', 'SOIGNEUR', 'NTG'],
     numUrls: 2,
-    urlType: 'thumbsBbCode',
+    urlType: 'thumbBbcode',
     containerStyle: 'titled',
     length: 224
   }]
@@ -158,7 +158,7 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['Source', 'SA89', 'D-Z0N3'],
     numUrls: 15,
-    urlType: 'thumbsBbCode',
+    urlType: 'thumbBbcode',
     containerStyle: 'boxed',
     length: 1493
   }]
@@ -201,19 +201,19 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: ['USA BD', 'Hybrid(Merged) Source', 'AMZN WEB-DL(Resized)'],
     numUrls: 33,
-    urlType: 'thumbsBbCode',
+    urlType: 'thumbBbcode',
     containerStyle: 'titled',
     length: 4241
   }, {
     teams: ['USA BD', 'Filtered Source', 'eXterminator', 'HiDt'],
     numUrls: 16,
-    urlType: 'thumbsBbCode',
+    urlType: 'thumbBbcode',
     containerStyle: 'titled',
     length: 2070
   }, {
     teams: ['USA BD', 'Hybrid(Merged) Source', 'eXterminator', 'HiDt', 'AMZN 4K(Resized)'],
     numUrls: 35,
-    urlType: 'thumbsBbCode',
+    urlType: 'thumbBbcode',
     containerStyle: 'titled',
     length: 4495
   }]
@@ -225,13 +225,13 @@ const simpleScreenshotsTests = [{
   result: [{
     teams: [],
     numUrls: 4,
-    urlType: 'imagesBbCode',
+    urlType: 'imageBbcode',
     containerStyle: 'none',
     length: 295
   }, {
     teams: ['Source', 'SA89', 'D-Z0N3'],
     numUrls: 15,
-    urlType: 'thumbsBbCode',
+    urlType: 'thumbBbcode',
     containerStyle: 'boxed',
     length: 1493
   }]

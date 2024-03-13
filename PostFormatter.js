@@ -51,68 +51,72 @@ const regexTeamExtraction = RegExp('\\b(?:' + weirdTeamsStr + '|(?:[^\\s-@.]+(?:
 const maxTeamsInComparison = 8
 const maxNonWordsInTitled = 20
 const minScreenshotsNonComparison = 3
-// simple regexes
-const regexNormalUrl = /https?:[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
-const regexImageUrl = RegExp(
-  regexNormalUrl.source + '?\\.(?:png|jpg)',
+// https://url1
+const regexUrl = /https?:[A-Za-z0-9\-._~!$&'()*+;=:@/?]+/i
+// https://1.png
+const regexImage = RegExp(
+  regexUrl.source + '?\\.(?:png|jpg)',
   'ig')
-// compare with thumbs
-const regexScreenshotsImages = RegExp(
-  '(?:\\[img\\]' + regexImageUrl.source + '\\[\\/img\\]|\\[img=' + regexImageUrl.source + '\\])',
+// [img]https://1.png[/img] or [img=https://1.png]
+const regexImageBbcode = RegExp(
+  '(?:\\[img\\]' + regexImage.source + '\\[\\/img\\]|\\[img=' + regexImage.source + '\\])',
   'ig')
-// compare with thumbs
-const regexScreenshotsThumbs = RegExp(
-  '\\[url=' + regexNormalUrl.source + '\\]\\s*' + regexScreenshotsImages.source + '\\s*\\[\\/url\\]',
+// [url=https://url1][img]https://1.png[/img][/url]
+const regexImageThumbBbcode = RegExp(
+  '\\[url=' + regexUrl.source + '\\]\\s*' + regexImageBbcode.source + '\\s*\\[\\/url\\]',
   'ig')
-// complex regexes
-// compare with comparison (GPW style)，封装的是纯图片链接
-const regexScreenshotsComparison = RegExp(
-  '\\[(comparison|box|hide|expand|spoiler|quote)=\\s*(' + regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source +')\\s*' + regexTeam.source + `){1,${maxTeamsInComparison-1}})\\]` +
-  '(\\s*(?:' + regexImageUrl.source + '(?:\\s+|\\s*,)\\s*)+' + regexImageUrl.source + ')\\s*\\[\\/\\1\\]',
-  'mig')
-// 截图模式:包含[box|hide|expand|spoiler|quote=]标签，封装的是缩略图
-const regexScreenshotsThumbsBoxed = RegExp(
+// [box=team1 | team2 | team3][url=https://url1][img]https://1.png[/img][/url] [url=https://url2][img]https://2.png[/img][/url] [url=https://url3][img]https://3.png[/img][/url][/box]
+const regexComparisonThumbBbcodeBoxed = RegExp(
   '\\[(box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' + regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
   regexTeam.source + '(?:\\s*\\3\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}}` +
-  ')\\s*\\]((?:\\s*' + regexScreenshotsThumbs.source + '\\s*)+)\\[\\/\\1\\]',
+  ')\\s*\\]((?:\\s*' + regexImageThumbBbcode.source + '\\s*)+)\\[\\/\\1\\]',
   'mig')
-// 截图模式：不包含[box|hide|expand|spoiler|quote=]标签，封装的是缩略图，要求Source, Encode与截图之间至少有一个换行符
-const regexScreenshotsThumbsTitled = RegExp(
+// team1 | team2 | team3
+// [url=https://url1][img]https://1.png[/img][/url] [url=https://url2][img]https://2.png[/img][/url] [url=https://url3][img]https://3.png[/img][/url]
+const regexComparisonThumbBbcodeTitled = RegExp(
   '\\b(' + regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
   regexTeam.source + '(?:\\s*\\2\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}}` +
-  `)[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*((?:\\s*` + regexScreenshotsThumbs.source + '\\s*)+)',
+  `)[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*((?:\\s*` + regexImageThumbBbcode.source + '\\s*)+)',
   'mig')
-// 截图模式:包含[box|hide|expand|spoiler|quote=]标签，封装的是图片链接BBCode
-const regexScreenshotsImagesBoxed = RegExp(
+// [box=team1 | team2 | team3][img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img][/box]
+const regexComparisonImageBbcodeBoxed = RegExp(
   '\\[(comparison|box|hide|expand|spoiler|quote)\\s*=\\s*\\w*?\\s*(' +
   regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
   regexTeam.source + '(?:\\s*\\3\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}}` +
-  ')\\s*\\]((?:\\s*' + regexScreenshotsImages.source + '\\s*)+)\\[\\/\\1\\]',
+  ')\\s*\\]((?:\\s*' + regexImageBbcode.source + '\\s*)+)\\[\\/\\1\\]',
   'mig')
-// 截图模式：不包含[box|hide|expand|spoiler|quote=]标签，封装的是图片链接，要求Source, Encode与截图之间至少有一个换行符
-const regexScreenshotsImagesTitled = RegExp(
+// team1 | team2 | team3
+// [img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img]
+const regexComparisonImageBbcodeTitled = RegExp(
   '\\b(' + regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source + ')\\s*)' +
   regexTeam.source + '(?:\\s*\\2\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}}` +
-  `)[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*((?:\\s*` + regexScreenshotsImages.source + '\\s*)+)',
+  `)[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*((?:\\s*` + regexImageBbcode.source + '\\s*)+)',
   'mig')
-// 3张以上的纯截图
-const regexScreenshotsImagesNonComparison = RegExp(
-  '(' + regexScreenshotsImages.source + `\\s*){${minScreenshotsNonComparison},}`,
+// [comparison=team1, team2, team3]htttps://1.png htttps://2.png htttps://3.png[/comparison]
+const regexComparisonImageBoxed = RegExp(
+  '\\[(comparison|box|hide|expand|spoiler|quote)=\\s*(' + regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source +')\\s*' + regexTeam.source + `){1,${maxTeamsInComparison-1}})\\]` +
+  '(\\s*(?:' + regexImage.source + '(?:\\s+|\\s*,)\\s*)+' + regexImage.source + ')\\s*\\[\\/\\1\\]',
+  'mig')
+// [img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img]
+const regexNonComparison = RegExp(
+  '(' + regexImageBbcode.source + `\\s*){${minScreenshotsNonComparison},}`,
   'mig')
 // 对比图相关正则表达式信息，由于可能不止一个会被匹配到，注意排序
 const regexInfo = [
-  // [box=team1, team2, team3][url=...][img]https://1.png[/img][/url] [url=...][img]https://2.png[/img][/url] [url=...][img]https://3.png[/img][/url][/box]
-  { regex: regexScreenshotsThumbsBoxed, groupForTeams: 2, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'boxed', urlType: 'thumbsBbCode' },
-  // team1 | team2 | team3\n[url=...][img]https://1.png[/img][/url] [url=...][img]https://2.png[/img][/url] [url=...][img]https://3.png[/img][/url]
-  { regex: regexScreenshotsThumbsTitled, groupForTeams: 1, groupForTeamSplitter: 2, groupForUrls: 3, containerStyle: 'titled', urlType: 'thumbsBbCode' },
-  // [box=team1, team2, team3][img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img][/box]
-  { regex: regexScreenshotsImagesBoxed, groupForTeams: 2, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'boxed', urlType: 'imagesBbCode' },
-  // team1 | team2 | team3\n[img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img]
-  { regex: regexScreenshotsImagesTitled, groupForTeams: 1, groupForTeamSplitter: 2, groupForUrls: 3, containerStyle: 'titled', urlType: 'imagesBbCode' },
-  // [comparison=team1, team2, team3]https://1.png https://2.png https://3.png[/comparison]
-  { regex: regexScreenshotsComparison, groupForTeams: 2, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'comparison', urlType: 'images' },
+  // [box=team1 | team2 | team3][url=https://url1][img]https://1.png[/img][/url] [url=https://url2][img]https://2.png[/img][/url] [url=https://url3][img]https://3.png[/img][/url][/box]
+  { regex: regexComparisonThumbBbcodeBoxed, groupForTeams: 2, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'boxed', urlType: 'thumbBbcode' },
+  // team1 | team2 | team3
+  // [url=https://url1][img]https://1.png[/img][/url] [url=https://url2][img]https://2.png[/img][/url] [url=https://url3][img]https://3.png[/img][/url]
+  { regex: regexComparisonThumbBbcodeTitled, groupForTeams: 1, groupForTeamSplitter: 2, groupForUrls: 3, containerStyle: 'titled', urlType: 'thumbBbcode' },
+  // [box=team1 | team2 | team3][img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img][/box]
+  { regex: regexComparisonImageBbcodeBoxed, groupForTeams: 2, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'boxed', urlType: 'imageBbcode' },
+  // team1 | team2 | team3
   // [img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img]
-  { regex: regexScreenshotsImagesNonComparison, groupForTeams: -1, groupForTeamSplitter: -1, groupForUrls: 0, containerStyle: 'none', urlType: 'imagesBbCode' }
+  { regex: regexComparisonImageBbcodeTitled, groupForTeams: 1, groupForTeamSplitter: 2, groupForUrls: 3, containerStyle: 'titled', urlType: 'imageBbcode' },
+  // [comparison=team1, team2, team3]htttps://1.png htttps://2.png htttps://3.png[/comparison]
+  { regex: regexComparisonImageBoxed, groupForTeams: 2, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'boxed', urlType: 'image' },
+  // [img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img]
+  { regex: regexNonComparison, groupForTeams: -1, groupForTeamSplitter: -1, groupForUrls: 0, containerStyle: 'none', urlType: 'imageBbcode' }
 ]
 const siteInfoMap = {
   // bracket makes the value of the string 'nexushd' the true key or instead the string 'NHD' will be used as key
@@ -778,7 +782,7 @@ async function images2images (imageUrls, numTeams, siteName) {
   let indicesForPixhost = []
   for (const [i, image] of imageUrls.entries()) {
     const imageHostName = Object.keys(imageHostInfoMap).find(ih => image.match(RegExp(escapeRegExp(ih), 'i'))) || ''
-    const match = image.match(RegExp(regexImageUrl.source, 'i'))
+    const match = image.match(RegExp(regexImage.source, 'i'))
     if (match) {
       imageUrls[i] = match[0]
       const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
@@ -828,7 +832,7 @@ async function images2ThumbUrls (imageUrls, numTeams, siteName) {
       }
     } else {
       // 不可从图片链接解析缩略图的图床（如PTPIMG），发送至Pixhost
-      const match = image.match(RegExp(regexImageUrl.source, 'i'))
+      const match = image.match(RegExp(regexImage.source, 'i'))
       if (match) {
         imageUrls[i] = match[0]
         indicesForPixhost.push(i)
@@ -916,7 +920,7 @@ async function sendImagesToPixhost (urls, size) {
             const resultList = upload_results.images
             const notices = upload_results.notices
             if (notices) {
-              notices.forEach(notice => console.error(notice))
+              notices.forEach(notice => console.warn(notice))
             }
             const outputImageNames = resultList.map(item => item.name)
             let thumbUrls = []
@@ -969,12 +973,12 @@ function collectComparisons (text) {
         }
         if (item.groupForUrls >= 0) {
           const urls = match[item.groupForUrls]
-          if (item.urlType === 'thumbsBbCode') {
-            result.urls = urls.match(regexScreenshotsThumbs)
-          } else if (item.urlType === 'imagesBbCode') {
-            result.urls = urls.match(regexScreenshotsImages)
-          } else if (item.urlType === 'images') {
-            result.urls = urls.match(regexImageUrl)
+          if (item.urlType === 'thumbBbcode') {
+            result.urls = urls.match(regexImageThumbBbcode)
+          } else if (item.urlType === 'imageBbcode') {
+            result.urls = urls.match(regexImageBbcode)
+          } else if (item.urlType === 'image') {
+            result.urls = urls.match(regexImage)
           }
         } else {
           result.urls = []
@@ -1056,11 +1060,14 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
       // convert to titled style no matter what the original style is
       let screenshotsConsumed = ''
       if (containerStyle !== 'none') {
-        if (urlType === 'images') {
+        if (urlType === 'image') {
           urls = await images2ThumbUrls(urls, teams.length, siteName)
-        } else if (urlType === 'imagesBbCode') {
+        } else if (urlType === 'imageBbcode') {
           urls = await images2images(urls, teams.length, siteName)
           urls = await images2ThumbUrls(urls, teams.length, siteName)
+        } else if (urlType !== 'thumbBbcode') {
+          console.error(`invalid url type ${urlType}`)
+          urls = []
         }
         if (urls.length > 0) {
           screenshotsConsumed = `[b]${teams.join(' | ')}[/b]`
@@ -1092,21 +1099,20 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
     for (let { starts, ends, teams, urls, containerStyle, urlType } of comparisons) {
       let screenshotsConsumed = ''
       if (containerStyle !== 'none') {
-        if (containerStyle === 'comparison') {
+        if (urlType === 'thumbBbcode') {
+          urls = await thumbs2ImageUrls(urls, teams.length, siteName)
+        } else if (urlType === 'imageBbcode' || urlType === 'image') {
           urls = await images2images(urls, teams.length, siteName)
-        } else if (containerStyle === 'boxed' || containerStyle === 'titled') {
-          if (urlType === 'thumbsBbCode') {
-            urls = await thumbs2ImageUrls(urls, teams.length, siteName)
-          } else if (urlType === 'imagesBbCode') {
-            urls = await images2images(urls, teams.length, siteName)
-          }
+        } else {
+          console.error(`invalid url type ${urlType}`)
+          urls = []
         }
         if (urls.length > 0) {
           urls = urls.map(url => url || invalidImageAnchor)
           screenshotsConsumed = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
           comparisonsProcessed.push({teams: teams, urls: urls})
         }
-      } else if (urlType === 'imagesBbCode') {
+      } else if (urlType === 'imageBbcode') {
         urls = await images2images(urls, 2, siteName)
         urls = urls.map(url => `[img]${url}[/img]`)
         if (urls.length > 0) {
@@ -1135,7 +1141,7 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
             let image = urls[i]
             const teamCurrent = teams[i % teams.length]
             if (currentScreenshots < site.maxScreenshots && (teamCurrent.toLowerCase() === 'encode' || teamCurrent.toLowerCase() === teamEncode.toLowerCase())) {
-              if (image.match(regexScreenshotsImages)) {
+              if (image.match(regexImageBbcode)) {
                 screenshotsEncode += image
               } else {
                 screenshotsEncode += `[img]${image}[/img]`
