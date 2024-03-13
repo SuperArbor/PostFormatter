@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info
-// @version      1.3.2.12
+// @version      1.3.2.13
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -724,6 +724,9 @@ function formatTorrentName (torrentName) {
 }
 // eslint-disable-next-line no-unused-vars
 function getThumbSize(numTeams, siteName) {
+  if (numTeams <= 0) {
+    console.error(`Invalid team number ${numTeams}`)
+  }
   return numTeams === 1
     ? 350
     : numTeams === 2
@@ -737,6 +740,9 @@ function getThumbSize(numTeams, siteName) {
             : 150
 }
 function getInvalidImageAnchor(numTeams, siteName) {
+  if (numTeams <= 0) {
+    console.error(`Invalid team number ${numTeams}`)
+  }
   let thumbPixels = getThumbSize(numTeams, siteName)
   let pixelsPerChar = 4
   let numCharHalf = Math.ceil((thumbPixels / pixelsPerChar - invalidImageAnchor.length) / 2)
@@ -934,18 +940,21 @@ async function sendImagesToPixhost (urls, size) {
             }
             const outputImageNames = resultList.map(item => item.name)
             let thumbUrls = []
-            let numFailed = 0
+            let failedImages = []
             // 由于原链接图片失效等原因，输出的链接数量可能小于输入的数量，需要对齐并找出失效图片的位置
             for (const [i, url] of urls.entries()) {
               // 输入url的最后一个'/'之后的内容作lowercase，得到outputImageName
               let inputImageName = url.replace(/.*?([^/]+)$/, '$1').toLowerCase()
-              if (inputImageName === outputImageNames[i - numFailed]) {
-                let result = resultList[i - numFailed]
+              if (inputImageName === outputImageNames[i - failedImages.length]) {
+                let result = resultList[i - failedImages.length]
                 thumbUrls.push(`[url=${result.show_url}][img]${result.th_url}[/img][/url]`)
               } else {
                 thumbUrls.push('')
-                numFailed++
+                failedImages.push(i + 1)
               }
+            }
+            if (failedImages.length) {
+              console.warn(`Failed images when sending to PIXHOST (indexed from 1): [${failedImages.join(', ')}]`)
             }
             resolve(thumbUrls)
           } else {
@@ -1079,7 +1088,7 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
           console.error(`invalid url type ${urlType}`)
           urls = []
         }
-        if (urls.length > 0) {
+        if (urls.length > 0 && teams.length > 0) {
           screenshotsConsumed = `[b]${teams.join(' | ')}[/b]`
           urls.forEach((url, i) => {
             url = url || getInvalidImageAnchor(teams.length, siteName)
@@ -1117,10 +1126,31 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
           console.error(`invalid url type ${urlType}`)
           urls = []
         }
-        if (urls.length > 0) {
-          urls = urls.map(url => url || getInvalidImageAnchor(teams.length, siteName))
-          screenshotsConsumed = `[comparison=${teams.join(', ')}]${urls.join(' ')}[/comparison]`
-          comparisonsProcessed.push({teams: teams, urls: urls})
+        // comparison style情况下，不仅需要移除无效链接，还要把同一组比较的链接一并删除，否则展示结果是不对齐的
+        if (urls.length > 0 && teams.length > 0) {
+          let urlsFiltered = []
+          let groupsFailed = []
+          for (let i = 0; i < urls.length; i += teams.length) {
+            let currentGroupOk = true
+            for (let j = 0; j < teams.length; j++) {
+              if (!urls[i + j]) {
+                currentGroupOk = false
+                break
+              }
+            }
+            if (currentGroupOk) {
+              for (let j = 0; j < teams.length; j++) {
+                urlsFiltered.push(urls[i + j])
+              }
+            } else {
+              groupsFailed.push(Math.floor(i / teams.length) + 1)
+            }
+          }
+          if (groupsFailed.length) {
+            console.warn(`Failed groups (indexed from 1): [${groupsFailed.join(', ')}] for comparison among [${teams.join(', ')}]`)
+          }
+          screenshotsConsumed = `[comparison=${teams.join(', ')}]${urlsFiltered.join(' ')}[/comparison]`
+          comparisonsProcessed.push({teams: teams, urls: urlsFiltered})
         }
       } else if (urlType === 'imageBbcode') {
         urls = await images2images(urls, 2, siteName)
