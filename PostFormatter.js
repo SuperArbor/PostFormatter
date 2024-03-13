@@ -92,7 +92,7 @@ const regexComparisonImageBbcodeTitled = RegExp(
   regexTeam.source + '(?:\\s*\\2\\s*' + regexTeam.source + `){0,${maxTeamsInComparison-2}}` +
   `)[\\W]{0,${maxNonWordsInTitled}}\\r?\\n+\\s*((?:\\s*` + regexImageBbcode.source + '\\s*)+)',
   'mig')
-// [comparison=team1, team2, team3]htttps://1.png htttps://2.png htttps://3.png[/comparison]
+// [comparison=team1, team2, team3]https://1.png https://2.png https://3.png[/comparison]
 const regexComparisonImageBoxed = RegExp(
   '\\[(comparison|box|hide|expand|spoiler|quote)=\\s*(' + regexTeam.source + '(?:\\s*(' + regexTeamsSplitter.source +')\\s*' + regexTeam.source + `){1,${maxTeamsInComparison-1}})\\]` +
   '(\\s*(?:' + regexImage.source + '(?:\\s+|\\s*,)\\s*)+' + regexImage.source + ')\\s*\\[\\/\\1\\]',
@@ -113,7 +113,7 @@ const regexInfo = [
   // team1 | team2 | team3
   // [img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img]
   { regex: regexComparisonImageBbcodeTitled, groupForTeams: 1, groupForTeamSplitter: 2, groupForUrls: 3, containerStyle: 'titled', urlType: 'imageBbcode' },
-  // [comparison=team1, team2, team3]htttps://1.png htttps://2.png htttps://3.png[/comparison]
+  // [comparison=team1, team2, team3]https://1.png https://2.png https://3.png[/comparison]
   { regex: regexComparisonImageBoxed, groupForTeams: 2, groupForTeamSplitter: 3, groupForUrls: 4, containerStyle: 'boxed', urlType: 'image' },
   // [img]https://1.png[/img] [img]https://2.png[/img] [img]https://3.png[/img]
   { regex: regexNonComparison, groupForTeams: -1, groupForTeamSplitter: -1, groupForUrls: 0, containerStyle: 'none', urlType: 'imageBbcode' }
