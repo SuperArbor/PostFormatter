@@ -1474,7 +1474,12 @@ function processDescription (siteName, description) {
             } else if (infoValue.Format === 'AVI') {
               torrentInfo.videoInfo.container = 'AVI'
             } else {
-              torrentInfo.videoInfo.container = infoValue.Format.trim()
+              if (infoValue.Format) {
+                torrentInfo.videoInfo.container = infoValue.Format.trim()
+              } else {
+                torrentInfo.videoInfo.container = ''
+                console.error('[main] invalid mediainfo (no video format)')
+              }
             }
             // 如果 torrentInfo.torrentTitle 尚未被赋值，直接使用mediainfo 中的值
             torrentInfo.torrentTitle = torrentInfo.torrentTitle ||
@@ -2091,7 +2096,7 @@ function processDescription (siteName, description) {
               site.audioInfo.dtsX.checked = torrentInfo.audioInfo.some(audio => audio.dtsX)
               site.audioInfo.atmos.checked = torrentInfo.audioInfo.some(audio => audio.atmos)
               // GPW的国语配音作为特色属性，特指外语片的译制音轨
-              site.audioInfo.chineseDub.checked = 
+              site.audioInfo.chineseDub.checked =
                 torrentInfo.audioInfo.some(audio => audio.language === 'mandarin' && !audio.commentary) &&
                 torrentInfo.audioInfo.some(audio => audio.language !== 'mandarin' && !audio.commentary)
             }
