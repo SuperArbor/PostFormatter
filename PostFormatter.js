@@ -1440,19 +1440,17 @@ function processDescription (siteName, description) {
                 }
               })
             }
-            const commecialName = infoValue['Commercial name']
-            if (commecialName) {
-              if (commecialName.match(/Dolby Atmos/i)) {
-                audio.atmos = true
-              } else if (commecialName.match(/DTS-HD Master Audio/i)) {
-                audio.dtsX = true
-              }
+            const commecialName = infoValue['Commercial name'] || ''
+            if (commecialName.match(/Dolby Atmos/i)) {
+              audio.atmos = true
+            } else if (commecialName.match(/DTS-HD Master Audio/i)) {
+              audio.dtsX = true
             }
             torrentInfo.audioInfo.push(audio)
           } else if (infoKey.match(/^video/i)) {
             // video
-            const hdrFormat = infoValue['HDR format']
-            const bitDepth = infoValue['Bit depth']
+            const hdrFormat = infoValue['HDR format'] || infoValue['Commercial name'] || ''
+            const bitDepth = infoValue['Bit depth'] || ''
             if (hdrFormat) {
               if (hdrFormat.match(/HDR10\+/i)) {
                 torrentInfo.videoInfo.hdr10plus = true
