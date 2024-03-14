@@ -937,7 +937,7 @@ async function sendImagesToPixhost (images, size) {
             const resultList = upload_results.images
             const notices = upload_results.notices
             if (notices) {
-              notices.forEach(notice => console.warn(`[sendImagesToPixhost] ${notice}`))
+              notices.forEach(notice => console.warn(`[sendImagesToPixhost] notice from PIXHOST: ${notice}`))
             }
             const outputImageNames = resultList.map(item => item.name)
             let thumbBbcodes = []
@@ -960,7 +960,7 @@ async function sendImagesToPixhost (images, size) {
             resolve(thumbBbcodes)
           } else {
             console.log(response)
-            reject(new Error('Failed to upload'))
+            reject(new Error('[sendImagesToPixhost] Failed to upload'))
           }
         }
       }
@@ -1076,19 +1076,19 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
   const comparisons = collectComparisons(textToConsume)
     // 倒序，以保证在替换textToConsume中的内容时，comparison中的starts和ends的有效性
     .sort((a, b) => b.starts - a.starts)
-  console.log(`[decomposeDescription] got ${comparisons.length} comparisons from description. handling them in screenshot style ${site.screenshotsStyle}`)
+  console.log(`[decomposeDescription] got ${comparisons.length} comparisons from description. handling them in screenshot style '${site.screenshotsStyle}'`)
   if (site.screenshotsStyle === 'conventional') {
     for (let { starts, ends, teams, urls, containerStyle, urlType } of comparisons) {
       let screenshotsConsumed = ''
       if (containerStyle !== 'none') {
-        console.log(`[decomposeDescription] comparison: container type '${containerStyle}', url type ${urlType}, teams [${teams.join(', ')}]`)
+        console.log(`[decomposeDescription] comparison: container type '${containerStyle}', url type '${urlType}', teams [${teams.join(', ')}]`)
         if (urlType === 'image') {
           urls = await image2ThumbBbcode(urls, teams.length, siteName)
         } else if (urlType === 'imageBbcode') {
           urls = await image2image(urls, teams.length, siteName)
           urls = await image2ThumbBbcode(urls, teams.length, siteName)
         } else if (urlType !== 'thumbBbcode') {
-          console.error(`[decomposeDescription] invalid url type ${urlType}`)
+          console.error(`[decomposeDescription] invalid url type '${urlType}'`)
           urls = []
         }
         if (urls.length > 0 && teams.length > 0) {
@@ -1122,13 +1122,13 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
     for (let { starts, ends, teams, urls, containerStyle, urlType } of comparisons) {
       let screenshotsConsumed = ''
       if (containerStyle !== 'none') {
-        console.log(`[decomposeDescription] comparison: container type '${containerStyle}', url type ${urlType}, teams [${teams.join(', ')}]`)
+        console.log(`[decomposeDescription] comparison: container type '${containerStyle}', url type '${urlType}', teams [${teams.join(', ')}]`)
         if (urlType === 'thumbBbcode') {
           urls = await thumbBbcode2Image(urls, teams.length, siteName)
         } else if (urlType === 'imageBbcode' || urlType === 'image') {
           urls = await image2image(urls, teams.length, siteName)
         } else {
-          console.error(`[decomposeDescription] invalid url type ${urlType}`)
+          console.error(`[decomposeDescription] invalid url type '${urlType}'`)
           urls = []
         }
         // comparison style情况下，不仅需要移除无效链接，还要把同一组比较的链接一并删除，否则展示结果是不对齐的
