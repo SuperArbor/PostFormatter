@@ -1689,10 +1689,10 @@ function processDescription (siteName, description) {
           }
           if (!site.pullMovieScore) {
             if (torrentInfo.movieInfo.doubanScore) {
-              smallDescrArray.push('豆瓣 ' + torrentInfo.movieInfo.doubanScore + '（' + torrentInfo.movieInfo.doubanScoreRatingNumber + '）')
+              smallDescrArray.push(`豆瓣 ${torrentInfo.movieInfo.doubanScore} (${torrentInfo.movieInfo.doubanScoreRatingNumber})`)
             }
             if (torrentInfo.movieInfo.imdbScore) {
-              smallDescrArray.push('IMDb ' + torrentInfo.movieInfo.imdbScore + '（' + torrentInfo.movieInfo.imdbRatingNumber + '）')
+              smallDescrArray.push(`IMDb ${torrentInfo.movieInfo.imdbScore} (${torrentInfo.movieInfo.imdbRatingNumber})`)
             }
           }
           if (torrentInfo.movieInfo.director) {
