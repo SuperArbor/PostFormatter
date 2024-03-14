@@ -140,7 +140,7 @@ const siteInfoMap = {
     // 是否需要在 box 标签右括号末端加上换行
     boxNeedBreakLine: false,
     // 不支持的标签
-    unsupportedTags: ['align', 'pre'],
+    unsupportedTags: ['align', 'pre', 'email'],
 
     inputFile: $('input[type="file"][name="file"]'),
     nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"), anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
@@ -177,7 +177,7 @@ const siteInfoMap = {
     boxSupportDescr: true,
     quoteStyle: 'title',
     boxNeedBreakLine: false,
-    unsupportedTags: ['align', 'pre'],
+    unsupportedTags: ['align', 'pre', 'email'],
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
     anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
@@ -214,7 +214,7 @@ const siteInfoMap = {
     boxSupportDescr: true,
     quoteStyle: 'none',
     boxNeedBreakLine: false,
-    unsupportedTags: ['align', 'center', 'pre'],
+    unsupportedTags: ['align', 'center', 'pre', 'email'],
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
     anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
@@ -253,7 +253,7 @@ const siteInfoMap = {
     boxSupportDescr: false,
     quoteStyle: 'none',
     boxNeedBreakLine: false,
-    unsupportedTags: ['align', 'pre'],
+    unsupportedTags: ['align', 'pre', 'email'],
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
     anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
@@ -289,7 +289,7 @@ const siteInfoMap = {
     boxSupportDescr: false,
     quoteStyle: 'writer',
     boxNeedBreakLine: false,
-    unsupportedTags: ['align', 'center'],
+    unsupportedTags: ['align', 'center', 'email'],
 
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $("input[type='text'][name='name']"), nameBoxEdit: $("input[type='text'][name='name']"),
     descrBox: $('textarea[name="descr"]'), smallDescBox: $("input[type='text'][name='subtitle']"), subtitleBox: $("input[type='text'][name='highlight']"),
@@ -315,7 +315,7 @@ const siteInfoMap = {
     boxSupportDescr: true,
     quoteStyle: 'writer',
     boxNeedBreakLine: true,
-    unsupportedTags: ['align', 'pre'],
+    unsupportedTags: ['align', 'pre', 'email'],
 
     inputFile: $('#file'),
     mediainfoBox: $('textarea[name="mediainfo[]"]'), descrBox: $('#release_desc'),
@@ -420,7 +420,7 @@ const siteInfoMap = {
     boxSupportDescr: true,
     quoteStyle: 'writer',
     boxNeedBreakLine: true,
-    unsupportedTags: ['align', 'pre'],
+    unsupportedTags: ['align', 'pre', 'email'],
 
     inputFile: $('#file'),
     mediainfoBox: $('textarea[name="mediainfo"]'), descrBox: $('#release_desc'),
