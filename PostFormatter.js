@@ -725,7 +725,7 @@ function formatTorrentName (torrentName) {
 // eslint-disable-next-line no-unused-vars
 function getThumbSize(numTeams, siteName) {
   if (numTeams <= 0) {
-    console.error(`Invalid team number ${numTeams}`)
+    console.error(`[getThumbSize] Invalid team number ${numTeams}`)
   }
   return numTeams === 1
     ? 350
@@ -741,7 +741,7 @@ function getThumbSize(numTeams, siteName) {
 }
 function getInvalidImageAnchor(numTeams, siteName) {
   if (numTeams <= 0) {
-    console.error(`Invalid team number ${numTeams}`)
+    console.error(`[getInvalidImageAnchor] Invalid team number ${numTeams}`)
   }
   let thumbPixels = getThumbSize(numTeams, siteName)
   let pixelsPerChar = 4
@@ -751,13 +751,13 @@ function getInvalidImageAnchor(numTeams, siteName) {
   return charsHalf + invalidImageAnchor + charsHalf
 }
 // decode [url=...][img]...[/img][/url] -> https://1.png
-async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
+async function thumbBbcode2Image (thumbBbcodes, numTeams, siteName) {
   const site = siteInfoMap[siteName]
   const size = getThumbSize(numTeams, siteName)
   const supportPixhost = site.supportedImageHosts ? site.supportedImageHosts.includes(PIXHOST) : true
-  let imageUrls = Array(thumbUrls.length).fill('')
+  let images = Array(thumbBbcodes.length).fill('')
   let indicesForPixhost = []
-  for (const [i, thumb] of thumbUrls.entries()) {
+  for (const [i, thumb] of thumbBbcodes.entries()) {
     const imageHostName = Object.keys(imageHostInfoMap).find(ih => thumb.match(RegExp(escapeRegExp(ih), 'i'))) || ''
     const imageHost = imageHostInfoMap[imageHostName]
     if (!imageHost) {
@@ -768,7 +768,7 @@ async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
     if (pattern) {
       const match = thumb.match(RegExp(pattern.source, 'i'))
       if (match) {
-        imageUrls[i] = match[0].replace(pattern, replacement)
+        images[i] = match[0].replace(pattern, replacement)
         const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
         // 确保转换图床的都是有效url
         if (!supportCurrentImageHost) {
@@ -779,55 +779,55 @@ async function thumbs2ImageUrls (thumbUrls, numTeams, siteName) {
   }
   // 条件supportPixhost 确保了递归调用时supportCurrentImageHost===true，indicesForPixhost必为空（否则可能导致无限循环）
   if (indicesForPixhost.length && supportPixhost) {
-    const urlsForPixhost = imageUrls.filter((_, index) => indicesForPixhost.includes(index))
-    const thumbUrlsFromPixhost = await sendImagesToPixhost(urlsForPixhost, size)
-    const imageUrlsFromPixhost = await thumbs2ImageUrls(thumbUrlsFromPixhost, numTeams, siteName)
+    const imagesForPixhost = images.filter((_, index) => indicesForPixhost.includes(index))
+    const thumbBbcodesFromPixhost = await sendImagesToPixhost(imagesForPixhost, size)
+    const imagesFromPixhost = await thumbBbcode2Image(thumbBbcodesFromPixhost, numTeams, siteName)
     for (let i = 0; i < indicesForPixhost.length; i++) {
-      imageUrls[indicesForPixhost[i]] = imageUrlsFromPixhost[i]
+      images[indicesForPixhost[i]] = imagesFromPixhost[i]
     }
   }
-  return imageUrls
+  return images
 }
 // https://1.png -> https://1.png, change imagehost if necessary
 // 同时[img]https://1.png[/img] -> https://1.png
-async function images2images (imageUrls, numTeams, siteName) {
+async function image2image (images, numTeams, siteName) {
   // const imageUrlsJoined = imageUrls.map(image => image.trim()).join(' ')
   const site = siteInfoMap[siteName]
   const supportPixhost = site.supportedImageHosts ? site.supportedImageHosts.includes(PIXHOST) : true
   const size = getThumbSize(numTeams, siteName)
   let indicesForPixhost = []
-  for (const [i, image] of imageUrls.entries()) {
+  for (const [i, image] of images.entries()) {
     const imageHostName = Object.keys(imageHostInfoMap).find(ih => image.match(RegExp(escapeRegExp(ih), 'i'))) || ''
     const match = image.match(RegExp(regexImage.source, 'i'))
     if (match) {
-      imageUrls[i] = match[0]
+      images[i] = match[0]
       const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
       if (!supportCurrentImageHost) {
         indicesForPixhost.push(i)
       }
     } else {
-      imageUrls[i] = ''
+      images[i] = ''
     }
   }
   if (indicesForPixhost.length && supportPixhost) {
-    const urlsForPixhost = imageUrls.filter((_, index) => indicesForPixhost.includes(index))
-    const thumbUrlsFromPixhost = await sendImagesToPixhost(urlsForPixhost, size)
-    const imageUrlsFromPixhost = await thumbs2ImageUrls(thumbUrlsFromPixhost, numTeams, siteName)
+    const imagesForPixhost = images.filter((_, index) => indicesForPixhost.includes(index))
+    const thumbBbcodesFromPixhost = await sendImagesToPixhost(imagesForPixhost, size)
+    const imagesFromPixhost = await thumbBbcode2Image(thumbBbcodesFromPixhost, numTeams, siteName)
     for (let i = 0; i < indicesForPixhost.length; i++) {
-      imageUrls[indicesForPixhost[i]] = imageUrlsFromPixhost[i]
+      images[indicesForPixhost[i]] = imagesFromPixhost[i]
     }
   }
-  return imageUrls
+  return images
 }
 // https://1.png -> [url=...][img]...[/img][/url]
-async function images2ThumbUrls (imageUrls, numTeams, siteName) {
+async function image2ThumbBbcode (images, numTeams, siteName) {
   const site = siteInfoMap[siteName]
   const size = getThumbSize(numTeams, siteName)
   const supportPixhost = site.supportedImageHosts ? site.supportedImageHosts.includes(PIXHOST) : true
-  let thumbUrls = Array(imageUrls.length).fill('')
+  let thumbBbcodes = Array(images.length).fill('')
   let indicesForPixhost = []
   // const imageUrlsJoined = imageUrls.map(image => image.trim()).join(' ')
-  for (const [i, image] of imageUrls.entries()) {
+  for (const [i, image] of images.entries()) {
     const imageHostName = Object.keys(imageHostInfoMap).find(ih => image.match(RegExp(escapeRegExp(ih), 'i'))) || ''
     const imageHost = imageHostInfoMap[imageHostName]
     let pattern = ''
@@ -839,7 +839,7 @@ async function images2ThumbUrls (imageUrls, numTeams, siteName) {
     if (pattern) {
       const match = image.match(RegExp(pattern.source, 'i'))
       if (match) {
-        thumbUrls[i] = match[0].replace(pattern, replacement)
+        thumbBbcodes[i] = match[0].replace(pattern, replacement)
         const supportCurrentImageHost = site.supportedImageHosts ? site.supportedImageHosts.includes(imageHostName) : true
         // 不支持当前图床，发送至Pixhost
         if (!supportCurrentImageHost) {
@@ -850,19 +850,19 @@ async function images2ThumbUrls (imageUrls, numTeams, siteName) {
       // 不可从图片链接解析缩略图的图床（如PTPIMG），发送至Pixhost
       const match = image.match(RegExp(regexImage.source, 'i'))
       if (match) {
-        imageUrls[i] = match[0]
+        images[i] = match[0]
         indicesForPixhost.push(i)
       }
     }
   }
   if (indicesForPixhost.length && supportPixhost) {
-    const urlsForPixhost = imageUrls.filter((_, index) => indicesForPixhost.includes(index))
-    const thumbUrlsFromPixhost = await sendImagesToPixhost(urlsForPixhost, size)
+    const imagesForPixhost = images.filter((_, index) => indicesForPixhost.includes(index))
+    const thumbBbcodesFromPixhost = await sendImagesToPixhost(imagesForPixhost, size)
     for (let i = 0; i < indicesForPixhost.length; i++) {
-      thumbUrls[indicesForPixhost[i]] = thumbUrlsFromPixhost[i]
+      thumbBbcodes[indicesForPixhost[i]] = thumbBbcodesFromPixhost[i]
     }
   }
-  return thumbUrls
+  return thumbBbcodes
 }
 function mediainfo2String(mediainfo) {
   let mediainfoStr = ''
@@ -911,9 +911,10 @@ function string2Mediainfo (mediainfoStr) {
   return mi
 }
 // 发送到PixHost，返回的是带链接的缩略图。返回的Array长度与输入一致，如果有生成失败的缩略图，返回的Array对应元素的值为 ""
-async function sendImagesToPixhost (urls, size) {
+async function sendImagesToPixhost (images, size) {
+  console.log(`[sendImagesToPixhost] sending ${images.length} images to PIXHOST`)
   const hostname = 'https://pixhost.to/remote/'
-  const data = encodeURI(`imgs=${urls.join('\n')}&content_type=0&max_th_size=${size}`)
+  const data = encodeURI(`imgs=${images.join('\n')}&content_type=0&max_th_size=${size}`)
   const headers = {
     'Content-Type': 'application/x-www-form-urlencoded',
     Accept: 'application/json',
@@ -936,27 +937,27 @@ async function sendImagesToPixhost (urls, size) {
             const resultList = upload_results.images
             const notices = upload_results.notices
             if (notices) {
-              notices.forEach(notice => console.warn(notice))
+              notices.forEach(notice => console.warn(`[sendImagesToPixhost] ${notice}`))
             }
             const outputImageNames = resultList.map(item => item.name)
-            let thumbUrls = []
+            let thumbBbcodes = []
             let failedImages = []
             // 由于原链接图片失效等原因，输出的链接数量可能小于输入的数量，需要对齐并找出失效图片的位置
-            for (const [i, url] of urls.entries()) {
+            for (const [i, image] of images.entries()) {
               // 输入url的最后一个'/'之后的内容作lowercase，得到outputImageName
-              let inputImageName = url.replace(/.*?([^/]+)$/, '$1').toLowerCase()
+              let inputImageName = image.replace(/.*?([^/]+)$/, '$1').toLowerCase()
               if (inputImageName === outputImageNames[i - failedImages.length]) {
                 let result = resultList[i - failedImages.length]
-                thumbUrls.push(`[url=${result.show_url}][img]${result.th_url}[/img][/url]`)
+                thumbBbcodes.push(`[url=${result.show_url}][img]${result.th_url}[/img][/url]`)
               } else {
-                thumbUrls.push('')
+                thumbBbcodes.push('')
                 failedImages.push(i + 1)
               }
             }
             if (failedImages.length) {
-              console.warn(`Failed images when sending to PIXHOST (indexed from 1): [${failedImages.join(', ')}]`)
+              console.warn(`[sendImagesToPixhost] Failed images when sending to PIXHOST (indexed from 1): [${failedImages.join(', ')}]`)
             }
-            resolve(thumbUrls)
+            resolve(thumbBbcodes)
           } else {
             console.log(response)
             reject(new Error('Failed to upload'))
@@ -1041,6 +1042,7 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
     results.push({ 'mediainfo': mi, 'index': mediainfoArray.index, 'length': mediainfoArray[0].length, 'completeName': completeName })
   }
   if (results.length) {
+    console.log(`[decomposeDescription] got ${results.length} mediainfo from description`)
     let encodeResult = { 'mediainfo': {}, 'index': 0, 'length': 0, 'completeName': '' }
     if (results.length === 1) {
       // 匹配到单个mediainfo
@@ -1074,18 +1076,19 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
   const comparisons = collectComparisons(textToConsume)
     // 倒序，以保证在替换textToConsume中的内容时，comparison中的starts和ends的有效性
     .sort((a, b) => b.starts - a.starts)
+  console.log(`[decomposeDescription] got ${comparisons.length} comparisons from description. handling them in screenshot style ${site.screenshotsStyle}`)
   if (site.screenshotsStyle === 'conventional') {
     for (let { starts, ends, teams, urls, containerStyle, urlType } of comparisons) {
-      // convert to titled style no matter what the original style is
       let screenshotsConsumed = ''
       if (containerStyle !== 'none') {
+        console.log(`[decomposeDescription] comparison: container type '${containerStyle}', url type ${urlType}, teams [${teams.join(', ')}]`)
         if (urlType === 'image') {
-          urls = await images2ThumbUrls(urls, teams.length, siteName)
+          urls = await image2ThumbBbcode(urls, teams.length, siteName)
         } else if (urlType === 'imageBbcode') {
-          urls = await images2images(urls, teams.length, siteName)
-          urls = await images2ThumbUrls(urls, teams.length, siteName)
+          urls = await image2image(urls, teams.length, siteName)
+          urls = await image2ThumbBbcode(urls, teams.length, siteName)
         } else if (urlType !== 'thumbBbcode') {
-          console.error(`invalid url type ${urlType}`)
+          console.error(`[decomposeDescription] invalid url type ${urlType}`)
           urls = []
         }
         if (urls.length > 0 && teams.length > 0) {
@@ -1101,7 +1104,8 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
             : `[center]${screenshotsConsumed}[/center]\n`
         }
       } else {
-        urls = await images2images(urls, 2, siteName)
+        console.log(`[decomposeDescription] screenshots of ${urls.length} urls`)
+        urls = await image2image(urls, 2, siteName)
         urls = urls.map(url => `[img]${url}[/img]`)
         if (urls.length > 0) {
           screenshotsConsumed = urls.join('\n')
@@ -1118,12 +1122,13 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
     for (let { starts, ends, teams, urls, containerStyle, urlType } of comparisons) {
       let screenshotsConsumed = ''
       if (containerStyle !== 'none') {
+        console.log(`[decomposeDescription] comparison: container type '${containerStyle}', url type ${urlType}, teams [${teams.join(', ')}]`)
         if (urlType === 'thumbBbcode') {
-          urls = await thumbs2ImageUrls(urls, teams.length, siteName)
+          urls = await thumbBbcode2Image(urls, teams.length, siteName)
         } else if (urlType === 'imageBbcode' || urlType === 'image') {
-          urls = await images2images(urls, teams.length, siteName)
+          urls = await image2image(urls, teams.length, siteName)
         } else {
-          console.error(`invalid url type ${urlType}`)
+          console.error(`[decomposeDescription] invalid url type ${urlType}`)
           urls = []
         }
         // comparison style情况下，不仅需要移除无效链接，还要把同一组比较的链接一并删除，否则展示结果是不对齐的
@@ -1147,13 +1152,14 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
             }
           }
           if (groupsFailed.length) {
-            console.warn(`Failed groups (indexed from 1): [${groupsFailed.join(', ')}] for comparison among [${teams.join(', ')}]`)
+            console.warn(`[decomposeDescription] Failed groups (indexed from 1): [${groupsFailed.join(', ')}] for comparison among [${teams.join(', ')}]`)
           }
           screenshotsConsumed = `[comparison=${teams.join(', ')}]${urlsFiltered.join(' ')}[/comparison]`
           comparisonsProcessed.push({teams: teams, urls: urlsFiltered})
         }
       } else if (urlType === 'imageBbcode') {
-        urls = await images2images(urls, 2, siteName)
+        console.log(`[decomposeDescription] screenshots of ${urls.length} urls`)
+        urls = await image2image(urls, 2, siteName)
         urls = urls.map(url => `[img]${url}[/img]`)
         if (urls.length > 0) {
           screenshotsConsumed = urls.join('\n')
@@ -1168,6 +1174,7 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
       const teamArray = torrentTitle.match(regexTeamExtraction)
       // 如果之前没有获取到teamEncode，直接用Encode赋值，避免后续'includes'判断错误（string.includes('') === true）
       let teamEncode = teamArray ? teamArray[0] : 'Encode'
+      console.log(`[decomposeDescription] extracting screenshots from comparisons with '${teamEncode}' as the encoding team`)
       let currentScreenshots = 0
       for (const item of comparisonsProcessed) {
         let teams = item.teams
@@ -1288,7 +1295,7 @@ function processDescription (siteName, description) {
   if (!siteName || !page) {
     return
   }
-  console.log(`running in site ${siteName} and page ${page}`)
+  console.log(`[main] running in site ${siteName} and page ${page}`)
   if (page === 'upload' || page === 'edit') {
     //= ========================================================================================================
     // 上传和编辑种子页面
@@ -1475,12 +1482,12 @@ function processDescription (siteName, description) {
               formatTorrentName(infoValue['Movie name'])
           }
         })
-        console.log(`video: { 10 bits: ${torrentInfo.videoInfo.bit10}, HDR10: ${torrentInfo.videoInfo.hdr10}, HDR10+: ${torrentInfo.videoInfo.hdr10plus}, Dolby Vision: ${torrentInfo.videoInfo.dovi}, container: ${torrentInfo.videoInfo.container} }`)
+        console.log(`[main] video: { 10 bits: ${torrentInfo.videoInfo.bit10}, HDR10: ${torrentInfo.videoInfo.hdr10}, HDR10+: ${torrentInfo.videoInfo.hdr10plus}, Dolby Vision: ${torrentInfo.videoInfo.dovi}, container: ${torrentInfo.videoInfo.container} }`)
         torrentInfo.audioInfo.forEach(audio => {
-          console.log(`audio: { language: ${audio.language}, commentary: ${audio.commentary}, Atmos: ${audio.atmos}, DtsX: ${audio.dtsX} }`)
+          console.log(`[main] audio: { language: ${audio.language}, commentary: ${audio.commentary}, Atmos: ${audio.atmos}, DtsX: ${audio.dtsX} }`)
         })
         torrentInfo.subtitleInfo.forEach(subtitle => {
-          console.log(`subtitle: { language: ${subtitle.language}, commentary: ${subtitle.commentary} }`)
+          console.log(`[main] subtitle: { language: ${subtitle.language}, commentary: ${subtitle.commentary} }`)
         })
         //= ========================================================================================================
         // info from title
@@ -2055,6 +2062,7 @@ function processDescription (siteName, description) {
                 let toSelect = torrentInfo.editionInfo[tagKey]
                 let checker = $(`a[onclick*="${tag}"]`)[0]
                 if (toSelect !== selectedTags.includes(tag)) {
+                  console.log(`[main] edition ${tag}`)
                   checker.click()
                 }
               })
