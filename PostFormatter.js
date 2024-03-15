@@ -1338,6 +1338,17 @@ function processDescription (siteName, description) {
         })
         const bbcodeToolbar = $('div.BBCodeToolbar').closest('#description-container').find('div.BBCodeToolbar')
         bbcodeToolbar.append(btnBingo)
+        // 如果没有"hide"按钮，添加一个
+        if (bbcodeToolbar.find('button[data-cmd="hide"]').length === 0) {
+          const btnHide = $('<input>').attr({
+            type: 'button',
+            class: 'BBCodeToolbar-button',
+            'data-cmd': 'hide',
+            value: '{H}',
+            style: 'font-weight: bold; color: white;'
+          })
+          bbcodeToolbar.find('button[data-cmd="code"]').after(btnHide)
+        }
       } else if (siteName === UHD) {
         btnBingo.attr({
           type: 'button',
