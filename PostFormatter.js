@@ -489,7 +489,7 @@ const imageHostInfoMap = {
   [IMG4K]: {
     images2Thumbs: null,
     thumbs2Images: {
-      pattern: /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.md\.png\[\/img\]\s*\[\/url\]/gi,
+      pattern: /\[url=[A-Za-z0-9\-._~!$&'()*+,;=:@/?]+\]\s*\[img\]([A-Za-z0-9\-._~!$&'()*+,;=:@/?]+)\.(?:md|th)\.png\[\/img\]\s*\[\/url\]/gi,
       replacement: '$1.png'
     }
   },
