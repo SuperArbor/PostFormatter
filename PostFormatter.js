@@ -41,7 +41,7 @@ const languageMap = {chinese_simplified: 'chs|zh', chinese_traditional: 'cht', m
 const invalidImageAnchor = 'NA'
 const weirdTeamsStr = weirdTeams.map(team => `(?:${escapeRegExp(team)})`).join('|')
 // 用于提取截图对比的多个压制组
-const regexTeam = RegExp('\\b(?:(?:' + weirdTeamsStr + '|\\w[\\w-. ]+)) ?(?:(?:\\([\\w-. ]+\\)|<[\\w-. ]+>|\\[[\\w-. ]+\\]) ?(?:[\\w-. ]+)?)?', 'i')
+const regexTeam = RegExp('\\b(?:(?:' + weirdTeamsStr + '|\\w[\\w-.#@~!$&* ]+)) ?(?:(?:\\([\\w-.#@~!$&* ]+\\)|<[\\w-.#@~!$&* ]+>|\\[[\\w-.#@~!$&* ]+\\]) ?(?:[\\w-.#@~!$&* ]+)?)?', 'i')
 // const regexTeamsSplitter = /\||,|\/|(?<!D)-(?=Z0N3)|(?<=D)-(?!Z0N3)|(?<!WEB)-(?=DL)|(?<=WEB)-(?!DL)|(?<!WEB|D)-(?!DL|Z0N3)| v\.?s\.? |>\s*v\.?s\.?\s*</i
 const allTeamSplitters = [',', '|', '/', ' vs ', ' vs. ', ' v.s ', ' v.s. ', '> vs <', ' - ']
 const [regexTeamsSplitter] = getTeamSplitterRegex(weirdTeams, allTeamSplitters, 'i')
