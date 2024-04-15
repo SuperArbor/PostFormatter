@@ -1426,9 +1426,15 @@ function processDescription (siteName, description) {
               }
             } else {
               Object.keys(languageMap).forEach(lang => {
-                if (languageRaw.match(RegExp(escapeRegExp(lang), 'i')) || languageRaw.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
-                  subtitle.language = lang
+                if (subtitle.language) {
                   return
+                } else {
+                  // cases like Spanish (Latin America) will match latin
+                  let language = languageRaw.replace(/\(.+\)/, '').trim()
+                  if (language.match(RegExp(escapeRegExp(lang), 'i')) || language.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
+                    subtitle.language = lang
+                    return
+                  }
                 }
               })
             }
@@ -1445,9 +1451,15 @@ function processDescription (siteName, description) {
               audio.language = 'mandarin'
             } else {
               Object.keys(languageMap).forEach(lang => {
-                if (languageRaw.match(RegExp(escapeRegExp(lang), 'i')) || languageRaw.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
-                  audio.language = lang
+                if (audio.language) {
                   return
+                } else {
+                  // cases like Spanish (Latin America) will match latin
+                  let language = languageRaw.replace(/\(.+\)/, '').trim()
+                  if (language.match(RegExp(escapeRegExp(lang), 'i')) || language.match(RegExp(escapeRegExp(lang.replace(/_/ig, ' ')), 'i'))) {
+                    audio.language = lang
+                    return
+                  }
                 }
               })
             }
