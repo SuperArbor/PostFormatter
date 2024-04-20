@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info
-// @version      1.3.2.13
+// @version      1.3.2.15
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -25,7 +25,7 @@ const NHD = 'nexushd'; const PUTAO = 'pt.sjtu'; const MTEAM = 'm-team'; const TT
 const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'; const KSHARE = 'kshare.club'; const PIXHOST = 'pixhost'; const IMGBOX = 'imgbox'; const IMG4K = 'img4k'; const ILIKESHOTS = 'yes.ilikeshots.club'
 // 特殊组名备注
 const weirdTeams = ['de[42]', 'D-Z0N3', 'WEB-DL']
-const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'
+const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'; const MTORRENT = 'mTorrent'
 const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
 // 匿名发布开关
 const ANONYMOUS = true
@@ -244,30 +244,36 @@ const siteInfoMap = {
   [MTEAM]: {
     hostName: 'm-team.cc',
     pages: {
-      upload: 'upload.php',
-      edit: 'edit.php',
-      subtitles: 'subtitles.php'
+      upload: 'upload',
+      edit: 'upload',
+      subtitles: 'subtitles'
     },
-    construct: NEXUSPHP,
+    construct: MTORRENT,
     targetBoxTag: 'expand',
     boxSupportDescr: false,
     quoteStyle: 'none',
     boxNeedBreakLine: false,
     unsupportedTags: ['align', 'pre', 'email'],
 
-    inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"),
-    anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
-    descrBox: $('#descr'), smallDescBox: $("input[name='small_descr']"),
-    imdbLinkBox: $("input[name='url'][type='text']"),
-    categorySel: $('#browsecat'), teamSel: $("select[name='team_sel']"), standardSel: $("select[name='standard_sel']"), areaSel: $("select[name='processing_sel']"), codecSel: $("select[name='codec_sel']"),
-    chsubCheck: $("input[type='checkbox'][name='l_sub']")[0], chdubCheck: $("input[type='checkbox'][name='l_dub']")[0],
+    inputFile: $('#torrent-input'), nameBoxUpload: $('#name'), nameBoxEdit: $('#name'),
+    anonymousControl: $("#anonymous")[0],
+    descrBox: $('#descr'), smallDescBox: $('#smallDescr'),
+    imdbLinkBox: $('#imdb'), doubanLinkBox: $('#douban'),
+    categorySel: $('#category'),
+    sourceSel: $('#source'), standardSel: $("#standard"), videoCodecSel: $("#videoCodec"), audioCodecSel: $('#audioCodec'),
+    mediumSel: $('#medium'), teamSel: $("#team"), areaSel: $("#processing"),
+    chsubCheck: $("input[type='checkbox'][value='sub']")[0], chdubCheck: $("input[type='checkbox'][value='dub']")[0],
+    mediainfoBox: $('#mediainfo'),
 
     pullMovieScore: true, translatedChineseNameInTitle: false, doubanIdInsteadofLink: false,
     screenshotsStyle: 'conventional',
-    categoryInfo: { default: 0, movieHd: 419, movieRemux: 439, tvSeriesHd: 402, documentary: 404, animation: 405 },
-    areaInfo: { default: 0, cnMl: 1, euAme: 2, hkTw: 3, jap: 4, kor: 5, other: 6 },
+    categoryInfo: { default: 0, movieSd: 401, movieHd: 419, movieRemux: 439, tvSeriesHd: 402, documentary: 404, animation: 405 },
+    sourceInfo: { bluray: 1, dvd: 3, hdtv: 4, tv: 5, other: 6, cd: 7 },
     standardInfo: { default: 0, res1080p: 1, res1080i: 2, res720p: 3, res2160p: 6, sd: 5 },
-    codecInfo: { default: 0, h264: 1, vc1: 2, h265: 16, xvid: 3, mpeg2: 4, flac: 5, ape: 10 },
+    videoCodecInfo: { default: 0, h264: 1, vc1: 2, h265: 16, xvid: 3, mpeg2: 4, mpeg4: 15, av1: 19 },
+    audioCodecInfo: { default: 0, flac: 1, ape: 2, dts: 3, mp3: 4, ogg: 5, aac: 6, other: 7, ac3: 8 },
+    mediumInfo: { default: 0, bluray: 2, hddvd: 2, remux: 3, minibd: 4, hdtv: 5, dvdr: 6, encode: 7, cd: 8, track: 9, webdl: 10 },
+    areaInfo: { default: 0, cnMl: 1, euAme: 2, hkTw: 3, jap: 4, kor: 5, other: 6 },
 
     inputFileSubtitle: $('input[type="file"][name="file[]"]'),
     titleBoxSubtitle: $('input[type="text"][name="title[]"]'),
@@ -1302,7 +1308,7 @@ function processDescription (siteName, description) {
     const nameBox = page === 'upload'
       ? site.nameBoxUpload
       : site.nameBoxEdit
-    const btnBingo = $('<input>')
+    let btnBingo = $('<input>')
     if (site.construct === NEXUSPHP) {
       btnBingo.attr({
         type: 'button',
@@ -1363,6 +1369,18 @@ function processDescription (siteName, description) {
         const bbcodeToolbar = $('div.wysibb-toolbar').closest('#textarea_wrap_0').find('div.wysibb-toolbar')
         bbcodeToolbar.append(divBingo)
       }
+    } else if (site.construct === MTORRENT) {
+      if (siteName === MTEAM) {
+        btnBingo = $('<button>', {
+          type: 'button',
+          class: 'toolbar-item',
+          value: 'BINGO',
+          title: 'BINGO',
+          'aria-label': 'BINGO',
+          style: 'font-weight: bold; color: white;'
+        })
+      }
+      $('button.toolbar-item').find('i.markdown').parent().after(btnBingo)
     }
     // function definition
     btnBingo.on('click', async () => {
@@ -1389,6 +1407,8 @@ function processDescription (siteName, description) {
             btnBingo.focus()
           }
           textToConsume = readClipboard ? await navigator.clipboard.readText() : oldText
+        } else if (site.construct === MTORRENT) {
+          console.log()
         }
         textToConsume = processDescription(siteName, textToConsume)
         // 为了在未选择种子文件的情况下也能获取torrentTitle，将torrentTitle中信息的识别放到mediainfo之后
