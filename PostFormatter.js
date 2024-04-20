@@ -878,7 +878,7 @@ function mediainfo2String(mediainfo) {
     })
     mediainfoStr += '\n'
   })
-  return mediainfoStr
+  return mediainfoStr.trim()
 }
 function string2Mediainfo (mediainfoStr) {
   let mi = {}
