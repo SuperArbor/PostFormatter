@@ -951,7 +951,7 @@ async function sendImagesToPixhost (images, size) {
             // 由于原链接图片失效等原因，输出的链接数量可能小于输入的数量，需要对齐并找出失效图片的位置
             for (const [i, image] of images.entries()) {
               // 输入url的最后一个'/'之后的内容作lowercase，得到outputImageName
-              let inputImageName = image.replace(/.*?([^/]+)$/, '$1').toLowerCase()
+              let inputImageName = image.replace(/.*?([^/]+)$/, '$1').toLowerCase().replace(/\.(?!\w+$)/, '-')
               if (inputImageName === outputImageNames[i - failedImages.length]) {
                 let result = resultList[i - failedImages.length]
                 thumbBbcodes.push(`[url=${result.show_url}][img]${result.th_url}[/img][/url]`)
@@ -1578,7 +1578,7 @@ function processDescription (siteName, description) {
           torrentInfo.standardInfo.res1080p =           !!torrentInfo.torrentTitle.match(/\b1080p\b/i)
           torrentInfo.standardInfo.res1080i =           !!torrentInfo.torrentTitle.match(/\b1080i\b/i)
           torrentInfo.standardInfo.res720p =            !!torrentInfo.torrentTitle.match(/\b720p\b/i)
-          torrentInfo.standardInfo.res2160p =           !!torrentInfo.torrentTitle.match(/\b(2160p|4k(?!= ?remaster| ?restoration))\b/i)
+          torrentInfo.standardInfo.res2160p =           !!torrentInfo.torrentTitle.match(/\b(2160p|4k(?! ?remaster| ?restoration))\b/i)
           torrentInfo.standardInfo.sd =                 !!torrentInfo.torrentTitle.match(/\b480p\b/i) || torrentInfo.sourceInfo.dvd
           torrentInfo.standardInfo.mhd =                !!torrentInfo.torrentTitle.match(/\bmhd\b/i)
           // codec
