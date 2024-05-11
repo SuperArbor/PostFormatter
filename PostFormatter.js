@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name         Post Formatter
 // @description  Format upload info
-// @version      1.3.2.15
+// @version      1.3.2.16
 // @author       Anonymous inspired by Secant(TYT@NexusHD)
 // @match        *.nexushd.org/*
 // @match        pterclub.com/*
@@ -11,6 +11,8 @@
 // @match        totheglory.im/*
 // @match        greatposterwall.com/*
 // @match        uhdbits.org/*
+// @match        hd-torrents.org/*
+// @match        hd-torrents.net/*
 // @grant        GM_xmlhttpRequest
 // @require      https://cdn.staticfile.org/jquery/2.1.4/jquery.js
 // @require      https://code.jquery.com/jquery-migrate-1.0.0.js
@@ -21,11 +23,11 @@
 //= ========================================================================================================
 // constants and configurations
 const $ = window.jQuery
-const NHD = 'nexushd'; const PUTAO = 'pt.sjtu'; const MTEAM = 'm-team'; const TTG = 'totheglory'; const GPW = 'greatposterwall'; const UHD = 'uhdbits'
+const NHD = 'nexushd'; const PUTAO = 'pt.sjtu'; const MTEAM = 'm-team'; const TTG = 'totheglory'; const GPW = 'greatposterwall'; const UHD = 'uhdbits'; const HDT = 'hd-torrents'
 const PTERCLUB = 'pterclub'; const IMGPILE = 'imgpile'; const PTPIMG = 'ptpimg'; const KSHARE = 'kshare.club'; const PIXHOST = 'pixhost'; const IMGBOX = 'imgbox'; const IMG4K = 'img4k'; const ILIKESHOTS = 'yes.ilikeshots.club'
 // 特殊组名备注
 const weirdTeams = ['de[42]', 'D-Z0N3', 'WEB-DL']
-const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'; const MTORRENT = 'mTorrent'
+const NEXUSPHP = 'nexusphp'; const GAZELLE = 'gazelle'; const MTORRENT = 'mTorrent'; const UNKNOWN = 'unknown'
 const allTagBoxes = ['box', 'hide', 'spoiler', 'expand']
 // 匿名发布开关
 const ANONYMOUS = true
@@ -143,7 +145,8 @@ const siteInfoMap = {
     unsupportedTags: ['align', 'pre', 'email'],
 
     inputFile: $('input[type="file"][name="file"]'),
-    nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"), anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
+    nameBoxUpload: $('#name'), nameBoxEdit: $("input[type='text'][name='name']"), 
+    anonymousControl: $("input[name='uplver'][type='checkbox']")[0],
     descrBox: $('#descr'), smallDescBox: $("input[name='small_descr']"),
     imdbLinkBox: $("input[name='url'][type='text']"), doubanLinkBox: $("input[name='douban_url']"),
     categorySel: $('#browsecat'), sourceSel: $("select[name='source_sel']"), standardSel: $("select[name='standard_sel']"), processingSel: $("select[name='processing_sel']"), codecSel: $("select[name='codec_sel']"),
@@ -300,7 +303,8 @@ const siteInfoMap = {
     inputFile: $('input[type="file"][name="file"]'), nameBoxUpload: $("input[type='text'][name='name']"), nameBoxEdit: $("input[type='text'][name='name']"),
     descrBox: $('textarea[name="descr"]'), smallDescBox: $("input[type='text'][name='subtitle']"), subtitleBox: $("input[type='text'][name='highlight']"),
     imdbLinkBox: $("input[name='imdb_c'][type='text']"), doubanLinkBox: $("input[name='douban_id'][type='text']"),
-    categorySel: $('select[name="type"]'), anonymousControl: $('select[name="anonymity"]'),
+    categorySel: $('select[name="type"]'), 
+    anonymousControl: $('select[name="anonymity"]'),
 
     pullMovieScore: true, translatedChineseNameInTitle: false, doubanIdInsteadofLink: true,
     screenshotsStyle: 'conventional',
@@ -431,7 +435,8 @@ const siteInfoMap = {
     inputFile: $('#file'),
     mediainfoBox: $('textarea[name="mediainfo"]'), descrBox: $('#release_desc'),
     sourceSel: $('select[id="media"]'), codecSel: $('select[id="codec"]'), standardSel: $('select[id="format"]'), teamBox: $('input[type="text"][id="team"]'),
-    categorySel: $('select[id="categories"]'), anonymousControl: $('input[type="checkbox"][id="anonymous"]')[0],
+    categorySel: $('select[id="categories"]'), 
+    anonymousControl: $('input[type="checkbox"][id="anonymous"]')[0],
     hdrSel: $('select[id="hdr"]'), seasonSel: $('select[id="season"]'),
     movieEditionSelected: $('input[type="text"][id="Version"]'),
     movieEditionInfo: {
@@ -469,6 +474,45 @@ const siteInfoMap = {
     subtitleInfo: {
       default: '', english: 'English', vietnamese: 'Vietnamese', danish: 'Danish', norwegian: 'Norwegian', finnish: 'Finnish', spanish: 'Spanish', french: 'French'
     }
+  },
+  [HDT]: {
+    hostName: 'hd-torrents.org',
+    pages: {
+      upload: 'upload.php',
+      edit: 'torrents.php?action=edit',
+      subtitles: 'subtitle.php'
+    },
+    construct: UNKNOWN,
+    targetBoxTag: '',
+    boxSupportDescr: true,
+    quoteStyle: 'writer',
+    boxNeedBreakLine: true,
+    unsupportedTags: ['align', 'pre', 'email'],
+    removeMediaInfo: true,
+
+    inputFile: $('file[name="torrent"]'),
+    nameBoxUpload: $("input[type='text'][name='filename']"), nameBoxEdit: $("input[type='text'][name='filename']"),
+    imdbLinkBox: $("input[name='infosite'][type='text']"), discogsLinkBox: $("input[name='infodiscogssite'][type='text']"),
+    descrBox: $('textarea[name="info"]'),
+    threeDSel: $('select[name="3d"]'),
+    categorySel: $('select[name="category"]'), 
+    anonymousControl: $('input[type="radio"][name="anonymous"][value="true"]')[0],
+    videoInfo: {
+      hdr10: $('input[type="checkbox"][name="HDR10"]')[0],
+      hdr10plus: $('input[type="checkbox"][name="HDR10Plus"]')[0],
+      dovi: $('input[type="checkbox"][name="DolbyVision"]')[0],
+      atmos: $('input[type="checkbox"][name="DolbyAtmos"]')[0]
+    },
+    fullSeasonSel: $('select[name="season"]'),
+    
+    pullMovieScore: false, translatedChineseNameInTitle: false,
+    screenshotsStyle: 'conventional',
+    threeDInfo: { default: 'false', no: 'false', yes: 'true' },
+    categoryInfo: { default: '0',
+      movie2160p: '64', movie1080ip: '5', movie720p: '3', 
+      tvSeries2160p: '65', tvSeries1080ip: '30', tvSeries720p: '38', 
+    },
+    fullSeansonInfo: { default: 'false', no: 'false', yes: 'true' }
   }
 }
 const imageHostInfoMap = {
@@ -1023,7 +1067,7 @@ function collectComparisons (text) {
   }
 }
 // 从简介中提取信息并格式化截图
-async function decomposeDescription (siteName, textToConsume, mediainfoStr, torrentTitle) {
+async function decomposeDescription (siteName, textToConsume, mediainfoStr, torrentTitle, removeMediaInfo=false) {
   let mediainfo = {}
   let description = ''
   const site = siteInfoMap[siteName]
@@ -1064,7 +1108,7 @@ async function decomposeDescription (siteName, textToConsume, mediainfoStr, torr
     }
     mediainfo = encodeResult.mediainfo
     // if the site has a place to fill out the mediainfo, remove it in the description box
-    if (site.mediainfoBox && encodeResult.length) {
+    if (removeMediaInfo && encodeResult.length) {
       textToConsume = textToConsume.substring(0, encodeResult.index) +
         textToConsume.substring(encodeResult.index + encodeResult.length)
     }
@@ -1381,6 +1425,16 @@ function processDescription (siteName, description) {
         })
       }
       $('button.toolbar-item').find('i.markdown').parent().after(btnBingo)
+    } else {
+      if (siteName === HDT) {
+        btnBingo.attr({
+          type: 'button',
+          name: 'bingo',
+          value: 'BINGO',
+          style: 'font-weight: bold; color: blue; margin-right: 5px'
+        })
+        $('#uploadPreview').after(btnBingo)
+      }
     }
     // function definition
     btnBingo.on('click', async () => {
@@ -1409,6 +1463,12 @@ function processDescription (siteName, description) {
           textToConsume = readClipboard ? await navigator.clipboard.readText() : oldText
         } else if (site.construct === MTORRENT) {
           console.log()
+        } else {
+          if (siteName === HDT) {
+            const oldText = site.descrBox.val()
+            let readClipboard = !oldText
+            textToConsume = readClipboard ? await navigator.clipboard.readText() : oldText
+          }
         }
         textToConsume = processDescription(siteName, textToConsume)
         // 为了在未选择种子文件的情况下也能获取torrentTitle，将torrentTitle中信息的识别放到mediainfo之后
@@ -1421,8 +1481,9 @@ function processDescription (siteName, description) {
         }
         //= ========================================================================================================
         let mediainfoStr = site.mediainfoBox ? site.mediainfoBox.val() : ''
+        const removeMediaInfo = site.removeMediaInfo || !!site.mediainfoBox
         // decompose description (and generate comparison screenshots)
-        ;[textToConsume, torrentInfo.mediainfo, torrentInfo.torrentTitle] = await decomposeDescription(siteName, textToConsume, mediainfoStr, torrentInfo.torrentTitle)
+        ;[textToConsume, torrentInfo.mediainfo, torrentInfo.torrentTitle] = await decomposeDescription(siteName, textToConsume, mediainfoStr, torrentInfo.torrentTitle, removeMediaInfo)
         // dtsX: false, atmos: false, commentary: false, language: 'chinese'
         torrentInfo.audioInfo = []
         torrentInfo.videoInfo = {
@@ -1559,6 +1620,7 @@ function processDescription (siteName, description) {
           torrentInfo.editionInfo.hybrid =              !!torrentInfo.torrentTitle.match(/\bhybrid\b/i)
           torrentInfo.editionInfo.imax =                !!torrentInfo.torrentTitle.match(/\bimax\b/i)
           torrentInfo.editionInfo.tvCut =               !!torrentInfo.torrentTitle.match(/\btv ?cut\b/i)
+          torrentInfo.editionInfo.threeD =              false //简化处理
           // processing
           torrentInfo.processingInfo.raw =              !!torrentInfo.torrentTitle.match(/\b(remux|web-?dl|(bd|dvd)?iso)\b/i)
           torrentInfo.processingInfo.encode =           !torrentInfo.processingInfo.raw
@@ -1686,6 +1748,24 @@ function processDescription (siteName, description) {
           const imdbLinkArray = textToConsume.match(/IMDb\s*链\s*接.+(https?:\/\/www\.imdb\.com\/title\/(tt\d+)\/?)/i)
           torrentInfo.movieInfo.imdbLink = imdbLinkArray ? imdbLinkArray[1] : ''
           torrentInfo.movieInfo.imdbId = imdbLinkArray ? imdbLinkArray[2] : ''
+        } else {
+          if (siteName === HDT) {
+            torrentInfo.movieInfo = {}
+            // category
+            const genresArray = textToConsume.match(/类\s*别\s+(.+)$/m)
+            torrentInfo.movieInfo.genres = genresArray
+              ? genresArray[1].trim().split(/\s*\/\s*/).filter(genre => genre).join(' / ')
+              : ''
+            torrentInfo.movieInfo.category = textToConsume.match(/集\s*数\s+\d+/)
+                ? categoryTvSeries
+                : categoryMovie
+            // imdb link
+            const imdbLinkArray = textToConsume.match(/IMDb\s*链\s*接.+(https?:\/\/www\.imdb\.com\/title\/(tt\d+)\/?)/i)
+            if (imdbLinkArray) {
+              torrentInfo.movieInfo.imdbLink = imdbLinkArray ? imdbLinkArray[1] : ''
+              torrentInfo.movieInfo.imdbId = imdbLinkArray ? imdbLinkArray[2] : ''
+            }
+          }
         }
         //= ========================================================================================================
         // fill the page
@@ -2069,6 +2149,24 @@ function processDescription (siteName, description) {
                   ? site.categoryInfo.tvShowJap
                   : site.categoryInfo.tvShow
             }
+          } else if (siteName === HDT && torrentInfo.standardInfo && torrentInfo.movieInfo) {
+            if (torrentInfo.movieInfo.category === categoryMovie) {
+              torrentInfo.infoInSite.category = torrentInfo.standardInfo.res720p
+                ? site.categoryInfo.movie720p
+                : torrentInfo.standardInfo.res1080i || torrentInfo.standardInfo.res1080p
+                  ? site.categoryInfo.movie1080ip
+                  : torrentInfo.standardInfo.res2160p
+                    ? site.categoryInfo.movie2160p
+                    : torrentInfo.infoInSite.category
+            } else if (torrentInfo.movieInfo.category === categoryTvSeries) {
+              torrentInfo.infoInSite.category = torrentInfo.standardInfo.res720p
+                ? site.categoryInfo.tvSeries720p
+                : torrentInfo.standardInfo.res1080i || torrentInfo.standardInfo.res1080p
+                  ? site.categoryInfo.tvSeries1080ip
+                  : torrentInfo.standardInfo.res2160p
+                    ? site.categoryInfo.tvSeries2160p
+                    : torrentInfo.infoInSite.category
+            }
           }
           site.categorySel.val(torrentInfo.infoInSite.category)
         }
@@ -2178,6 +2276,24 @@ function processDescription (siteName, description) {
             }
             site.mediainfoBox.val(mediainfo2String(torrentInfo.mediainfo))
           }
+        } else if (siteName === HDT) {
+          // 3d info
+          if (torrentInfo.editionInfo) {
+            site.threeDSel.val(torrentInfo.editionInfo.threeD ? site.threeDInfo.yes : site.threeDInfo.no)
+          }
+          // hdr info
+          if (torrentInfo.videoInfo) {
+            site.videoInfo.dovi.checked = torrentInfo.videoInfo.dovi
+            site.videoInfo.hdr10plus.checked = torrentInfo.videoInfo.hdr10plus
+            site.videoInfo.hdr10.checked = torrentInfo.videoInfo.hdr10
+          }
+          if (torrentInfo.audioInfo) {
+            site.videoInfo.atmos.checked = torrentInfo.audioInfo.some(audio => audio.atmos)
+          }
+          // season info
+          if (site.fullSeasonSel && torrentInfo.movieInfo.category === categoryTvSeries) {
+            site.fullSeasonSel.val(site.fullSeansonInfo.yes)  //简化处理
+          }
         }
         // anonymously uploading
         if (site.anonymousControl) {
@@ -2185,6 +2301,8 @@ function processDescription (siteName, description) {
             site.anonymousControl.checked = ANONYMOUS
           } else if (siteName === TTG) {
             site.anonymousControl.val(ANONYMOUS ? 'yes' : 'no')
+          } else if (siteName === HDT) {
+            site.anonymousControl.checked = ANONYMOUS
           }
         }
         site.descrBox.val(textToConsume)
@@ -2247,6 +2365,6 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     collectComparisons, decomposeDescription, processDescription,
     mediainfo2String, string2Mediainfo, processTags, getTeamSplitterRegex, formatTorrentName,
-    NHD, PTERCLUB, GPW, MTEAM, TTG, PUTAO, UHD, siteInfoMap
+    NHD, PTERCLUB, GPW, MTEAM, TTG, PUTAO, UHD, HDT, siteInfoMap
   }
 }
